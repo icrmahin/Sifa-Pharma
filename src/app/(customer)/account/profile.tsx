@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -9,21 +9,14 @@ import LoadingState from '../../../components/common/LoadingState';
 import colors from '../../../constants/colors';
 import spacing from '../../../constants/spacing';
 import { useAuth } from '../../../hooks/useAuth';
-import { mockUser } from '../../../services/mockData';
+
+// frontend-only: mockUser removed — backend required for real user data
 
 export default function ProfileScreen() {
   const { user, loading } = useAuth();
-  const [name, setName] = useState(user?.name ?? mockUser.name);
-  const [email, setEmail] = useState(user?.email ?? mockUser.email ?? '');
-  const [phone, setPhone] = useState(user?.phone ?? mockUser.phone ?? '');
-
-  useEffect(() => {
-    if (user) {
-      setName(user.name || '');
-      setEmail(user.email || '');
-      setPhone(user.phone || '');
-    }
-  }, [user]);
+  const [name, setName] = useState(user?.name ?? "");
+  const [email, setEmail] = useState(user?.email ?? "");
+  const [phone, setPhone] = useState(user?.phone ?? "");
 
   if (loading) {
     return <LoadingState label="Loading profile..." />;

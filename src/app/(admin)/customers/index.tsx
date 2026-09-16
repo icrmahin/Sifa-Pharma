@@ -1,42 +1,27 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import AdminHeader from '../../../components/admin/AdminHeader';
 import EmptyState from '../../../components/common/EmptyState';
-import ErrorState from '../../../components/common/ErrorState';
-import LoadingState from '../../../components/common/LoadingState';
 import SearchBar from '../../../components/common/SearchBar';
 import colors from '../../../constants/colors';
 import spacing from '../../../constants/spacing';
 import typography from '../../../constants/typography';
-import { getCustomers } from '../../../services/admin/customerService';
-import type { CustomerRecord } from '../../../services/mockData';
-import { normalizeError } from '../../../utils/errorHandling';
+
+type CustomerRecord = {
+  id: string;
+  name: string;
+  phone: string;
+  email?: string;
+  orderCount?: number;
+  totalSpent?: number;
+};
 
 export default function AdminCustomersScreen() {
-  const [customers, setCustomers] = useState<CustomerRecord[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // frontend-only: empty typed array — no backend
+  const customers: CustomerRecord[] = [];
   const [query, setQuery] = useState('');
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      setCustomers(await getCustomers());
-    } catch (err) {
-      setError(normalizeError(err).message);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    load();
-  }, [load]);
-
-  if (loading) return <LoadingState label="Loading customers" />;
 
   const filtered = customers.filter((customer) =>
     customer.name.toLowerCase().includes(query.toLowerCase()),
@@ -47,9 +32,7 @@ export default function AdminCustomersScreen() {
       <AdminHeader title="Customers" subtitle="Manage customer records" />
       <ScrollView contentContainerStyle={styles.container}>
         <SearchBar value={query} onChangeText={setQuery} placeholder="Search customer" />
-        {error ? (
-          <ErrorState title="Could not load customers" message={error} onRetry={load} />
-        ) : filtered.length === 0 ? (
+        {filtered.length === 0 ? (
           <EmptyState
             title="No customers found"
             message={

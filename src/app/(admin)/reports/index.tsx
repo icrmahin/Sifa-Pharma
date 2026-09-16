@@ -1,15 +1,11 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AdminHeader from '../../../components/admin/AdminHeader';
-import ErrorState from '../../../components/common/ErrorState';
-import LoadingState from '../../../components/common/LoadingState';
 import colors from '../../../constants/colors';
 import spacing from '../../../constants/spacing';
 import typography from '../../../constants/typography';
-import { getInventoryReport, getSalesReport } from '../../../services/admin/reportService';
 import { formatCurrency } from '../../../utils/currency';
-import { normalizeError } from '../../../utils/errorHandling';
 
 type ReportState = {
   revenue: number;
@@ -20,58 +16,33 @@ type ReportState = {
 };
 
 export default function AdminReportsScreen() {
-  const [report, setReport] = useState<ReportState | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const [sales, inventory] = await Promise.all([getSalesReport(), getInventoryReport()]);
-      const ordersCount = sales.deliveredCount;
-      setReport({
-        revenue: sales.totalRevenue,
-        ordersToday: ordersCount,
-        avgOrderValue: ordersCount > 0 ? Math.round(sales.totalRevenue / ordersCount) : 0,
-        lowStock: inventory.lowStock,
-        outOfStock: inventory.outOfStock,
-      });
-    } catch (err) {
-      setError(normalizeError(err).message);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    load();
-  }, [load]);
-
-  if (loading) return <LoadingState label="Loading reports" />;
+  // frontend-only: placeholder report — no backend
+  const report: ReportState = {
+    revenue: 0,
+    ordersToday: 0,
+    avgOrderValue: 0,
+    lowStock: 0,
+    outOfStock: 0,
+  };
 
   const reports = [
-    { label: "Revenue", value: report ? formatCurrency(report.revenue) : "—" },
-    { label: "Delivered orders", value: report ? String(report.ordersToday) : "—" },
-    { label: "Avg order value", value: report ? formatCurrency(report.avgOrderValue) : "—" },
-    { label: "Low stock", value: report ? String(report.lowStock) : "—" },
-    { label: "Out of stock", value: report ? String(report.outOfStock) : "—" },
+    { label: "Revenue", value: formatCurrency(report.revenue) },
+    { label: "Delivered orders", value: String(report.ordersToday) },
+    { label: "Avg order value", value: formatCurrency(report.avgOrderValue) },
+    { label: "Low stock", value: String(report.lowStock) },
+    { label: "Out of stock", value: String(report.outOfStock) },
   ];
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <AdminHeader title="Reports" subtitle="High-level performance" />
       <ScrollView contentContainerStyle={styles.container}>
-        {error ? (
-          <ErrorState title="Could not load reports" message={error} onRetry={load} />
-        ) : (
-          reports.map((report) => (
-            <View key={report.label} style={styles.card}>
-              <Text style={styles.label}>{report.label}</Text>
-              <Text style={styles.value}>{report.value}</Text>
-            </View>
-          ))
-        )}
+        {reports.map((r) => (
+          <View key={r.label} style={styles.card}>
+            <Text style={styles.label}>{r.label}</Text>
+            <Text style={styles.value}>{r.value}</Text>
+          </View>
+        ))}
       </ScrollView>
     </SafeAreaView>
   );

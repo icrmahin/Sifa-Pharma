@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
@@ -7,36 +7,15 @@ import AppLogo from "../../components/common/AppLogo";
 import colors from "../../constants/colors";
 import spacing from "../../constants/spacing";
 import typography from "../../constants/typography";
-import { authService } from "../../services/authService";
-import { useAuth } from "../../hooks/useAuth";
 
 export default function WelcomeScreen() {
   const [loading, setLoading] = useState(false);
-  const { session, syncSession } = useAuth();
-
-  useEffect(() => {
-    if (session) {
-      router.replace("/");
-    }
-  }, [session]);
 
   const handleGoogleLogin = async () => {
+    // backend required — no-op frontend-only dev mode
+    setLoading(true);
     try {
-      setLoading(true);
-
-      const res = await authService.signInWithGoogle();
-
-      console.log("Google login response:", res);
-
-      if (!res?.session) {
-        console.error("No active session after Google login");
-        return;
-      }
-
-      await syncSession(res.session);
       router.replace("/");
-    } catch (error) {
-      console.error("Google Sign-In Error:", error);
     } finally {
       setLoading(false);
     }

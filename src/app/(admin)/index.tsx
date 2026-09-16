@@ -15,15 +15,12 @@ import AdminStatCard from "../../components/admin/AdminStatCard";
 import InventoryStatus from "../../components/admin/InventoryStatus";
 import Button from "../../components/common/Button";
 import EmptyState from "../../components/common/EmptyState";
-import LoadingState from "../../components/common/LoadingState";
 import StatusBadge from "../../components/common/StatusBadge";
 import config from "../../constants/config";
 import colors from "../../constants/colors";
 import sizes from "../../constants/sizes";
 import spacing from "../../constants/spacing";
 import typography from "../../constants/typography";
-import { useAdmin } from "../../hooks/useAdmin";
-import { useAuth } from "../../hooks/useAuth";
 import { formatCurrency } from "../../utils/currency";
 import { formatShortDate } from "../../utils/date";
 
@@ -116,14 +113,26 @@ function ActionChip({ label }: { label: string }) {
 }
 
 export default function AdminDashboardScreen() {
-  const { user } = useAuth();
-  const { dashboard, loading } = useAdmin();
+  // frontend-only: stub user and dashboard — no backend
+  const user = { name: "Admin" } as { name: string };
   const { width } = useWindowDimensions();
 
   const isCompact = width < 768;
   const isWide = width >= 1024;
 
-  if (loading || !dashboard) return <LoadingState label="Loading dashboard" />;
+  // frontend-only placeholder dashboard — empty typed data keeps UI intact
+  const dashboard = {
+    pendingOrders: 0,
+    processingOrders: 0,
+    activeProducts: 0,
+    lowStockProducts: 0,
+    attentionOrders: [] as Array<{ id: string; orderNumber: string; customerName: string; total: number }>,
+    pendingReturns: [] as Array<{ id: string; productName: string; customerName: string; quantity: number }>,
+    lowStockBatches: [] as Array<{ id: string; productName: string; batchNumber: string; quantity: number; status: "healthy" | "low" | "out_of_stock"; expiryDate?: string }>,
+    expiringBatches: [] as Array<{ id: string; productName: string; batchNumber: string; quantity: number; status: "healthy" | "low" | "out_of_stock"; expiryDate?: string }>,
+    recentOrders: [] as Array<{ id: string; orderNumber: string; customerName: string; total: number; status: string; createdAt: string }>,
+    recentActivity: [] as Array<{ id: string; action: string; actor: string; recordType: string; timestamp: string }>,
+  };
 
   const {
     pendingOrders,

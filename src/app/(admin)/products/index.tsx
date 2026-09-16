@@ -1,24 +1,19 @@
 import { router } from "expo-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AdminHeader from "../../../components/admin/AdminHeader";
 import AdminProductCard from "../../../components/admin/AdminProductCard";
 import Button from "../../../components/common/Button";
 import EmptyState from "../../../components/common/EmptyState";
-import ErrorState from "../../../components/common/ErrorState";
 import FilterChip from "../../../components/common/FilterChip";
-import LoadingState from "../../../components/common/LoadingState";
 import SearchBar from "../../../components/common/SearchBar";
 import colors from "../../../constants/colors";
 import config from "../../../constants/config";
 import spacing from "../../../constants/spacing";
 import typography from "../../../constants/typography";
-import { getAdminProducts } from "../../../services/admin/adminProductService";
-import { getCategories } from "../../../services/categoryService";
 import type { Category } from "../../../types/category";
 import type { Product } from "../../../types/product";
-import { normalizeError } from "../../../utils/errorHandling";
 
 type StatusFilter = "all" | "active" | "inactive";
 type StockFilter = "all" | "in_stock" | "low" | "out";
@@ -40,35 +35,13 @@ export default function AdminProductsScreen() {
   const { width } = useWindowDimensions();
   const twoColumns = width >= 720;
 
-  const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // frontend-only: empty typed arrays — no backend
+  const [products] = useState<Product[]>([]);
+  const [categories] = useState<Category[]>([]);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<StatusFilter>("all");
   const [stockFilter, setStockFilter] = useState<StockFilter>("all");
   const [categoryId, setCategoryId] = useState("all");
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const [productList, categoryList] = await Promise.all([
-        getAdminProducts(),
-        getCategories(),
-      ]);
-      setProducts(productList);
-      setCategories(categoryList);
-    } catch (err) {
-      setError(normalizeError(err).message);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    load();
-  }, [load]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -96,8 +69,6 @@ export default function AdminProductsScreen() {
       return true;
     });
   }, [products, query, status, stockFilter, categoryId]);
-
-  if (loading) return <LoadingState label="Loading products…" />;
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -156,13 +127,7 @@ export default function AdminProductsScreen() {
           </ScrollView>
         </View>
 
-        {error ? (
-          <ErrorState
-            title="Could not load products"
-            message={error}
-            onRetry={load}
-          />
-        ) : filtered.length === 0 ? (
+        {filtered.length === 0 ? (
           <EmptyState
             title="No products found"
             message={

@@ -6,7 +6,10 @@ import Header from '../../../components/common/Header';
 import colors from '../../../constants/colors';
 import spacing from '../../../constants/spacing';
 import typography from '../../../constants/typography';
-import { mockManufacturers } from '../../../services/mockData';
+import type { Manufacturer } from '../../../types/manufacturer';
+
+// frontend-only placeholder — no backend required
+const mockManufacturers: Manufacturer[] = [];
 
 export default function CustomerManufacturersScreen() {
   return (

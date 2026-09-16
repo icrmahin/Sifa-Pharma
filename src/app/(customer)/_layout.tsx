@@ -1,14 +1,9 @@
-import { Redirect, Stack } from "expo-router";
+import { Stack } from "expo-router";
 import { StyleSheet, View } from "react-native";
 import CustomerNavigation from "../../components/common/CustomerNavigation";
-import LoadingState from "../../components/common/LoadingState";
-import { useAuth } from "../../hooks/useAuth";
 
+// frontend-only dev mode — no auth gating, render navigation directly
 export default function CustomerLayout() {
-  const { session, loading } = useAuth();
-  if (loading) return <LoadingState label="Loading your account" />;
-  if (!session) return <Redirect href="/(auth)/welcome" />;
-
   return (
     <View style={styles.container}>
       <Stack screenOptions={{ headerShown: false }}>

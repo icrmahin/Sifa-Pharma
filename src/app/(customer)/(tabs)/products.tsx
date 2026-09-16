@@ -15,11 +15,14 @@ import ProductCard from "../../../components/products/ProductCard";
 import colors from "../../../constants/colors";
 import spacing from "../../../constants/spacing";
 import typography from "../../../constants/typography";
-import {
-  mockCategories,
-  mockManufacturers,
-  mockProducts,
-} from "../../../services/mockData";
+import type { Product } from "../../../types/product";
+import type { Category } from "../../../types/category";
+import type { Manufacturer } from "../../../types/manufacturer";
+
+// frontend-only placeholders — no backend required
+const mockProducts: Product[] = [];
+const mockCategories: Category[] = [];
+const mockManufacturers: Manufacturer[] = [];
 
 export default function CustomerProductsScreen() {
   const [query, setQuery] = useState("");

@@ -5,8 +5,11 @@ import Header from "../../../components/common/Header";
 import colors from "../../../constants/colors";
 import spacing from "../../../constants/spacing";
 import typography from "../../../constants/typography";
-import { mockNotifications } from "../../../services/mockData";
+import type { NotificationItem } from "../../../types/notification";
 import { formatDateTime } from "../../../utils/date";
+
+// frontend-only placeholder — no backend required
+const mockNotifications: NotificationItem[] = [];
 
 export default function CustomerNotificationsScreen() {
   return (

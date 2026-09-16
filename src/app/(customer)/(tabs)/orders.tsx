@@ -9,14 +9,21 @@ import LoadingState from "../../../components/common/LoadingState";
 import OrderCard from "../../../components/orders/OrderCard";
 import colors from "../../../constants/colors";
 import spacing from "../../../constants/spacing";
-import { getOrders } from "../../../services/orderService";
 import type { Order } from "../../../types/order";
+
+// frontend-only placeholder — no backend required
+const mockOrders: Order[] = [];
+const getOrders = async (): Promise<Order[]> => {
+  // backend required — return empty placeholder
+  return mockOrders;
+};
 
 export default function CustomerOrdersScreen() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
     getOrders()
       .then(setOrders)

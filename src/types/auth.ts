@@ -1,4 +1,3 @@
-import type { Session } from "@supabase/supabase-js";
 import type { User } from "./user";
 
 export type Role = "customer" | "admin";
@@ -38,5 +37,4 @@ export interface AuthContextType extends AuthState {
   login: (form: LoginForm) => Promise<AuthSession>;
   register: (form: RegisterForm) => Promise<AuthSession>;
   refreshUser: () => Promise<void>;
-  syncSession: (sbSession?: Session | null) => Promise<AuthSession | null>;
 }

@@ -18,13 +18,15 @@ import ProductCard from "../../../components/products/ProductCard";
 import colors from "../../../constants/colors";
 import spacing from "../../../constants/spacing";
 import typography from "../../../constants/typography";
-import {
-  mockCategories,
-  mockManufacturers,
-  mockProducts,
-} from "../../../services/mockData";
 import type { Product } from "../../../types/product";
+import type { Category } from "../../../types/category";
+import type { Manufacturer } from "../../../types/manufacturer";
 import { useCart } from "../../../providers/CartProvider";
+
+// frontend-only placeholders — no backend required
+const mockProducts: Product[] = [];
+const mockCategories: Category[] = [];
+const mockManufacturers: Manufacturer[] = [];
 
 export default function CustomerHomeScreen() {
   const [loading, setLoading] = useState(true);
@@ -33,12 +35,10 @@ export default function CustomerHomeScreen() {
   const [searchFocused, setSearchFocused] = useState(false);
   const { itemCount } = useCart();
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
     const timer = setTimeout(() => {
-      const hasProducts = mockProducts.length > 0;
-      if (!hasProducts) {
-        setError("No products found.");
-      }
+      // frontend-only: no backend, just finish loading (empty placeholders render empty states)
       setLoading(false);
     }, 350);
     return () => clearTimeout(timer);
@@ -144,11 +144,11 @@ export default function CustomerHomeScreen() {
 
         <View style={styles.heroCard}>
           <Text style={styles.heroLabel}>Product of the day</Text>
-          <Text style={styles.heroTitle}>{mockProducts[0].name}</Text>
+          <Text style={styles.heroTitle}>{mockProducts[0]?.name ?? "Featured medicine"}</Text>
           <Text style={styles.heroText}>
-            {mockProducts[0].brand} · {mockProducts[0].genericName}
+            {mockProducts[0] ? `${mockProducts[0].brand} · ${mockProducts[0].genericName}` : "Backend required for live data"}
           </Text>
-          <Text style={styles.heroPrice}>KSh {mockProducts[0].price}</Text>
+          <Text style={styles.heroPrice}>{mockProducts[0] ? `KSh ${mockProducts[0].price}` : "KSh —"}</Text>
         </View>
 
         <View style={styles.sectionHeader}>

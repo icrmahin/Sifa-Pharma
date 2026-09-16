@@ -1,20 +1,9 @@
-import { useCallback, useEffect, useState } from "react";
-import { getNotifications } from "../services/notificationService";
 import type { NotificationItem } from "../types/notification";
 
+// Placeholder: backend not yet implemented.
 export function useNotifications() {
-  const [items, setItems] = useState<NotificationItem[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    setItems(await getNotifications());
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    load();
-  }, [load]);
-
-  return { items, loading, reload: load };
+  const items: NotificationItem[] = [];
+  const loading = false;
+  const reload = async () => {};
+  return { items, loading, reload };
 }

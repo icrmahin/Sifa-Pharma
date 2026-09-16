@@ -1,43 +1,20 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import AdminHeader from '../../../components/admin/AdminHeader';
 import EmptyState from '../../../components/common/EmptyState';
-import ErrorState from '../../../components/common/ErrorState';
-import LoadingState from '../../../components/common/LoadingState';
 import SearchBar from '../../../components/common/SearchBar';
 import StatusBadge from '../../../components/common/StatusBadge';
 import colors from '../../../constants/colors';
 import spacing from '../../../constants/spacing';
 import typography from '../../../constants/typography';
-import { getAdminOrders } from '../../../services/admin/orderManagementService';
 import type { Order } from '../../../types/order';
-import { normalizeError } from '../../../utils/errorHandling';
 
 export default function AdminOrdersScreen() {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // frontend-only: empty typed array — no backend
+  const orders: Order[] = [];
   const [query, setQuery] = useState('');
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      setOrders(await getAdminOrders());
-    } catch (err) {
-      setError(normalizeError(err).message);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    load();
-  }, [load]);
-
-  if (loading) return <LoadingState label="Loading orders" />;
 
   const filtered = orders.filter(
     (order) =>
@@ -50,9 +27,7 @@ export default function AdminOrdersScreen() {
       <AdminHeader title="Orders" subtitle="Approve and process orders" />
       <ScrollView contentContainerStyle={styles.container}>
         <SearchBar value={query} onChangeText={setQuery} placeholder="Search order or customer" />
-        {error ? (
-          <ErrorState title="Could not load orders" message={error} onRetry={load} />
-        ) : filtered.length === 0 ? (
+        {filtered.length === 0 ? (
           <EmptyState
             title="No orders found"
             message={

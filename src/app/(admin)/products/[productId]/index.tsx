@@ -1,12 +1,10 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AdminHeader from "../../../../components/admin/AdminHeader";
 import Button from "../../../../components/common/Button";
 import EmptyState from "../../../../components/common/EmptyState";
-import ErrorState from "../../../../components/common/ErrorState";
-import LoadingState from "../../../../components/common/LoadingState";
 import Modal from "../../../../components/common/Modal";
 import StatusBadge from "../../../../components/common/StatusBadge";
 import ProductImage from "../../../../components/products/ProductImage";
@@ -14,18 +12,8 @@ import colors from "../../../../constants/colors";
 import config from "../../../../constants/config";
 import spacing from "../../../../constants/spacing";
 import typography from "../../../../constants/typography";
-import {
-  deleteProduct,
-  setProductActive,
-} from "../../../../services/admin/adminProductService";
-import { getCategories } from "../../../../services/categoryService";
-import { getManufacturers } from "../../../../services/manufacturerService";
-import { getProductById } from "../../../../services/productService";
-import type { Category } from "../../../../types/category";
-import type { Manufacturer } from "../../../../types/manufacturer";
 import type { Product } from "../../../../types/product";
 import { formatCurrency } from "../../../../utils/currency";
-import { normalizeError } from "../../../../utils/errorHandling";
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   if (!value) return null;
@@ -41,78 +29,44 @@ export default function AdminProductDetailScreen() {
   const params = useLocalSearchParams<{ productId: string }>();
   const productId = params.productId;
 
-  const [product, setProduct] = useState<Product | null>(null);
-  const [categoryName, setCategoryName] = useState("");
-  const [manufacturerName, setManufacturerName] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [toggling, setToggling] = useState(false);
-  const [deleting, setDeleting] = useState(false);
+  // frontend-only: placeholder product — no backend
+  const placeholderProduct: Product | null = productId
+    ? {
+        id: String(productId),
+        name: "Placeholder Product",
+        brand: "Demo Brand",
+        genericName: "Demo Generic",
+        categoryId: "",
+        manufacturerId: "",
+        description: "Frontend-only placeholder — backend required for real data.",
+        price: 0,
+        stock: 0,
+        unit: "pack",
+        isActive: true,
+        isFeatured: false,
+        createdAt: new Date().toISOString(),
+      }
+    : null;
+
+  const product = placeholderProduct;
+  const categoryName = "";
+  const manufacturerName = "";
   const [deleteConfirm, setDeleteConfirm] = useState(false);
 
-  const load = useCallback(async () => {
-    if (!productId) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const [item, categoryList, manufacturerList] = await Promise.all([
-        getProductById(productId),
-        getCategories(),
-        getManufacturers(),
-      ]);
-      if (!item) {
-        setError("Product not found.");
-        setProduct(null);
-        return;
-      }
-      setProduct(item);
-      const category = categoryList.find(
-        (entry: Category) => entry.id === item.categoryId,
-      );
-      const manufacturer = manufacturerList.find(
-        (entry: Manufacturer) => entry.id === item.manufacturerId,
-      );
-      setCategoryName(category?.name ?? "");
-      setManufacturerName(manufacturer?.name ?? "");
-    } catch (err) {
-      setError(normalizeError(err).message);
-    } finally {
-      setLoading(false);
-    }
-  }, [productId]);
-
-  useEffect(() => {
-    load();
-  }, [load]);
-
-  const handleToggleActive = async () => {
-    if (!product) return;
-    setToggling(true);
-    try {
-      await setProductActive(product.id, !product.isActive);
-      await load();
-    } catch (err) {
-      setError(normalizeError(err).message);
-    } finally {
-      setToggling(false);
-    }
-  };
-
-  const handleDelete = async () => {
-    setDeleting(true);
-    try {
-      await deleteProduct(productId);
-      setDeleteConfirm(false);
-      router.replace("/(admin)/products");
-    } catch (err) {
-      setError(normalizeError(err).message);
-      setDeleteConfirm(false);
-    } finally {
-      setDeleting(false);
-    }
-  };
-
-  if (loading) return <LoadingState label="Loading product…" />;
+  // Show EmptyState if no placeholder (e.g. missing param) to keep UI intact
+  if (!product) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <AdminHeader title="Product" subtitle="Product overview" />
+        <EmptyState
+          title="Product not found"
+          message="This product may have been removed."
+          actionLabel="Back to products"
+          onAction={() => router.back()}
+        />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -121,119 +75,113 @@ export default function AdminProductDetailScreen() {
         subtitle="Product overview"
       />
 
-      {error ? (
-        <ErrorState title="Could not load product" message={error} onRetry={load} />
-      ) : !product ? (
-        <EmptyState
-          title="Product not found"
-          message="This product may have been removed."
-          actionLabel="Back to products"
-          onAction={() => router.back()}
+      <ScrollView contentContainerStyle={styles.container}>
+        <ProductImage
+          uri={product.image}
+          recyclingKey={product.id}
+          style={styles.image}
         />
-      ) : (
-        <ScrollView contentContainerStyle={styles.container}>
-          <ProductImage
-            uri={product.image}
-            recyclingKey={product.id}
-            style={styles.image}
+
+        <View style={styles.card}>
+          <Text style={styles.brand}>{product.brand}</Text>
+          <Text style={styles.name}>{product.name}</Text>
+          <Text style={styles.generic}>{product.genericName}</Text>
+
+          <View style={styles.badges}>
+            <StatusBadge
+              label={product.isActive ? "Active" : "Inactive"}
+              tone={product.isActive ? "info" : "neutral"}
+            />
+            <StatusBadge
+              label={
+                product.stock === 0
+                  ? "Out of stock"
+                  : product.stock < config.lowStockThreshold
+                    ? "Low stock"
+                    : "In stock"
+              }
+              tone={
+                product.stock === 0
+                  ? "danger"
+                  : product.stock < config.lowStockThreshold
+                    ? "warning"
+                    : "success"
+              }
+            />
+          </View>
+
+          <View style={styles.priceRow}>
+            <Text style={styles.price}>{formatCurrency(product.price)}</Text>
+            {product.originalPrice && product.originalPrice > product.price ? (
+              <Text style={styles.original}>
+                {formatCurrency(product.originalPrice)}
+              </Text>
+            ) : null}
+            {product.discountPercent ? (
+              <StatusBadge label={`-${product.discountPercent}%`} tone="warning" />
+            ) : null}
+          </View>
+
+          <View style={styles.divider} />
+
+          <InfoRow label="Category" value={categoryName} />
+          <InfoRow label="Manufacturer" value={manufacturerName} />
+          <InfoRow label="Unit" value={product.unit} />
+          <InfoRow label="Stock" value={`${product.stock} units`} />
+          <InfoRow label="Batch number" value={product.batchNumber ?? ""} />
+          <InfoRow
+            label="Expiry date"
+            value={
+              product.expiryDate
+                ? new Date(product.expiryDate).toLocaleDateString()
+                : ""
+            }
           />
+          <InfoRow label="Featured" value={product.isFeatured ? "Yes" : "No"} />
 
-          <View style={styles.card}>
-            <Text style={styles.brand}>{product.brand}</Text>
-            <Text style={styles.name}>{product.name}</Text>
-            <Text style={styles.generic}>{product.genericName}</Text>
+          <View style={styles.divider} />
 
-            <View style={styles.badges}>
-              <StatusBadge
-                label={product.isActive ? "Active" : "Inactive"}
-                tone={product.isActive ? "info" : "neutral"}
-              />
-              <StatusBadge
-                label={
-                  product.stock === 0
-                    ? "Out of stock"
-                    : product.stock < config.lowStockThreshold
-                      ? "Low stock"
-                      : "In stock"
-                }
-                tone={
-                  product.stock === 0
-                    ? "danger"
-                    : product.stock < config.lowStockThreshold
-                      ? "warning"
-                      : "success"
-                }
-              />
-            </View>
+          <Text style={styles.description}>{product.description}</Text>
+        </View>
 
-            <View style={styles.priceRow}>
-              <Text style={styles.price}>{formatCurrency(product.price)}</Text>
-              {product.originalPrice && product.originalPrice > product.price ? (
-                <Text style={styles.original}>
-                  {formatCurrency(product.originalPrice)}
-                </Text>
-              ) : null}
-              {product.discountPercent ? (
-                <StatusBadge label={`-${product.discountPercent}%`} tone="warning" />
-              ) : null}
-            </View>
-
-            <View style={styles.divider} />
-
-            <InfoRow label="Category" value={categoryName} />
-            <InfoRow label="Manufacturer" value={manufacturerName} />
-            <InfoRow label="Unit" value={product.unit} />
-            <InfoRow label="Stock" value={`${product.stock} units`} />
-            <InfoRow label="Batch number" value={product.batchNumber ?? ""} />
-            <InfoRow
-              label="Expiry date"
-              value={
-                product.expiryDate
-                  ? new Date(product.expiryDate).toLocaleDateString()
-                  : ""
-              }
-            />
-            <InfoRow label="Featured" value={product.isFeatured ? "Yes" : "No"} />
-
-            <View style={styles.divider} />
-
-            <Text style={styles.description}>{product.description}</Text>
-          </View>
-
-          <View style={styles.actions}>
-            <Button
-              title="Edit product"
-              onPress={() =>
-                router.push({
-                  pathname: "/(admin)/products/[productId]/edit",
-                  params: { productId: product.id },
-                })
-              }
-              fullWidth
-            />
-            <Button
-              title={product.isActive ? "Deactivate" : "Activate"}
-              variant={product.isActive ? "secondary" : "primary"}
-              loading={toggling}
-              onPress={handleToggleActive}
-              fullWidth
-            />
-            <Button
-              title="Delete product"
-              variant="danger"
-              onPress={() => setDeleteConfirm(true)}
-              fullWidth
-            />
-          </View>
-        </ScrollView>
-      )}
+        <View style={styles.actions}>
+          <Button
+            title="Edit product"
+            onPress={() =>
+              router.push({
+                pathname: "/(admin)/products/[productId]/edit",
+                params: { productId: product.id },
+              })
+            }
+            fullWidth
+          />
+          <Button
+            title={product.isActive ? "Deactivate" : "Activate"}
+            variant={product.isActive ? "secondary" : "primary"}
+            onPress={() => {
+              // backend required — no-op frontend-only
+            }}
+            fullWidth
+          />
+          <Button
+            title="Delete product"
+            variant="danger"
+            onPress={() => setDeleteConfirm(true)}
+            fullWidth
+          />
+        </View>
+      </ScrollView>
 
       <Modal
         visible={deleteConfirm}
         title="Delete product?"
         message={`"${product?.name ?? "This product"}" will be permanently removed from the catalog.`}
-        actionLabel={deleting ? "Deleting…" : "Delete product"}
-        onAction={handleDelete}
+        actionLabel="Delete product"
+        onAction={() => {
+          // backend required — no-op frontend-only
+          setDeleteConfirm(false);
+          router.replace("/(admin)/products");
+        }}
         onClose={() => setDeleteConfirm(false)}
       />
     </SafeAreaView>

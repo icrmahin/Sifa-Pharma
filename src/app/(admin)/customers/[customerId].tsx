@@ -1,79 +1,65 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import AdminHeader from '../../../components/admin/AdminHeader';
 import EmptyState from '../../../components/common/EmptyState';
-import ErrorState from '../../../components/common/ErrorState';
-import LoadingState from '../../../components/common/LoadingState';
 import colors from '../../../constants/colors';
 import spacing from '../../../constants/spacing';
 import typography from '../../../constants/typography';
-import { getCustomerById } from '../../../services/admin/customerService';
-import type { CustomerRecord } from '../../../services/mockData';
 import { formatCurrency } from '../../../utils/currency';
-import { normalizeError } from '../../../utils/errorHandling';
+
+type CustomerRecord = {
+  id: string;
+  name: string;
+  phone: string;
+  orderCount: number;
+  totalSpent: number;
+};
 
 export default function AdminCustomerDetailScreen() {
   const params = useLocalSearchParams<{ customerId: string }>();
   const customerId = params.customerId;
 
-  const [customer, setCustomer] = useState<CustomerRecord | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const load = useCallback(async () => {
-    if (!customerId) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const item = await getCustomerById(customerId);
-      if (!item) {
-        setError("Customer not found.");
-        setCustomer(null);
-        return;
+  // frontend-only: placeholder single object — no backend
+  const customer: CustomerRecord | null = customerId
+    ? {
+        id: String(customerId),
+        name: "Placeholder Customer",
+        phone: "+0000000000",
+        orderCount: 0,
+        totalSpent: 0,
       }
-      setCustomer(item);
-    } catch (err) {
-      setError(normalizeError(err).message);
-    } finally {
-      setLoading(false);
-    }
-  }, [customerId]);
+    : null;
 
-  useEffect(() => {
-    load();
-  }, [load]);
-
-  if (loading) return <LoadingState label="Loading customer" />;
-
-  return (
-    <SafeAreaView style={styles.safeArea}>
-      <AdminHeader title={customer?.name ?? "Customer"} subtitle="Customer overview" />
-
-      {error ? (
-        <View style={styles.errorWrap}>
-          <ErrorState title="Could not load customer" message={error} onRetry={load} />
-        </View>
-      ) : !customer ? (
+  if (!customer) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <AdminHeader title="Customer" subtitle="Customer overview" />
         <EmptyState
           title="Customer not found"
           message="This account may have been removed."
           actionLabel="Back to customers"
           onAction={() => router.back()}
         />
-      ) : (
-        <ScrollView contentContainerStyle={styles.container}>
-          <View style={styles.card}>
-            <Text style={styles.label}>Phone</Text>
-            <Text style={styles.value}>{customer.phone}</Text>
-            <Text style={styles.label}>Orders</Text>
-            <Text style={styles.value}>{customer.orderCount}</Text>
-            <Text style={styles.label}>Total spending</Text>
-            <Text style={styles.value}>{formatCurrency(customer.totalSpent)}</Text>
-          </View>
-        </ScrollView>
-      )}
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <AdminHeader title={customer?.name ?? "Customer"} subtitle="Customer overview" />
+
+      <ScrollView contentContainerStyle={styles.container}>
+        <View style={styles.card}>
+          <Text style={styles.label}>Phone</Text>
+          <Text style={styles.value}>{customer.phone}</Text>
+          <Text style={styles.label}>Orders</Text>
+          <Text style={styles.value}>{customer.orderCount}</Text>
+          <Text style={styles.label}>Total spending</Text>
+          <Text style={styles.value}>{formatCurrency(customer.totalSpent)}</Text>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }

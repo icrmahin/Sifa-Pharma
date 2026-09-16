@@ -1,20 +1,9 @@
-import { Redirect, Stack } from "expo-router";
+import { Stack } from "expo-router";
 import { StyleSheet, View } from "react-native";
 import AdminNavigation from "../../components/admin/AdminNavigation";
-import LoadingState from "../../components/common/LoadingState";
-import { useAuth } from "../../hooks/useAuth";
 
+// frontend-only dev mode — no auth gating, render navigation directly
 export default function AdminLayout() {
-  const { isAdmin, loading } = useAuth();
-
-  if (loading) {
-    return <LoadingState label="Verifying admin access..." />;
-  }
-
-  if (!isAdmin) {
-    return <Redirect href="/(customer)/account/profile" />;
-  }
-
   return (
     <View style={styles.container}>
       <Stack screenOptions={{ headerShown: false }}>

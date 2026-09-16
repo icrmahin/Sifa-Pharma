@@ -7,9 +7,29 @@ import StatusBadge from '../../../components/common/StatusBadge';
 import colors from '../../../constants/colors';
 import spacing from '../../../constants/spacing';
 import typography from '../../../constants/typography';
-import { mockOrders } from '../../../services/mockData';
+import type { Order } from '../../../types/order';
 import { formatCurrency } from '../../../utils/currency';
 import { formatDateTime } from '../../../utils/date';
+
+// frontend-only placeholder — no backend required
+const mockOrders: Order[] = [
+  {
+    id: "placeholder-order",
+    orderNumber: "ORD-PL0001",
+    customerId: "placeholder-customer",
+    customerName: "Demo customer",
+    createdAt: new Date().toISOString(),
+    status: "PENDING",
+    subtotal: 0,
+    discount: 0,
+    deliveryFee: 0,
+    total: 0,
+    paymentMethod: "CASH_ON_DELIVERY",
+    address: "Backend required for real order data",
+    items: [],
+    timeline: [{ label: "Order placed", time: new Date().toISOString(), note: "Backend required" }],
+  },
+];
 
 export default function CustomerOrderDetailScreen() {
   const params = useLocalSearchParams<{ orderId: string }>();

@@ -13,9 +13,14 @@ import spacing from "../../constants/spacing";
 import typography from "../../constants/typography";
 import { useAuth } from "../../hooks/useAuth";
 import { useCart } from "../../hooks/useCart";
-import { submitOrder } from "../../services/orderService";
 import { formatCurrency } from "../../utils/currency";
 import { normalizeError } from "../../utils/errorHandling";
+
+// frontend-only placeholder — backend required
+const submitOrder = async (_payload: { customerId: string; customerName: string; address: string }): Promise<void> => {
+  // backend required — no-op for frontend-only build
+  return;
+};
 
 export default function CheckoutScreen() {
   const { items, summary, loading } = useCart();

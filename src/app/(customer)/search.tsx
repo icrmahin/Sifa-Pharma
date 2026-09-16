@@ -7,7 +7,10 @@ import SearchBar from "../../components/common/SearchBar";
 import ProductCard from "../../components/products/ProductCard";
 import colors from "../../constants/colors";
 import spacing from "../../constants/spacing";
-import { mockProducts } from "../../services/mockData";
+import type { Product } from "../../types/product";
+
+// frontend-only placeholder — no backend required, keep SearchBar with empty results
+const mockProducts: Product[] = [];
 
 export default function CustomerSearchScreen() {
   const [query, setQuery] = useState("");

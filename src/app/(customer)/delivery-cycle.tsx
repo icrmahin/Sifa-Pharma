@@ -7,9 +7,20 @@ import StatusBadge from '../../components/common/StatusBadge';
 import colors from '../../constants/colors';
 import spacing from '../../constants/spacing';
 import typography from '../../constants/typography';
-import { mockDeliveryCycle } from '../../services/mockData';
+import type { DeliveryCycle } from '../../types/deliveryCycle';
 import { formatCurrency } from '../../utils/currency';
 import { formatDateTime } from '../../utils/date';
+
+// frontend-only placeholder — no backend required
+const mockDeliveryCycle: DeliveryCycle = {
+  id: "placeholder-cycle",
+  customerId: "placeholder-customer",
+  status: "PENDING",
+  startedAt: new Date().toISOString(),
+  closesAt: new Date().toISOString(),
+  estimatedTotal: 0,
+  products: [],
+};
 
 export default function DeliveryCycleScreen() {
   return (

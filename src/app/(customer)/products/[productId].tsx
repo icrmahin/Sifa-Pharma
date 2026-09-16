@@ -11,14 +11,17 @@ import colors from "../../../constants/colors";
 import spacing from "../../../constants/spacing";
 import typography from "../../../constants/typography";
 import { useCart } from "../../../hooks/useCart";
-import {
-  mockCategories,
-  mockManufacturers,
-  mockProducts,
-} from "../../../services/mockData";
+import type { Product } from "../../../types/product";
+import type { Category } from "../../../types/category";
+import type { Manufacturer } from "../../../types/manufacturer";
 import { formatCurrency } from "../../../utils/currency";
 import { formatDate } from "../../../utils/date";
 import { normalizeError } from "../../../utils/errorHandling";
+
+// frontend-only placeholders — no backend required
+const mockProducts: Product[] = [];
+const mockCategories: Category[] = [];
+const mockManufacturers: Manufacturer[] = [];
 
 export default function ProductDetailScreen() {
   const params = useLocalSearchParams<{ productId: string }>();

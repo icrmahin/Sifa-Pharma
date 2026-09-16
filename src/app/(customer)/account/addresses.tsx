@@ -7,7 +7,10 @@ import Header from '../../../components/common/Header';
 import colors from '../../../constants/colors';
 import spacing from '../../../constants/spacing';
 import typography from '../../../constants/typography';
-import { mockAddresses } from '../../../services/mockData';
+import type { Address } from '../../../types/address';
+
+// frontend-only placeholder — no backend required
+const mockAddresses: Address[] = [];
 
 export default function CustomerAddressesScreen() {
   return (

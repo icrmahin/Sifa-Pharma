@@ -6,13 +6,18 @@ import Header from "../../../../components/common/Header";
 import ProductCard from "../../../../components/products/ProductCard";
 import colors from "../../../../constants/colors";
 import spacing from "../../../../constants/spacing";
-import { mockCategories, mockProducts } from "../../../../services/mockData";
+import type { Product } from "../../../../types/product";
+import type { Category } from "../../../../types/category";
+
+// frontend-only placeholders — no backend required
+const mockCategories: Category[] = [];
+const mockProducts: Product[] = [];
 
 export default function CategoryProductsScreen() {
   const params = useLocalSearchParams<{ categoryId: string }>();
-  const category =
+  const category: Category =
     mockCategories.find((item) => item.id === params.categoryId) ??
-    mockCategories[0];
+    mockCategories[0] ?? { id: params.categoryId ?? "placeholder", name: "Category", slug: "placeholder" };
   const products = useMemo(
     () => mockProducts.filter((product) => product.categoryId === category.id),
     [category.id],

@@ -6,7 +6,10 @@ import Header from '../../../components/common/Header';
 import colors from '../../../constants/colors';
 import spacing from '../../../constants/spacing';
 import typography from '../../../constants/typography';
-import { mockCategories } from '../../../services/mockData';
+import type { Category } from '../../../types/category';
+
+// frontend-only placeholder — no backend required
+const mockCategories: Category[] = [];
 
 export default function CustomerCategoriesScreen() {
   return (

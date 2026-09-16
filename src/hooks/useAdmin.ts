@@ -1,21 +1,9 @@
-import { useCallback, useEffect, useState } from "react";
-import { getAdminDashboard } from "../services/admin/dashboardService";
+// Placeholder: backend not yet implemented.
+// UI-only hook - returns empty state until real backend connects.
 
 export function useAdmin() {
-  const [dashboard, setDashboard] = useState<Awaited<ReturnType<typeof getAdminDashboard>> | null>(
-    null,
-  );
-  const [loading, setLoading] = useState(true);
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    setDashboard(await getAdminDashboard());
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    load();
-  }, [load]);
-
-  return { dashboard, loading, reload: load };
+  const dashboard = null;
+  const loading = false;
+  const reload = async () => {};
+  return { dashboard, loading, reload };
 }

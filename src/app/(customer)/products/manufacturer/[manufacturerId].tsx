@@ -6,13 +6,18 @@ import Header from "../../../../components/common/Header";
 import ProductCard from "../../../../components/products/ProductCard";
 import colors from "../../../../constants/colors";
 import spacing from "../../../../constants/spacing";
-import { mockManufacturers, mockProducts } from "../../../../services/mockData";
+import type { Product } from "../../../../types/product";
+import type { Manufacturer } from "../../../../types/manufacturer";
+
+// frontend-only placeholders — no backend required
+const mockManufacturers: Manufacturer[] = [];
+const mockProducts: Product[] = [];
 
 export default function ManufacturerProductsScreen() {
   const params = useLocalSearchParams<{ manufacturerId: string }>();
-  const manufacturer =
+  const manufacturer: Manufacturer =
     mockManufacturers.find((item) => item.id === params.manufacturerId) ??
-    mockManufacturers[0];
+    mockManufacturers[0] ?? { id: params.manufacturerId ?? "placeholder", name: "Manufacturer" };
   const products = useMemo(
     () =>
       mockProducts.filter(

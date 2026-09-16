@@ -1,28 +1,16 @@
 import { router } from "expo-router";
-import { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AdminHeader from "../../../components/admin/AdminHeader";
 import Button from "../../../components/common/Button";
-import LoadingState from "../../../components/common/LoadingState";
 import colors from "../../../constants/colors";
 import spacing from "../../../constants/spacing";
 import typography from "../../../constants/typography";
-import { getInventory } from "../../../services/admin/inventoryService";
 import type { InventoryItem } from "../../../types/inventory";
 
 export default function AdminInventoryScreen() {
-  const [items, setItems] = useState<InventoryItem[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    getInventory().then((result) => {
-      setItems(result);
-      setLoading(false);
-    });
-  }, []);
-
-  if (loading) return <LoadingState label="Loading inventory" />;
+  // frontend-only: empty typed array — no backend
+  const items: InventoryItem[] = [];
 
   return (
     <SafeAreaView style={styles.safeArea}>

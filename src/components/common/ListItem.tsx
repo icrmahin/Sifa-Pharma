@@ -1,9 +1,12 @@
+/* eslint-disable react-hooks/immutability -- Reanimated shared values are mutable by design */
 import { Pressable, StyleSheet, Text, View, type ViewStyle } from "react-native";
 import { SymbolView } from "expo-symbols";
+import Animated, { useSharedValue, useAnimatedStyle, withSpring, useReducedMotion } from "react-native-reanimated";
 import { colors, border as borderToken } from "../../constants/colors";
-import { radius, layout } from "../../constants/sizes";
+import { layout } from "../../constants/sizes";
 import { spacing } from "../../constants/spacing";
 import { fontFamily, fontSize, lineHeight } from "../../constants/typography";
+import { springConfigs } from "../../lib/motion";
 
 type ListItemProps = {
   /** Primary text */
@@ -25,7 +28,7 @@ type ListItemProps = {
 
 /**
  * Single row for lists, settings screens, and menu items.
- * Supports leading/trailing elements and optional press feedback.
+ * Supports leading/trailing elements and optional animated press feedback.
  */
 export default function ListItem({
   title,
@@ -37,7 +40,27 @@ export default function ListItem({
   compact = false,
   style,
 }: ListItemProps) {
-  const padding = compact ? { paddingVertical: spacing.sm, paddingHorizontal: spacing.md } : { paddingVertical: spacing.md, paddingHorizontal: spacing.lg };
+  const reducedMotion = useReducedMotion();
+
+  const padding = compact
+    ? { paddingVertical: spacing.sm, paddingHorizontal: spacing.md }
+    : { paddingVertical: spacing.md, paddingHorizontal: spacing.lg };
+
+  const scale = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const handlePressIn = () => {
+    if (reducedMotion) return;
+    scale.value = withSpring(0.98, springConfigs.snap);
+  };
+
+  const handlePressOut = () => {
+    if (reducedMotion) return;
+    scale.value = withSpring(1, springConfigs.snap);
+  };
 
   const content = (
     <View style={[styles.row, padding, divider && styles.divider, style]}>
@@ -65,9 +88,12 @@ export default function ListItem({
       <Pressable
         onPress={onPress}
         accessibilityRole="button"
-        style={({ pressed }) => [pressed && styles.pressed]}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
       >
-        {content}
+        <Animated.View style={animatedStyle}>
+          {content}
+        </Animated.View>
       </Pressable>
     );
   }
@@ -101,5 +127,4 @@ const styles = StyleSheet.create({
     lineHeight: fontSize.footnote * lineHeight.normal,
     color: colors.textMuted,
   },
-  pressed: { opacity: 0.82, backgroundColor: colors.primarySoft },
 });

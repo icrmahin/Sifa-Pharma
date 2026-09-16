@@ -1,8 +1,11 @@
-import { Pressable, StyleSheet, View, type ViewProps, type ViewStyle } from "react-native";
-import { colors, surface, border as borderToken } from "../../constants/colors";
+/* eslint-disable react-hooks/immutability -- Reanimated shared values are mutable by design */
+import { Pressable, StyleSheet, type ViewProps } from "react-native";
+import Animated, { useSharedValue, useAnimatedStyle, withSpring, useReducedMotion } from "react-native-reanimated";
+import { border as borderToken, surface } from "../../constants/colors";
 import { radius } from "../../constants/sizes";
 import { spacing } from "../../constants/spacing";
 import { shadows } from "../../constants/shadows";
+import { springConfigs, compression as compressionValues } from "../../lib/motion";
 
 type CardProps = ViewProps & {
   /** Make the card pressable */
@@ -15,7 +18,7 @@ type CardProps = ViewProps & {
 
 /**
  * Surface container for grouping related content.
- * Optional onPress wraps the card in a Pressable with pressed feedback.
+ * Optional onPress wraps the card in a Pressable with animated spring compression.
  */
 export default function Card({
   onPress,
@@ -26,39 +29,55 @@ export default function Card({
   ...props
 }: CardProps) {
   const shadowStyle = shadows[elevation];
+  const reducedMotion = useReducedMotion();
 
-  const content = (
-    <View
-      style={[
-        styles.card,
-        shadowStyle,
-        pressed && styles.pressed,
-        style,
-      ]}
-      {...props}
-    >
-      {children}
-    </View>
-  );
+  const scale = useSharedValue(1);
+  const opacity = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+    opacity: opacity.value,
+  }));
+
+  const handlePressIn = () => {
+    if (reducedMotion) return;
+    scale.value = withSpring(compressionValues.subtle, springConfigs.card);
+    opacity.value = withSpring(0.92, springConfigs.card);
+  };
+
+  const handlePressOut = () => {
+    if (reducedMotion) return;
+    scale.value = withSpring(1, springConfigs.card);
+    opacity.value = withSpring(1, springConfigs.card);
+  };
+
+  const cardStyles = [
+    styles.card,
+    shadowStyle,
+    pressed && styles.pressed,
+    style,
+  ];
 
   if (onPress) {
     return (
       <Pressable
         onPress={onPress}
         accessibilityRole="button"
-        style={({ pressed: p }) => [
-          styles.card,
-          shadowStyle,
-          p && styles.pressed,
-          style,
-        ]}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
       >
-        {children}
+        <Animated.View style={[cardStyles, animatedStyle]} {...props}>
+          {children}
+        </Animated.View>
       </Pressable>
     );
   }
 
-  return content;
+  return (
+    <Animated.View style={[cardStyles, animatedStyle]} {...props}>
+      {children}
+    </Animated.View>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -70,7 +89,6 @@ const styles = StyleSheet.create({
     borderColor: borderToken.light,
   },
   pressed: {
-    opacity: 0.82,
-    transform: [{ scale: 0.98 }],
+    opacity: 0.92,
   },
 });

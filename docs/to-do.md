@@ -50,7 +50,7 @@
   * Tables where actually needed
   * Loading/empty/error states
 
-* [] **05 — Industrial Transparent UI system**
+* [x] **05 — Industrial Transparent UI system**
 
   * Layered surfaces
   * Controlled transparency
@@ -61,7 +61,7 @@
   * Avoid excessive glass/blur
   * Keep everything readable and functional
 
-* [ ] **06 — Physics / interaction system**
+* [x] **06 — Physics / interaction system**
 
   * Press compression
   * Spring-based transitions

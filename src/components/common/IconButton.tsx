@@ -1,7 +1,9 @@
+/* eslint-disable react-hooks/immutability -- Reanimated shared values are mutable by design */
 import { Pressable, StyleSheet, View, type PressableProps, type ViewStyle } from "react-native";
+import Animated, { useSharedValue, useAnimatedStyle, withSpring, useReducedMotion } from "react-native-reanimated";
 import { colors, surface } from "../../constants/colors";
-import { spacing } from "../../constants/spacing";
 import { radius, layout, opacity as opacityToken } from "../../constants/sizes";
+import { springConfigs, compression as compressionValues } from "../../lib/motion";
 
 type IconButtonProps = PressableProps & {
   /** The icon element to render */
@@ -27,6 +29,8 @@ export default function IconButton({
   style,
   ...props
 }: IconButtonProps) {
+  const reducedMotion = useReducedMotion();
+
   const bg = {
     primary: colors.primary,
     secondary: surface.DEFAULT,
@@ -41,6 +45,26 @@ export default function IconButton({
     danger: colors.ripple.danger,
   }[variant];
 
+  const scale = useSharedValue(1);
+  const opacity = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+    opacity: opacity.value,
+  }));
+
+  const handlePressIn = () => {
+    if (disabled || reducedMotion) return;
+    scale.value = withSpring(compressionValues.standard, springConfigs.press);
+    opacity.value = withSpring(opacityToken.pressed, springConfigs.press);
+  };
+
+  const handlePressOut = () => {
+    if (disabled || reducedMotion) return;
+    scale.value = withSpring(1, springConfigs.press);
+    opacity.value = withSpring(1, springConfigs.press);
+  };
+
   return (
     <Pressable
       {...props}
@@ -49,17 +73,22 @@ export default function IconButton({
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
       accessibilityState={{ disabled: !!disabled }}
-      style={({ pressed }) => [
-        styles.base,
-        { width: size, height: size, backgroundColor: bg },
-        variant === "secondary" && styles.bordered,
-        pressed && !disabled && styles.pressed,
-        disabled && styles.disabled,
-        style,
-      ]}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
     >
-      {icon}
-      {badge && <View style={styles.badgeDot} />}
+      <Animated.View
+        style={[
+          styles.base,
+          { width: size, height: size, backgroundColor: bg },
+          variant === "secondary" && styles.bordered,
+          disabled && styles.disabled,
+          animatedStyle,
+          style,
+        ]}
+      >
+        {icon}
+        {badge && <View style={styles.badgeDot} />}
+      </Animated.View>
     </Pressable>
   );
 }
@@ -71,7 +100,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   bordered: { borderWidth: 1, borderColor: colors.border },
-  pressed: { opacity: opacityToken.pressed, transform: [{ scale: 0.95 }] },
   disabled: { opacity: opacityToken.disabled },
   badgeDot: {
     position: "absolute",

@@ -1,9 +1,11 @@
+/* eslint-disable react-hooks/immutability -- Reanimated shared values are mutable by design */
 import { Pressable, StyleSheet, Text, type PressableProps, type ViewStyle } from "react-native";
+import Animated, { useSharedValue, useAnimatedStyle, withSpring, useReducedMotion } from "react-native-reanimated";
 import { colors, surface } from "../../constants/colors";
 import { spacing } from "../../constants/spacing";
 import { fontFamily, fontSize, lineHeight } from "../../constants/typography";
 import { radius, layout, opacity as opacityToken } from "../../constants/sizes";
-import { shadows } from "../../constants/shadows";
+import { springConfigs, compression as compressionValues } from "../../lib/motion";
 
 type ButtonVariant = "primary" | "secondary" | "danger" | "ghost" | "link";
 
@@ -36,30 +38,57 @@ export default function Button({
   ...props
 }: ButtonProps) {
   const p = palette[variant];
+  const isDisabled = disabled || loading;
+  const reducedMotion = useReducedMotion();
+
+  const scale = useSharedValue(1);
+  const opacity = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+    opacity: opacity.value,
+  }));
+
+  const handlePressIn = () => {
+    if (isDisabled || reducedMotion) return;
+    scale.value = withSpring(compressionValues.subtle, springConfigs.press);
+    opacity.value = withSpring(opacityToken.pressed, springConfigs.press);
+  };
+
+  const handlePressOut = () => {
+    if (isDisabled || reducedMotion) return;
+    scale.value = withSpring(1, springConfigs.press);
+    opacity.value = withSpring(1, springConfigs.press);
+  };
 
   return (
     <Pressable
       {...props}
-      disabled={disabled || loading}
+      disabled={isDisabled}
       android_ripple={{ color: p.ripple, borderless: false }}
       accessibilityRole="button"
-      accessibilityState={{ disabled: disabled || loading, busy: loading }}
-      style={({ pressed }) => [
-        styles.base,
-        { backgroundColor: p.bg },
-        p.border && { borderWidth: 1, borderColor: p.border },
-        variant === "link" && styles.link,
-        fullWidth && styles.fullWidth,
-        pressed && !disabled && styles.pressed,
-        (disabled || loading) && styles.disabled,
-        style,
-      ]}
+      accessibilityState={{ disabled: isDisabled, busy: loading }}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
     >
-      {loading ? (
-        <Text style={[styles.label, { color: p.fg }]}>Please wait…</Text>
-      ) : (
-        <Text style={[styles.label, { color: p.fg }]}>{title}</Text>
-      )}
+      <Animated.View
+        style={[
+          styles.base,
+          { backgroundColor: p.bg },
+          p.border && { borderWidth: 1, borderColor: p.border },
+          variant === "link" && styles.link,
+          fullWidth && styles.fullWidth,
+          isDisabled && styles.disabled,
+          animatedStyle,
+          style,
+        ]}
+      >
+        {loading ? (
+          <Text style={[styles.label, { color: p.fg }]}>Please wait…</Text>
+        ) : (
+          <Text style={[styles.label, { color: p.fg }]}>{title}</Text>
+        )}
+      </Animated.View>
     </Pressable>
   );
 }
@@ -74,12 +103,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     flexDirection: "row",
     gap: spacing.sm,
-    ...shadows.xs,
   },
   fullWidth: { width: "100%" },
-  pressed: { opacity: opacityToken.pressed, transform: [{ scale: 0.98 }] },
   disabled: { opacity: opacityToken.disabled },
-  link: { paddingHorizontal: 0, paddingVertical: 0, minHeight: 0, ...shadows.none },
+  link: { paddingHorizontal: 0, paddingVertical: 0, minHeight: 0 },
   label: {
     fontFamily: fontFamily.semiBold,
     fontSize: fontSize.footnote,

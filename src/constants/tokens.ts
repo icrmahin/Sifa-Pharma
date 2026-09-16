@@ -4,3 +4,4 @@ export { spacing } from "./spacing";
 export { sizes, radius, borderWidth, layout, containerPadding, maxWidth, opacity, duration, spring } from "./sizes";
 export { shadows } from "./shadows";
 export { config } from "./config";
+export { layeredSurface, divider, transparency, technical, geometry, industrialElevation } from "./industrial";

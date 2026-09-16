@@ -1,0 +1,105 @@
+import { Pressable, StyleSheet, Text, View, type ViewStyle } from "react-native";
+import { SymbolView } from "expo-symbols";
+import { colors, border as borderToken } from "../../constants/colors";
+import { radius, layout } from "../../constants/sizes";
+import { spacing } from "../../constants/spacing";
+import { fontFamily, fontSize, lineHeight } from "../../constants/typography";
+
+type ListItemProps = {
+  /** Primary text */
+  title: string;
+  /** Secondary text below the title */
+  subtitle?: string;
+  /** Left element (icon, avatar, badge) */
+  left?: React.ReactNode;
+  /** Right element (chevron, badge, action) */
+  right?: React.ReactNode;
+  /** Press handler. If provided, renders as Pressable */
+  onPress?: () => void;
+  /** Show divider line above this item */
+  divider?: boolean;
+  /** Compact mode with less padding */
+  compact?: boolean;
+  style?: ViewStyle;
+};
+
+/**
+ * Single row for lists, settings screens, and menu items.
+ * Supports leading/trailing elements and optional press feedback.
+ */
+export default function ListItem({
+  title,
+  subtitle,
+  left,
+  right,
+  onPress,
+  divider = false,
+  compact = false,
+  style,
+}: ListItemProps) {
+  const padding = compact ? { paddingVertical: spacing.sm, paddingHorizontal: spacing.md } : { paddingVertical: spacing.md, paddingHorizontal: spacing.lg };
+
+  const content = (
+    <View style={[styles.row, padding, divider && styles.divider, style]}>
+      {left ? <View style={styles.left}>{left}</View> : null}
+      <View style={styles.content}>
+        <Text style={styles.title} numberOfLines={1}>{title}</Text>
+        {subtitle ? (
+          <Text style={styles.subtitle} numberOfLines={2}>{subtitle}</Text>
+        ) : null}
+      </View>
+      {right ? (
+        <View style={styles.right}>{right}</View>
+      ) : onPress ? (
+        <SymbolView
+          name={{ ios: "chevron.right", android: "chevron_right", web: "chevron_right" }}
+          tintColor={colors.textMuted}
+          size={16}
+        />
+      ) : null}
+    </View>
+  );
+
+  if (onPress) {
+    return (
+      <Pressable
+        onPress={onPress}
+        accessibilityRole="button"
+        style={({ pressed }) => [pressed && styles.pressed]}
+      >
+        {content}
+      </Pressable>
+    );
+  }
+
+  return content;
+}
+
+const styles = StyleSheet.create({
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    minHeight: layout.touch,
+  },
+  divider: {
+    borderTopWidth: 1,
+    borderTopColor: borderToken.light,
+  },
+  left: { flexShrink: 0 },
+  content: { flex: 1, gap: 2 },
+  right: { flexShrink: 0 },
+  title: {
+    fontFamily: fontFamily.medium,
+    fontSize: fontSize.body,
+    lineHeight: fontSize.body * lineHeight.normal,
+    color: colors.text,
+  },
+  subtitle: {
+    fontFamily: fontFamily.regular,
+    fontSize: fontSize.footnote,
+    lineHeight: fontSize.footnote * lineHeight.normal,
+    color: colors.textMuted,
+  },
+  pressed: { opacity: 0.82, backgroundColor: colors.primarySoft },
+});

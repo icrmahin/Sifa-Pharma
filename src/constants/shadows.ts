@@ -4,6 +4,10 @@ type ShadowStyle = ViewStyle;
 
 const isIOS = Platform.OS === "ios";
 
+/**
+ * Elevation scale — use with the `shadows` token object.
+ * Keep shadow color matched to brand ink (#18201E) for cohesion.
+ */
 export const shadows = {
   none: {
     shadowColor: "transparent",
@@ -13,6 +17,7 @@ export const shadows = {
     elevation: 0,
   } as ShadowStyle,
 
+  /** Subtle lift — list items, flat cards */
   xs: isIOS
     ? {
         shadowColor: "#18201E",
@@ -23,6 +28,7 @@ export const shadows = {
       }
     : { elevation: 1 },
 
+  /** Card rest — product cards, inputs */
   sm: isIOS
     ? {
         shadowColor: "#18201E",
@@ -33,6 +39,7 @@ export const shadows = {
       }
     : { elevation: 2 },
 
+  /** Card hover — elevated panels */
   md: isIOS
     ? {
         shadowColor: "#18201E",
@@ -43,6 +50,7 @@ export const shadows = {
       }
     : { elevation: 4 },
 
+  /** Dropdown — menus, modals */
   lg: isIOS
     ? {
         shadowColor: "#18201E",
@@ -53,6 +61,7 @@ export const shadows = {
       }
     : { elevation: 6 },
 
+  /** Floating — drawers, bottom sheets */
   xl: isIOS
     ? {
         shadowColor: "#18201E",

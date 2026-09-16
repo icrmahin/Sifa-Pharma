@@ -1,18 +1,20 @@
 import { Pressable, StyleSheet, Text } from "react-native";
-import colors from "../../constants/colors";
-import sizes from "../../constants/sizes";
-import spacing from "../../constants/spacing";
-import typography from "../../constants/typography";
+import { colors, surface } from "../../constants/colors";
+import { radius } from "../../constants/sizes";
+import { spacing } from "../../constants/spacing";
+import { fontFamily, fontSize, lineHeight } from "../../constants/typography";
 
-export default function FilterChip({
-  label,
-  selected,
-  onPress,
-}: {
+type FilterChipProps = {
   label: string;
   selected?: boolean;
-  onPress: () => void;
-}) {
+  onPress?: () => void;
+};
+
+/**
+ * Filter chip — prefer using Chip component for new code.
+ * Kept for backward compatibility.
+ */
+export default function FilterChip({ label, selected = false, onPress }: FilterChipProps) {
   return (
     <Pressable
       onPress={onPress}
@@ -28,16 +30,21 @@ export default function FilterChip({
 
 const styles = StyleSheet.create({
   chip: {
-    backgroundColor: colors.backgroundAlt,
+    backgroundColor: surface.DEFAULT,
     borderColor: colors.border,
     borderWidth: 1,
-    borderRadius: sizes.borderRadius.pill,
+    borderRadius: radius.pill,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     minHeight: 36,
     justifyContent: "center",
   },
   selected: { backgroundColor: colors.primarySoft, borderColor: colors.primary },
-  text: { color: colors.text, fontWeight: "600", fontSize: typography.footnote },
+  text: {
+    fontFamily: fontFamily.semiBold,
+    fontSize: fontSize.footnote,
+    lineHeight: fontSize.footnote * lineHeight.normal,
+    color: colors.text,
+  },
   selectedText: { color: colors.primary },
 });

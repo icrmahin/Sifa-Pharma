@@ -18,7 +18,7 @@
   * Optimize all image assets
   * Establish asset naming/conventions
 
-* [ ] **03 — Design tokens**
+* [x] **03 — Design tokens**
 
   * Deep Green `#123C35`
   * Sage Green `#8FB8A8`
@@ -32,7 +32,7 @@
   * Shadow/elevation system
   * Motion/physics tokens
 
-* [ ] **04 — Core UI foundation**
+* [x] **04 — Core UI foundation**
 
   * Screen/container primitives
   * Typography components
@@ -50,7 +50,7 @@
   * Tables where actually needed
   * Loading/empty/error states
 
-* [ ] **05 — Industrial Transparent UI system**
+* [] **05 — Industrial Transparent UI system**
 
   * Layered surfaces
   * Controlled transparency

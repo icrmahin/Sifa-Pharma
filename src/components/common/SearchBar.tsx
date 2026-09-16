@@ -1,9 +1,9 @@
 import { SymbolView } from "expo-symbols";
 import { Pressable, StyleSheet, TextInput, View } from "react-native";
-import colors from "../../constants/colors";
-import sizes from "../../constants/sizes";
-import spacing from "../../constants/spacing";
-import typography from "../../constants/typography";
+import { colors, surface } from "../../constants/colors";
+import { radius, layout } from "../../constants/sizes";
+import { spacing } from "../../constants/spacing";
+import { fontFamily, fontSize, lineHeight } from "../../constants/typography";
 
 type SearchBarProps = {
   value: string;
@@ -64,20 +64,20 @@ const styles = StyleSheet.create({
   wrapper: {
     flexDirection: "row",
     alignItems: "center",
-    borderRadius: sizes.borderRadius.md,
-    backgroundColor: colors.backgroundAlt,
+    borderRadius: radius.md,
+    backgroundColor: surface.DEFAULT,
     borderWidth: 1,
     borderColor: colors.border,
     paddingHorizontal: spacing.md,
-    minHeight: 44,
+    minHeight: layout.touch,
   },
-  icon: {
-    marginRight: spacing.sm,
-  },
+  icon: { marginRight: spacing.sm },
   input: {
     flex: 1,
+    fontFamily: fontFamily.regular,
+    fontSize: fontSize.footnote,
+    lineHeight: fontSize.footnote * lineHeight.normal,
     color: colors.text,
-    fontSize: typography.footnote,
     paddingVertical: spacing.sm,
   },
   clearButton: {

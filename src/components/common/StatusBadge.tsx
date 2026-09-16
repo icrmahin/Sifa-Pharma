@@ -1,31 +1,33 @@
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import colors from '../../constants/colors';
-import spacing from '../../constants/spacing';
-import typography from '../../constants/typography';
+import { StyleSheet, Text, View } from "react-native";
+import { colors, surface } from "../../constants/colors";
+import { radius } from "../../constants/sizes";
+import { spacing } from "../../constants/spacing";
+import { fontFamily, fontSize, lineHeight } from "../../constants/typography";
 
 type StatusBadgeProps = {
   label: string;
-  tone?: 'success' | 'warning' | 'danger' | 'info' | 'neutral';
+  tone?: "success" | "warning" | "danger" | "info" | "neutral";
 };
 
-export default function StatusBadge({ label, tone = 'neutral' }: StatusBadgeProps) {
-  const palette = {
-    success: { background: colors.successSoft, text: colors.success, border: colors.successBorder, dot: colors.success },
-    warning: { background: colors.warningSoft, text: colors.warning, border: colors.warningBorder, dot: colors.warning },
-    danger: { background: colors.dangerSoft, text: colors.danger, border: colors.dangerBorder, dot: colors.danger },
-    info: { background: colors.primarySoft, text: colors.primary, border: colors.primaryMuted, dot: colors.primary },
-    neutral: { background: colors.background, text: colors.textMuted, border: colors.border, dot: colors.textMuted },
-  }[tone];
+const palette = {
+  success: { bg: colors.successSoft, fg: colors.success, border: colors.successBorder, dot: colors.success },
+  warning: { bg: colors.warningSoft, fg: colors.warning, border: colors.warningBorder, dot: colors.warning },
+  danger:  { bg: colors.dangerSoft,  fg: colors.danger,  border: colors.dangerBorder,  dot: colors.danger },
+  info:    { bg: colors.primarySoft, fg: colors.primary, border: colors.primaryMuted,   dot: colors.primary },
+  neutral: { bg: surface.disabled, fg: colors.textMuted, border: colors.border,  dot: colors.textMuted },
+} as const;
+
+export default function StatusBadge({ label, tone = "neutral" }: StatusBadgeProps) {
+  const p = palette[tone];
 
   return (
     <View
-      style={[styles.badge, { backgroundColor: palette.background, borderColor: palette.border }]}
+      style={[styles.badge, { backgroundColor: p.bg, borderColor: p.border }]}
       accessibilityLabel={label}
       accessibilityRole="text"
     >
-      <View style={[styles.dot, { backgroundColor: palette.dot }]} />
-      <Text style={[styles.text, { color: palette.text }]} numberOfLines={1}>
+      <View style={[styles.dot, { backgroundColor: p.dot }]} />
+      <Text style={[styles.text, { color: p.fg }]} numberOfLines={1}>
         {label}
       </Text>
     </View>
@@ -34,24 +36,21 @@ export default function StatusBadge({ label, tone = 'neutral' }: StatusBadgeProp
 
 const styles = StyleSheet.create({
   badge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-start",
     gap: spacing.xs,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xxs,
-    borderRadius: 6,
+    borderRadius: radius.sm,
     borderWidth: 1,
   },
-  dot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
+  dot: { width: 6, height: 6, borderRadius: 3 },
   text: {
-    fontSize: typography.caption2,
-    fontWeight: '700',
+    fontFamily: fontFamily.semiBold,
+    fontSize: fontSize.micro,
+    lineHeight: fontSize.micro * lineHeight.tight,
     letterSpacing: 0.6,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
   },
 });

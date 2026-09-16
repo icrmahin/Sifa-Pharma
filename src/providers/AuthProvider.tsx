@@ -22,7 +22,7 @@ const AuthContext = createContext<AuthContextType | null>(null);
 const DEV_USER: User = {
   id: "dev-admin-001",
   name: "Dev Admin",
-  email: "admin@hibbullah.app",
+  email: "admin@sifa-pharma.com",
   phone: "+254700000000",
   role: "admin",
   createdAt: new Date().toISOString(),

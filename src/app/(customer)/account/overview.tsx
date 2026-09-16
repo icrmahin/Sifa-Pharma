@@ -11,7 +11,7 @@ import { useAuth } from "../../../hooks/useAuth";
 type IconName = SymbolViewProps["name"];
 
 const ROW_ICON_SIZE = 18;
-const RIPPLE = "rgba(2, 55, 25, 0.08)";
+const RIPPLE = "rgba(18, 60, 53, 0.08)";
 const CHEVRON: IconName = { ios: "chevron.right", android: "chevron_right", web: "chevron_right" };
 const SIGN_OUT_ICON: IconName = {
   ios: "rectangle.portrait.and.arrow.right",
@@ -89,7 +89,7 @@ export default function CustomerAccountDashboard() {
     <SafeAreaView style={styles.safeArea}>
       <Header
         title="Account"
-        subtitle="Hibbullah · Your account"
+        subtitle="Sifa-Pharma · Your account"
         onBack={() => router.back()}
       />
       <ScrollView contentContainerStyle={styles.container}>
@@ -99,7 +99,7 @@ export default function CustomerAccountDashboard() {
             <Text style={styles.avatarText}>{initial}</Text>
           </View>
           <View style={styles.identityText}>
-            <Text style={styles.eyebrow}>Hibbullah · Customer</Text>
+            <Text style={styles.eyebrow}>Sifa-Pharma · Customer</Text>
             <Text style={styles.userName} numberOfLines={1}>
               {user?.name ?? "Welcome"}
             </Text>

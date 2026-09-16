@@ -1,8 +1,9 @@
 {
-  "name": "com.hibbullah.app",
+  "name": "com.sifapharma.app",
   "main": "expo-router/entry",
   "version": "1.0.0",
   "dependencies": {
+    "@expo-google-fonts/sora": "^0.4.2",
     "expo": "~57.0.22",
     "expo-constants": "~57.0.18",
     "expo-device": "~57.0.2",

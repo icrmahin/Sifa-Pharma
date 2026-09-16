@@ -10,7 +10,7 @@ import spacing from '../../constants/spacing';
 import typography from '../../constants/typography';
 
 export default function ForgotPasswordScreen() {
-  const [email, setEmail] = useState('amina@hibbullah.app');
+  const [email, setEmail] = useState('');
 
   return (
     <SafeAreaView style={styles.safeArea}>

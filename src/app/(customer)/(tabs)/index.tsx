@@ -83,7 +83,7 @@ export default function CustomerHomeScreen() {
         <View style={styles.headerRow}>
           <View style={styles.brandRow}>
             <AppLogo size={38} />
-            <Text style={styles.brandName}>Hibbullah</Text>
+            <Text style={styles.brandName}>Sifa-Pharma</Text>
           </View>
           <Pressable
             style={styles.cartButton}

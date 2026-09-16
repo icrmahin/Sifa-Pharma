@@ -1,4 +1,11 @@
 export const typography = {
+  fontFamily: {
+    regular: "Sora_400Regular",
+    medium: "Sora_500Medium",
+    semiBold: "Sora_600SemiBold",
+    bold: "Sora_700Bold",
+  },
+
   largeTitle: 34,
   title1: 28,
   title2: 22,
@@ -20,14 +27,12 @@ export const typography = {
   caption: 12,
   label: 11,
 
-  // Line heights
   lineHeight: {
     tight: 1.2,
     normal: 1.4,
     relaxed: 1.6,
   },
 
-  // Letter spacing
   letterSpacing: {
     tight: -0.2,
     normal: 0,

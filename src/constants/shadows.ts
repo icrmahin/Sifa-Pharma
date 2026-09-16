@@ -15,9 +15,9 @@ export const shadows = {
 
   xs: isIOS
     ? {
-        shadowColor: "#000",
+        shadowColor: "#18201E",
         shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
+        shadowOpacity: 0.04,
         shadowRadius: 2,
         elevation: 1,
       }
@@ -25,9 +25,9 @@ export const shadows = {
 
   sm: isIOS
     ? {
-        shadowColor: "#000",
+        shadowColor: "#18201E",
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.08,
+        shadowOpacity: 0.06,
         shadowRadius: 4,
         elevation: 2,
       }
@@ -35,9 +35,9 @@ export const shadows = {
 
   md: isIOS
     ? {
-        shadowColor: "#000",
+        shadowColor: "#18201E",
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
+        shadowOpacity: 0.08,
         shadowRadius: 8,
         elevation: 4,
       }
@@ -45,9 +45,9 @@ export const shadows = {
 
   lg: isIOS
     ? {
-        shadowColor: "#000",
+        shadowColor: "#18201E",
         shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.12,
+        shadowOpacity: 0.1,
         shadowRadius: 16,
         elevation: 6,
       }
@@ -55,9 +55,9 @@ export const shadows = {
 
   xl: isIOS
     ? {
-        shadowColor: "#000",
+        shadowColor: "#18201E",
         shadowOffset: { width: 0, height: 12 },
-        shadowOpacity: 0.15,
+        shadowOpacity: 0.12,
         shadowRadius: 24,
         elevation: 8,
       }

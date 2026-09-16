@@ -14,7 +14,7 @@ export default function AdminHeader({ title, subtitle, action }: AdminHeaderProp
   return (
     <View style={styles.header}>
       <View style={styles.titleArea}>
-        <Text style={styles.eyebrow}>Hibbullah · Admin</Text>
+        <Text style={styles.eyebrow}>Sifa-Pharma · Admin</Text>
         <Text style={styles.title} numberOfLines={1}>
           {title}
         </Text>

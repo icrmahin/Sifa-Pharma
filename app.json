@@ -1,34 +1,34 @@
 {
   "expo": {
-    "name": "hibbullah-pharmacy",
-    "slug": "hibbullah-app",
-    "version": "1.0.1",
+    "name": "Sifa-Pharma",
+    "slug": "sifa-pharma",
+    "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/logo/hibbullah-logo.png",
-    "scheme": "comhibbullahapp",
+    "icon": "./assets/images/logo/sifa-logo-dark.png",
+    "scheme": "sifapharma",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/images/logo/hibbullah-logo.png"
+      "icon": "./assets/images/logo/sifa-logo-dark.png"
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#023719",
-        "foregroundImage": "./assets/images/logo/hibbullah-logo.png"
+        "backgroundColor": "#F6F7F4",
+        "foregroundImage": "./assets/images/logo/sifa-logo-dark.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.icrmahin.hibbullahapp"
+      "package": "com.sifapharma.app"
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/logo/hibbullah-logo.png"
+      "favicon": "./assets/images/logo/sifa-logo-dark.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#FFFFFF",
-          "image": "./assets/images/logo/hibbullah-logo.png",
+          "backgroundColor": "#F6F7F4",
+          "image": "./assets/images/logo/sifa-logo-dark.png",
           "imageWidth": 88
         }
       ],

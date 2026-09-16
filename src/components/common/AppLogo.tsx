@@ -1,16 +1,23 @@
 import { Image } from "expo-image";
 import { StyleSheet, type ImageStyle, type StyleProp } from "react-native";
 
-const logo = require("@/assets/images/logo/hibbullah-logo.png");
+const logoDark = require("@/assets/images/logo/sifa-logo-dark.png");
+const logoWhite = require("@/assets/images/logo/sifa-logo-white.png");
 
-export default function AppLogo({ size = 88, style }: { size?: number; style?: StyleProp<ImageStyle> }) {
+type AppLogoProps = {
+  size?: number;
+  style?: StyleProp<ImageStyle>;
+  variant?: "dark" | "white";
+};
+
+export default function AppLogo({ size = 88, style, variant = "dark" }: AppLogoProps) {
   return (
     <Image
-      source={logo}
+      source={variant === "white" ? logoWhite : logoDark}
       style={[{ width: size, height: size }, style]}
       contentFit="contain"
       priority="high"
-      accessibilityLabel="Hibbullah logo"
+      accessibilityLabel="Sifa-Pharma logo"
     />
   );
 }

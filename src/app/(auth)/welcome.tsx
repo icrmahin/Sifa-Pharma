@@ -26,7 +26,7 @@ export default function WelcomeScreen() {
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.brandWrap}>
           <AppLogo size={88} />
-          <Text style={styles.brand}>Hibbullah</Text>
+          <Text style={styles.brand}>Sifa-Pharma</Text>
         </View>
 
         <View style={styles.hero}>

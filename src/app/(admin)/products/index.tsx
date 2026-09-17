@@ -1,14 +1,16 @@
 import { router } from "expo-router";
 import { useMemo, useState } from "react";
-import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AdminHeader from "../../../components/admin/AdminHeader";
 import AdminProductCard from "../../../components/admin/AdminProductCard";
 import Button from "../../../components/common/Button";
 import EmptyState from "../../../components/common/EmptyState";
 import FilterChip from "../../../components/common/FilterChip";
+import ResponsiveContainer from "../../../components/common/ResponsiveContainer";
 import SearchBar from "../../../components/common/SearchBar";
 import { useThemeColors } from "../../../providers/ThemeProvider";
+import { useResponsive } from "../../../hooks/useResponsive";
 import config from "../../../constants/config";
 import spacing from "../../../constants/spacing";
 import typography from "../../../constants/typography";
@@ -33,8 +35,8 @@ const STOCK_FILTERS: { label: string; value: StockFilter }[] = [
 
 export default function AdminProductsScreen() {
   const colors = useThemeColors();
-  const { width } = useWindowDimensions();
-  const twoColumns = width >= 720;
+  const { isDesktop } = useResponsive();
+  const twoColumns = isDesktop;
 
   const [products] = useState<Product[]>([]);
   const [categories] = useState<Category[]>([]);
@@ -81,7 +83,8 @@ export default function AdminProductsScreen() {
       />
 
       <ScrollView contentContainerStyle={styles.container}>
-        <SearchBar
+        <ResponsiveContainer sidebarAware>
+          <SearchBar
           value={query}
           onChangeText={setQuery}
           placeholder="Search products"
@@ -160,6 +163,7 @@ export default function AdminProductsScreen() {
             </View>
           </>
         )}
+        </ResponsiveContainer>
       </ScrollView>
     </SafeAreaView>
   );

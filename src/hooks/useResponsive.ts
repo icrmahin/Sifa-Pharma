@@ -1,4 +1,5 @@
 import { useWindowDimensions } from "react-native";
+import { spacing } from "../constants/spacing";
 
 export type Breakpoint = "xs" | "sm" | "md" | "lg" | "xl" | "xxl";
 
@@ -67,7 +68,5 @@ export function useResponsive() {
     cardWidth,
   };
 }
-
-const spacing = { lg: 16 };
 
 export default useResponsive;

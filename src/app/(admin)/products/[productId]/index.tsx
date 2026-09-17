@@ -6,9 +6,11 @@ import AdminHeader from "../../../../components/admin/AdminHeader";
 import Button from "../../../../components/common/Button";
 import EmptyState from "../../../../components/common/EmptyState";
 import Modal from "../../../../components/common/Modal";
+import ResponsiveContainer from "../../../../components/common/ResponsiveContainer";
 import StatusBadge from "../../../../components/common/StatusBadge";
 import ProductImage from "../../../../components/products/ProductImage";
 import { useThemeColors } from "../../../../providers/ThemeProvider";
+import { useResponsive } from "../../../../hooks/useResponsive";
 import config from "../../../../constants/config";
 import spacing from "../../../../constants/spacing";
 import typography from "../../../../constants/typography";
@@ -27,6 +29,7 @@ function InfoRow({ label, value, colors }: { label: string; value: string; color
 
 export default function AdminProductDetailScreen() {
   const colors = useThemeColors();
+  const { isDesktop } = useResponsive();
   const params = useLocalSearchParams<{ productId: string }>();
   const productId = params.productId;
 
@@ -72,7 +75,8 @@ export default function AdminProductDetailScreen() {
       <AdminHeader title={product?.name ?? "Product"} subtitle="Product overview" />
 
       <ScrollView contentContainerStyle={styles.container}>
-        <ProductImage uri={product.image} recyclingKey={product.id} style={styles.image} />
+        <ResponsiveContainer sidebarAware maxWidth={isDesktop ? 960 : 1320}>
+          <ProductImage uri={product.image} recyclingKey={product.id} style={isDesktop ? styles.imageDesktop : styles.image} />
 
         <View style={[styles.card, { backgroundColor: colors.backgroundAlt, borderColor: colors.borderLight }]}>
           <Text style={[styles.brand, { color: colors.textMuted }]}>{product.brand}</Text>
@@ -158,6 +162,7 @@ export default function AdminProductDetailScreen() {
             fullWidth
           />
         </View>
+        </ResponsiveContainer>
       </ScrollView>
 
       <Modal
@@ -181,11 +186,9 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     gap: spacing.lg,
     paddingBottom: spacing.xxl,
-    alignSelf: "center",
-    width: "100%",
-    maxWidth: 720,
   },
   image: { height: 180, borderRadius: 12 },
+  imageDesktop: { height: 280, borderRadius: 12 },
   card: {
     borderRadius: 12,
     borderWidth: 1,

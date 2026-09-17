@@ -6,6 +6,8 @@ import spacing from "../../../constants/spacing";
 import typography from "../../../constants/typography";
 import { radius, layout } from "../../../constants/sizes";
 import Icon from "../../../components/common/Icon";
+import ResponsiveContainer from "../../../components/common/ResponsiveContainer";
+import { useResponsive } from "../../../hooks/useResponsive";
 import type { IconName } from "../../../components/common/Icon";
 import Toggle from "../../../components/common/Toggle";
 
@@ -52,6 +54,7 @@ export default function AccountScreen() {
   const { user, isAdmin, signOut } = useAuth();
   const colors = useThemeColors();
   const { themeMode, setThemeMode } = useTheme();
+  const { isDesktop } = useResponsive();
 
   const isDark = themeMode === "dark" || (themeMode === "system" && colors.background === "#111A17");
   const initial = user?.name ? user.name.charAt(0).toUpperCase() : "U";
@@ -75,135 +78,109 @@ export default function AccountScreen() {
       style={[styles.container, { backgroundColor: colors.background }]}
       contentContainerStyle={styles.content}
     >
-      <Text style={[styles.title, { color: colors.text }]}>Settings</Text>
+      <ResponsiveContainer maxWidth={isDesktop ? 800 : 1320}>
+        <Text style={[styles.title, { color: colors.text }]}>Settings</Text>
 
-      {/* Profile Card */}
-      <Pressable
-        style={({ pressed }) => [
-          styles.profileCard,
-          {
-            backgroundColor: colors.backgroundAlt,
-            borderColor: colors.borderLight,
-          },
-          pressed && styles.pressed,
-        ]}
-        onPress={() => router.push("/(customer)/account/profile")}
-        accessibilityRole="button"
-        accessibilityLabel="Open profile"
-      >
-        <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
-          <Text style={[styles.avatarText, { color: colors.white }]}>{initial}</Text>
-        </View>
-        <View style={styles.profileInfo}>
-          <Text style={[styles.profileName, { color: colors.text }]} numberOfLines={1}>
-            {user?.name || "User"}
-          </Text>
-          <Text style={[styles.profileEmail, { color: colors.textMuted }]} numberOfLines={1}>
-            {user?.email || ""}
-          </Text>
-        </View>
-        <Icon name="chevron-right" size={20} color={colors.textMuted} />
-      </Pressable>
-
-      {/* Admin Dashboard */}
-      {isAdmin ? (
+        {/* Profile Card */}
         <Pressable
           style={({ pressed }) => [
-            styles.adminCard,
-            {
-              backgroundColor: colors.backgroundAlt,
-              borderColor: colors.borderLight,
-            },
+            styles.profileCard,
+            { backgroundColor: colors.backgroundAlt, borderColor: colors.borderLight },
             pressed && styles.pressed,
           ]}
-          onPress={() => router.push("/(admin)")}
+          onPress={() => router.push("/(customer)/account/profile")}
           accessibilityRole="button"
-          accessibilityLabel="Open admin dashboard"
+          accessibilityLabel="Open profile"
         >
-          <View style={[styles.adminIconContainer, { backgroundColor: colors.primarySoft }]}>
-            <Icon name="dashboard" size={20} color={colors.primary} />
+          <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
+            <Text style={[styles.avatarText, { color: colors.white }]}>{initial}</Text>
           </View>
-          <View style={styles.adminInfo}>
-            <Text style={[styles.adminLabel, { color: colors.text }]}>Admin Dashboard</Text>
-            <Text style={[styles.adminHint, { color: colors.textMuted }]}>Manage store operations</Text>
+          <View style={styles.profileInfo}>
+            <Text style={[styles.profileName, { color: colors.text }]} numberOfLines={1}>
+              {user?.name || "User"}
+            </Text>
+            <Text style={[styles.profileEmail, { color: colors.textMuted }]} numberOfLines={1}>
+              {user?.email || ""}
+            </Text>
           </View>
           <Icon name="chevron-right" size={20} color={colors.textMuted} />
         </Pressable>
-      ) : null}
 
-      {/* Settings Sections */}
-      {SECTIONS.map((section) => (
-        <View key={section.title} style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>
-            {section.title}
-          </Text>
-          <View
-            style={[
-              styles.sectionGroup,
-              {
-                backgroundColor: colors.backgroundAlt,
-                borderColor: colors.borderLight,
-              },
+        {/* Admin Dashboard */}
+        {isAdmin ? (
+          <Pressable
+            style={({ pressed }) => [
+              styles.adminCard,
+              { backgroundColor: colors.backgroundAlt, borderColor: colors.borderLight },
+              pressed && styles.pressed,
             ]}
+            onPress={() => router.push("/(admin)")}
+            accessibilityRole="button"
+            accessibilityLabel="Open admin dashboard"
           >
-            {section.items.map((item, index) => (
-              <View key={item.label}>
-                <Pressable
-                  style={({ pressed }) => [
-                    styles.row,
-                    pressed && styles.pressed,
-                  ]}
-                  onPress={() => {
-                    if (item.toggle) {
-                      handleDarkModeToggle();
-                    } else {
-                      handleItemPress(item);
-                    }
-                  }}
-                  accessibilityRole="button"
-                  accessibilityLabel={item.label}
-                >
-                  <View style={[styles.rowIcon, { backgroundColor: colors.primarySoft }]}>
-                    <Icon
-                      name={item.icon}
-                      size={20}
-                      color={item.destructive ? colors.danger : colors.primary}
-                    />
+            <View style={[styles.adminIconContainer, { backgroundColor: colors.primarySoft }]}>
+              <Icon name="dashboard" size={20} color={colors.primary} />
+            </View>
+            <View style={styles.adminInfo}>
+              <Text style={[styles.adminLabel, { color: colors.text }]}>Admin Dashboard</Text>
+              <Text style={[styles.adminHint, { color: colors.textMuted }]}>Manage store operations</Text>
+            </View>
+            <Icon name="chevron-right" size={20} color={colors.textMuted} />
+          </Pressable>
+        ) : null}
+
+        {/* Settings Sections */}
+        <View style={[styles.sectionsGrid, isDesktop && styles.sectionsGridDesktop]}>
+          {SECTIONS.map((section) => (
+            <View key={section.title} style={[styles.section, isDesktop && styles.sectionDesktop]}>
+              <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>
+                {section.title}
+              </Text>
+              <View
+                style={[styles.sectionGroup, { backgroundColor: colors.backgroundAlt, borderColor: colors.borderLight }]}
+              >
+                {section.items.map((item, index) => (
+                  <View key={item.label}>
+                    <Pressable
+                      style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+                      onPress={() => {
+                        if (item.toggle) {
+                          handleDarkModeToggle();
+                        } else {
+                          handleItemPress(item);
+                        }
+                      }}
+                      accessibilityRole="button"
+                      accessibilityLabel={item.label}
+                    >
+                      <View style={[styles.rowIcon, { backgroundColor: colors.primarySoft }]}>
+                        <Icon
+                          name={item.icon}
+                          size={20}
+                          color={item.destructive ? colors.danger : colors.primary}
+                        />
+                      </View>
+                      <Text
+                        style={[styles.rowLabel, { color: item.destructive ? colors.danger : colors.text }]}
+                      >
+                        {item.label}
+                      </Text>
+                      {item.toggle ? (
+                        <Toggle value={isDark} onValueChange={handleDarkModeToggle} size="sm" />
+                      ) : (
+                        <Icon name="chevron-right" size={18} color={colors.textMuted} />
+                      )}
+                    </Pressable>
+                    {index < section.items.length - 1 ? (
+                      <View style={[styles.divider, { backgroundColor: colors.borderSoft, marginLeft: spacing.lg + 32 + spacing.md }]} />
+                    ) : null}
                   </View>
-                  <Text
-                    style={[
-                      styles.rowLabel,
-                      { color: item.destructive ? colors.danger : colors.text },
-                    ]}
-                  >
-                    {item.label}
-                  </Text>
-                  {item.toggle ? (
-                    <Toggle
-                      value={isDark}
-                      onValueChange={handleDarkModeToggle}
-                      size="sm"
-                    />
-                  ) : (
-                    <Icon name="chevron-right" size={18} color={colors.textMuted} />
-                  )}
-                </Pressable>
-                {index < section.items.length - 1 ? (
-                  <View
-                    style={[
-                      styles.divider,
-                      {
-                        backgroundColor: colors.borderSoft,
-                        marginLeft: spacing.lg + 32 + spacing.md,
-                      },
-                    ]}
-                  />
-                ) : null}
+                ))}
               </View>
-            ))}
-          </View>
+            </View>
+          ))}
         </View>
-      ))}
+      </ResponsiveContainer>
     </ScrollView>
   );
 }
@@ -237,10 +214,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  avatarText: {
-    fontSize: typography.body,
-    fontWeight: "700",
-  },
+  avatarText: { fontSize: typography.body, fontWeight: "700" },
   profileInfo: { flex: 1, gap: spacing.xxs },
   profileName: { fontSize: typography.bodySmall, fontWeight: "700" },
   profileEmail: { fontSize: typography.caption },
@@ -263,7 +237,14 @@ const styles = StyleSheet.create({
   adminInfo: { flex: 1 },
   adminLabel: { fontSize: typography.bodySmall, fontWeight: "700" },
   adminHint: { fontSize: typography.caption, marginTop: spacing.xxs },
+  sectionsGrid: {},
+  sectionsGridDesktop: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.lg,
+  },
   section: { marginBottom: spacing.xl },
+  sectionDesktop: { flexBasis: "48%", marginBottom: 0 },
   sectionTitle: {
     fontSize: typography.caption,
     fontWeight: "700",
@@ -292,11 +273,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  rowLabel: {
-    flex: 1,
-    fontSize: typography.bodySmall,
-    fontWeight: "600",
-  },
+  rowLabel: { flex: 1, fontSize: typography.bodySmall, fontWeight: "600" },
   divider: { height: 1 },
   pressed: { opacity: 0.6, transform: [{ scale: 0.99 }] },
 });

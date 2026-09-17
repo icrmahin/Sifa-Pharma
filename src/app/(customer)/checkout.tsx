@@ -8,9 +8,11 @@ import EmptyState from "../../components/common/EmptyState";
 import Header from "../../components/common/Header";
 import Input from "../../components/common/Input";
 import LoadingState from "../../components/common/LoadingState";
+import ResponsiveContainer from "../../components/common/ResponsiveContainer";
 import colors from "../../constants/colors";
 import spacing from "../../constants/spacing";
 import typography from "../../constants/typography";
+import { useResponsive } from "../../hooks/useResponsive";
 import { useAuth } from "../../hooks/useAuth";
 import { useCart } from "../../hooks/useCart";
 import { formatCurrency } from "../../utils/currency";
@@ -18,7 +20,6 @@ import { normalizeError } from "../../utils/errorHandling";
 
 // frontend-only placeholder — backend required
 const submitOrder = async (_payload: { customerId: string; customerName: string; address: string }): Promise<void> => {
-  // backend required — no-op for frontend-only build
   return;
 };
 
@@ -29,6 +30,7 @@ export default function CheckoutScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const { isDesktop } = useResponsive();
 
   const handleSubmit = async () => {
     if (!items.length || submitting) return;
@@ -67,69 +69,99 @@ export default function CheckoutScreen() {
     <SafeAreaView style={styles.safeArea}>
       <Header title="Checkout" onBack={() => router.back()} />
       <ScrollView contentContainerStyle={styles.container}>
-        <Input
-          label="Customer name"
-          value={user?.name ?? "Demo customer"}
-          editable={false}
-        />
-        <Input
-          label="Delivery address"
-          value={address}
-          onChangeText={setAddress}
-        />
-
-        <View style={styles.summaryBox}>
-          <Text style={styles.sectionTitle}>Order summary</Text>
-          {items.map((item) => (
-            <View key={item.id} style={styles.row}>
-              <Text>{item.product.name}</Text>
-              <Text>
-                {item.quantity} x {formatCurrency(item.product.price)}
-              </Text>
+        <ResponsiveContainer maxWidth={isDesktop ? 960 : 1320}>
+          {isDesktop ? (
+            <View style={styles.desktopLayout}>
+              <View style={styles.formColumn}>
+                <Input label="Customer name" value={user?.name ?? "Demo customer"} editable={false} />
+                <Input label="Delivery address" value={address} onChangeText={setAddress} />
+              </View>
+              <View style={styles.summaryColumn}>
+                <View style={styles.summaryBox}>
+                  <Text style={styles.sectionTitle}>Order summary</Text>
+                  {items.map((item) => (
+                    <View key={item.id} style={styles.row}>
+                      <Text>{item.product.name}</Text>
+                      <Text>{item.quantity} x {formatCurrency(item.product.price)}</Text>
+                    </View>
+                  ))}
+                  <View style={styles.row}>
+                    <Text>Subtotal</Text>
+                    <Text>{formatCurrency(summary.subtotal)}</Text>
+                  </View>
+                  <View style={styles.row}>
+                    <Text>Discount</Text>
+                    <Text>-{formatCurrency(summary.discount)}</Text>
+                  </View>
+                  <View style={styles.row}>
+                    <Text>Delivery</Text>
+                    <Text>{formatCurrency(summary.deliveryFee)}</Text>
+                  </View>
+                  <View style={[styles.row, styles.total]}>
+                    <Text style={styles.totalText}>Total</Text>
+                    <Text style={styles.totalText}>{formatCurrency(summary.total)}</Text>
+                  </View>
+                </View>
+                <View style={styles.paymentBox}>
+                  <Text style={styles.sectionTitle}>Payment</Text>
+                  <Text style={styles.paymentMethod}>Cash on Delivery</Text>
+                </View>
+                {error ? <Text style={styles.error}>{error}</Text> : null}
+                {success ? <Text style={styles.success}>Order submitted and added to your delivery cycle.</Text> : null}
+                <Button
+                  title={success ? "View delivery cycle" : "Submit order"}
+                  onPress={success ? () => router.replace("/(customer)/delivery-cycle") : handleSubmit}
+                  loading={submitting}
+                  disabled={success || !address.trim()}
+                  fullWidth
+                />
+              </View>
             </View>
-          ))}
-          <View style={styles.row}>
-            <Text>Subtotal</Text>
-            <Text>{formatCurrency(summary.subtotal)}</Text>
-          </View>
-          <View style={styles.row}>
-            <Text>Discount</Text>
-            <Text>-{formatCurrency(summary.discount)}</Text>
-          </View>
-          <View style={styles.row}>
-            <Text>Delivery</Text>
-            <Text>{formatCurrency(summary.deliveryFee)}</Text>
-          </View>
-          <View style={[styles.row, styles.total]}>
-            <Text style={styles.totalText}>Total</Text>
-            <Text style={styles.totalText}>
-              {formatCurrency(summary.total)}
-            </Text>
-          </View>
-        </View>
-
-        <View style={styles.paymentBox}>
-          <Text style={styles.sectionTitle}>Payment</Text>
-          <Text style={styles.paymentMethod}>Cash on Delivery</Text>
-        </View>
-
-        {error ? <Text style={styles.error}>{error}</Text> : null}
-        {success ? (
-          <Text style={styles.success}>
-            Order submitted and added to your delivery cycle.
-          </Text>
-        ) : null}
-        <Button
-          title={success ? "View delivery cycle" : "Submit order"}
-          onPress={
-            success
-              ? () => router.replace("/(customer)/delivery-cycle")
-              : handleSubmit
-          }
-          loading={submitting}
-          disabled={success || !address.trim()}
-          fullWidth
-        />
+          ) : (
+            <>
+              <Input label="Customer name" value={user?.name ?? "Demo customer"} editable={false} />
+              <Input label="Delivery address" value={address} onChangeText={setAddress} />
+              <View style={styles.summaryBox}>
+                <Text style={styles.sectionTitle}>Order summary</Text>
+                {items.map((item) => (
+                  <View key={item.id} style={styles.row}>
+                    <Text>{item.product.name}</Text>
+                    <Text>{item.quantity} x {formatCurrency(item.product.price)}</Text>
+                  </View>
+                ))}
+                <View style={styles.row}>
+                  <Text>Subtotal</Text>
+                  <Text>{formatCurrency(summary.subtotal)}</Text>
+                </View>
+                <View style={styles.row}>
+                  <Text>Discount</Text>
+                  <Text>-{formatCurrency(summary.discount)}</Text>
+                </View>
+                <View style={styles.row}>
+                  <Text>Delivery</Text>
+                  <Text>{formatCurrency(summary.deliveryFee)}</Text>
+                </View>
+                <View style={[styles.row, styles.total]}>
+                  <Text style={styles.totalText}>Total</Text>
+                  <Text style={styles.totalText}>{formatCurrency(summary.total)}</Text>
+                </View>
+              </View>
+              <View style={styles.paymentBox}>
+                <Text style={styles.sectionTitle}>Payment</Text>
+                <Text style={styles.paymentMethod}>Cash on Delivery</Text>
+              </View>
+              {error ? <Text style={styles.error}>{error}</Text> : null}
+              {success ? <Text style={styles.success}>Order submitted and added to your delivery cycle.</Text> : null}
+              <Button
+                title={success ? "View delivery cycle" : "Submit order"}
+                onPress={success ? () => router.replace("/(customer)/delivery-cycle") : handleSubmit}
+                loading={submitting}
+                disabled={success || !address.trim()}
+                fullWidth
+              />
+            </>
+          )}
+        </ResponsiveContainer>
       </ScrollView>
     </SafeAreaView>
   );
@@ -137,11 +169,10 @@ export default function CheckoutScreen() {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: colors.background },
-  container: {
-    padding: spacing.lg,
-    gap: spacing.lg,
-    paddingBottom: spacing.xxl,
-  },
+  container: { padding: spacing.lg, gap: spacing.lg, paddingBottom: spacing.xxl },
+  desktopLayout: { flexDirection: "row", gap: spacing.xl },
+  formColumn: { flex: 1, gap: spacing.lg },
+  summaryColumn: { flex: 1, gap: spacing.lg },
   summaryBox: {
     backgroundColor: colors.backgroundAlt,
     borderRadius: 16,

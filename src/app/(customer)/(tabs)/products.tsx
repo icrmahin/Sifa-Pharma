@@ -11,10 +11,12 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import Header from "../../../components/common/Header";
 import SearchBar from "../../../components/common/SearchBar";
+import ResponsiveContainer from "../../../components/common/ResponsiveContainer";
 import ProductCard from "../../../components/products/ProductCard";
 import colors from "../../../constants/colors";
 import spacing from "../../../constants/spacing";
 import typography from "../../../constants/typography";
+import { useResponsive } from "../../../hooks/useResponsive";
 import type { Product } from "../../../types/product";
 import type { Category } from "../../../types/category";
 import type { Manufacturer } from "../../../types/manufacturer";
@@ -28,6 +30,7 @@ export default function CustomerProductsScreen() {
   const [query, setQuery] = useState("");
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [manufacturerId, setManufacturerId] = useState<string | null>(null);
+  const { isMobile, isTablet, columns } = useResponsive();
 
   const filteredProducts = useMemo(() => {
     return mockProducts.filter((product) => {
@@ -44,6 +47,8 @@ export default function CustomerProductsScreen() {
     });
   }, [categoryId, manufacturerId, query]);
 
+  const gridColumns = isMobile ? 1 : isTablet ? 2 : columns;
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <Header title="Products" subtitle="Browse by category and manufacturer" />
@@ -51,19 +56,23 @@ export default function CustomerProductsScreen() {
         data={filteredProducts}
         contentContainerStyle={styles.container}
         keyExtractor={(item) => item.id}
+        numColumns={gridColumns}
+        columnWrapperStyle={gridColumns > 1 ? styles.gridRow : undefined}
         renderItem={({ item }) => (
-          <ProductCard
-            product={item}
-            onPress={(product) =>
-              router.push({
-                pathname: "/(customer)/products/[productId]",
-                params: { productId: product.id },
-              })
-            }
-          />
+          <View style={[styles.gridItem, gridColumns > 1 && { flexBasis: `${100 / gridColumns - 1}%` }]}>
+            <ProductCard
+              product={item}
+              onPress={(product) =>
+                router.push({
+                  pathname: "/(customer)/products/[productId]",
+                  params: { productId: product.id },
+                })
+              }
+            />
+          </View>
         )}
         ListHeaderComponent={
-          <View>
+          <ResponsiveContainer>
             <SearchBar
               value={query}
               onChangeText={setQuery}
@@ -129,7 +138,7 @@ export default function CustomerProductsScreen() {
             <Text style={styles.resultText}>
               {filteredProducts.length} products
             </Text>
-          </View>
+          </ResponsiveContainer>
         }
         ListEmptyComponent={
           <Text style={styles.resultText}>No products found</Text>
@@ -146,6 +155,12 @@ export default function CustomerProductsScreen() {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: colors.background },
   container: { padding: spacing.lg, paddingBottom: spacing.xxl },
+  gridRow: {
+    gap: spacing.md,
+  },
+  gridItem: {
+    marginBottom: spacing.md,
+  },
   label: {
     color: colors.text,
     fontSize: typography.bodySmall,

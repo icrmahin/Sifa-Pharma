@@ -7,9 +7,11 @@ import Button from "../../../components/common/Button";
 import EmptyState from "../../../components/common/EmptyState";
 import Header from "../../../components/common/Header";
 import LoadingState from "../../../components/common/LoadingState";
+import ResponsiveContainer from "../../../components/common/ResponsiveContainer";
 import colors from "../../../constants/colors";
 import spacing from "../../../constants/spacing";
 import typography from "../../../constants/typography";
+import { useResponsive } from "../../../hooks/useResponsive";
 import { useCart } from "../../../hooks/useCart";
 import { formatCurrency } from "../../../utils/currency";
 import { normalizeError } from "../../../utils/errorHandling";
@@ -18,6 +20,7 @@ export default function CustomerCartScreen() {
   const { items, summary, loading, setQuantity, removeItem } = useCart();
   const [error, setError] = useState<string | null>(null);
   const [updating, setUpdating] = useState(false);
+  const { isDesktop } = useResponsive();
 
   const updateQuantity = async (itemId: string, quantity: number) => {
     setUpdating(true);
@@ -49,60 +52,118 @@ export default function CustomerCartScreen() {
     <SafeAreaView style={styles.safeArea}>
       <Header title="Cart" subtitle="Review and checkout your items" />
       <ScrollView contentContainerStyle={styles.container}>
-        {error ? <Text style={styles.error}>{error}</Text> : null}
-        {items.length === 0 ? (
-          <EmptyState
-            title="Your cart is empty"
-            message="Add medicines from the product catalogue to begin."
-            actionLabel="Browse products"
-            onAction={() => router.push("/(customer)/(tabs)/products")}
-          />
-        ) : (
-          items.map((item) => (
-            <CartItemRow
-              key={item.id}
-              item={item}
-              onQuantity={(quantity) => updateQuantity(item.id, quantity)}
-              onRemove={() => removeCartItem(item.id)}
+        <ResponsiveContainer>
+          {error ? <Text style={styles.error}>{error}</Text> : null}
+          {items.length === 0 ? (
+            <EmptyState
+              title="Your cart is empty"
+              message="Add medicines from the product catalogue to begin."
+              actionLabel="Browse products"
+              onAction={() => router.push("/(customer)/(tabs)/products")}
             />
-          ))
-        )}
+          ) : isDesktop ? (
+            <View style={styles.desktopLayout}>
+              {/* Items column */}
+              <View style={styles.itemsColumn}>
+                {items.map((item) => (
+                  <CartItemRow
+                    key={item.id}
+                    item={item}
+                    onQuantity={(quantity) => updateQuantity(item.id, quantity)}
+                    onRemove={() => removeCartItem(item.id)}
+                  />
+                ))}
+              </View>
 
-        <View style={styles.summaryBox}>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Subtotal</Text>
-            <Text style={styles.summaryValue}>{formatCurrency(summary.subtotal)}</Text>
-          </View>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Discount</Text>
-            <Text style={styles.summaryValue}>-{formatCurrency(summary.discount)}</Text>
-          </View>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Delivery fee</Text>
-            <Text style={styles.summaryValue}>{formatCurrency(summary.deliveryFee)}</Text>
-          </View>
-          <View style={[styles.summaryRow, styles.totalRow]}>
-            <Text style={styles.totalText}>Total</Text>
-            <Text style={styles.totalText}>
-              {formatCurrency(summary.total)}
-            </Text>
-          </View>
-        </View>
+              {/* Summary sidebar */}
+              <View style={styles.summaryColumn}>
+                <View style={styles.summaryBox}>
+                  <Text style={styles.summaryTitle}>Order Summary</Text>
+                  <View style={styles.summaryRow}>
+                    <Text style={styles.summaryLabel}>Subtotal</Text>
+                    <Text style={styles.summaryValue}>{formatCurrency(summary.subtotal)}</Text>
+                  </View>
+                  <View style={styles.summaryRow}>
+                    <Text style={styles.summaryLabel}>Discount</Text>
+                    <Text style={styles.summaryValue}>-{formatCurrency(summary.discount)}</Text>
+                  </View>
+                  <View style={styles.summaryRow}>
+                    <Text style={styles.summaryLabel}>Delivery fee</Text>
+                    <Text style={styles.summaryValue}>{formatCurrency(summary.deliveryFee)}</Text>
+                  </View>
+                  <View style={[styles.summaryRow, styles.totalRow]}>
+                    <Text style={styles.totalText}>Total</Text>
+                    <Text style={styles.totalText}>
+                      {formatCurrency(summary.total)}
+                    </Text>
+                  </View>
+                </View>
 
-        <View style={styles.actions}>
-          <Button
-            title="Continue shopping"
-            variant="secondary"
-            onPress={() => router.push("/(customer)/(tabs)/products")}
-            fullWidth
-          />
-          <Button
-            title="Proceed to checkout"
-            onPress={() => router.push("/(customer)/checkout")}
-            disabled={items.length === 0 || updating}
-            fullWidth
-          />
-        </View>
+                <View style={styles.actions}>
+                  <Button
+                    title="Continue shopping"
+                    variant="secondary"
+                    onPress={() => router.push("/(customer)/(tabs)/products")}
+                    fullWidth
+                  />
+                  <Button
+                    title="Proceed to checkout"
+                    onPress={() => router.push("/(customer)/checkout")}
+                    disabled={items.length === 0 || updating}
+                    fullWidth
+                  />
+                </View>
+              </View>
+            </View>
+          ) : (
+            <>
+              {items.map((item) => (
+                <CartItemRow
+                  key={item.id}
+                  item={item}
+                  onQuantity={(quantity) => updateQuantity(item.id, quantity)}
+                  onRemove={() => removeCartItem(item.id)}
+                />
+              ))}
+
+              <View style={styles.summaryBox}>
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel}>Subtotal</Text>
+                  <Text style={styles.summaryValue}>{formatCurrency(summary.subtotal)}</Text>
+                </View>
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel}>Discount</Text>
+                  <Text style={styles.summaryValue}>-{formatCurrency(summary.discount)}</Text>
+                </View>
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel}>Delivery fee</Text>
+                  <Text style={styles.summaryValue}>{formatCurrency(summary.deliveryFee)}</Text>
+                </View>
+                <View style={[styles.summaryRow, styles.totalRow]}>
+                  <Text style={styles.totalText}>Total</Text>
+                  <Text style={styles.totalText}>
+                    {formatCurrency(summary.total)}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.actions}>
+                <Button
+                  title="Continue shopping"
+                  variant="secondary"
+                  onPress={() => router.push("/(customer)/(tabs)/products")}
+                  fullWidth
+                />
+                <Button
+                  title="Proceed to checkout"
+                  onPress={() => router.push("/(customer)/checkout")}
+                  disabled={items.length === 0 || updating}
+                  fullWidth
+                />
+              </View>
+            </>
+          )}
+        </ResponsiveContainer>
       </ScrollView>
     </SafeAreaView>
   );
@@ -116,6 +177,24 @@ const styles = StyleSheet.create({
     gap: spacing.lg,
   },
   error: { color: colors.danger, fontSize: typography.bodySmall },
+  desktopLayout: {
+    flexDirection: "row",
+    gap: spacing.xl,
+  },
+  itemsColumn: {
+    flex: 2,
+    gap: spacing.md,
+  },
+  summaryColumn: {
+    flex: 1,
+    gap: spacing.lg,
+  },
+  summaryTitle: {
+    color: colors.text,
+    fontSize: typography.body,
+    fontWeight: "700",
+    marginBottom: spacing.md,
+  },
   summaryBox: {
     backgroundColor: colors.backgroundAlt,
     borderRadius: 16,

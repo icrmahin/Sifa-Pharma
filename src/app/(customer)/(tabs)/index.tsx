@@ -15,6 +15,7 @@ import ErrorState from "../../../components/common/ErrorState";
 import LoadingState from "../../../components/common/LoadingState";
 import SearchBar from "../../../components/common/SearchBar";
 import Icon from "../../../components/common/Icon";
+import ResponsiveContainer from "../../../components/common/ResponsiveContainer";
 import ProductCard from "../../../components/products/ProductCard";
 import ProductHeroSlider from "../../../components/products/ProductHeroSlider";
 import colors from "../../../constants/colors";
@@ -22,6 +23,7 @@ import spacing from "../../../constants/spacing";
 import typography from "../../../constants/typography";
 import { radius, layout } from "../../../constants/sizes";
 import { springConfigs } from "../../../lib/motion";
+import { useResponsive } from "../../../hooks/useResponsive";
 import type { Product } from "../../../types/product";
 import type { Category } from "../../../types/category";
 import type { Manufacturer } from "../../../types/manufacturer";
@@ -42,6 +44,7 @@ export default function CustomerHomeScreen() {
   const [activeTab, setActiveTab] = useState<DiscoveryTab>("trending");
   const [showFilter, setShowFilter] = useState(false);
   const { itemCount } = useCart();
+  const { isMobile, isTablet, columns } = useResponsive();
 
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
@@ -97,139 +100,149 @@ export default function CustomerHomeScreen() {
   if (loading) return <LoadingState label="Loading your pharmacy" />;
   if (error) return <ErrorState message={error} />;
 
+  const gridColumns = isMobile ? 1 : isTablet ? 2 : columns;
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container}>
-        {/* Header */}
-        <View style={styles.headerRow}>
-          <View style={styles.brandRow}>
-            <AppLogo size={38} />
-            <Text style={styles.brandName}>Sifa-Pharma</Text>
+        <ResponsiveContainer>
+          {/* Header */}
+          <View style={styles.headerRow}>
+            <View style={styles.brandRow}>
+              <AppLogo size={38} />
+              <Text style={styles.brandName}>Sifa-Pharma</Text>
+            </View>
           </View>
-        </View>
 
-        {/* Search */}
-        <View style={styles.searchArea}>
-          <SearchBar
-            value={query}
-            onChangeText={setQuery}
-            onFocus={() => setSearchFocused(true)}
-            placeholder="Search medicines, health products..."
-          />
-          {searchFocused ? (
-            <View style={styles.searchPanel}>
-              <Text style={styles.searchPanelTitle}>
-                {query ? "Recommended matches" : "Popular medicines"}
-              </Text>
-              <FlatList
-                data={searchResults}
-                keyboardShouldPersistTaps="handled"
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                  <Pressable
-                    style={styles.searchResult}
-                    onPress={() => openProduct(item)}
-                  >
-                    <Text style={styles.searchResultName} numberOfLines={1}>
-                      {item.name}
-                    </Text>
-                    <Text style={styles.searchResultMeta} numberOfLines={1}>
-                      {item.brand} · {item.genericName}
-                    </Text>
-                  </Pressable>
-                )}
-                ListEmptyComponent={
-                  <Text style={styles.noResults}>No medicines found</Text>
-                }
+          {/* Search */}
+          <View style={styles.searchArea}>
+            <SearchBar
+              value={query}
+              onChangeText={setQuery}
+              onFocus={() => setSearchFocused(true)}
+              placeholder="Search medicines, health products..."
+            />
+            {searchFocused ? (
+              <View style={[styles.searchPanel, { backgroundColor: colors.backgroundAlt, borderColor: colors.border }]}>
+                <Text style={styles.searchPanelTitle}>
+                  {query ? "Recommended matches" : "Popular medicines"}
+                </Text>
+                <FlatList
+                  data={searchResults}
+                  keyboardShouldPersistTaps="handled"
+                  keyExtractor={(item) => item.id}
+                  renderItem={({ item }) => (
+                    <Pressable
+                      style={styles.searchResult}
+                      onPress={() => openProduct(item)}
+                    >
+                      <Text style={styles.searchResultName} numberOfLines={1}>
+                        {item.name}
+                      </Text>
+                      <Text style={styles.searchResultMeta} numberOfLines={1}>
+                        {item.brand} · {item.genericName}
+                      </Text>
+                    </Pressable>
+                  )}
+                  ListEmptyComponent={
+                    <Text style={styles.noResults}>No medicines found</Text>
+                  }
+                />
+              </View>
+            ) : null}
+          </View>
+
+          {/* Hero Slider */}
+          <View style={styles.heroSection}>
+            <ProductHeroSlider
+              products={mockProducts.length > 0 ? mockProducts.slice(0, 4) : []}
+              onProductPress={openProduct}
+            />
+          </View>
+
+          {/* Compact Discovery Controls */}
+          <View style={styles.discoverySection}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.discoveryControls}
+            >
+              <FilterPill
+                active={showFilter}
+                onPress={() => setShowFilter(!showFilter)}
               />
-            </View>
-          ) : null}
-        </View>
+              <DiscoveryPill
+                label="Trending"
+                icon="trending-up"
+                active={activeTab === "trending" && !showFilter}
+                onPress={() => { setActiveTab("trending"); setShowFilter(false); }}
+              />
+              <DiscoveryPill
+                label="Discount"
+                icon="local-offer"
+                active={activeTab === "discount" && !showFilter}
+                onPress={() => { setActiveTab("discount"); setShowFilter(false); }}
+              />
+              <DiscoveryPill
+                label="New Arrivals"
+                icon="new-releases"
+                active={activeTab === "new" && !showFilter}
+                onPress={() => { setActiveTab("new"); setShowFilter(false); }}
+              />
+            </ScrollView>
 
-        {/* Hero Slider */}
-        <View style={styles.heroSection}>
-          <ProductHeroSlider
-            products={mockProducts.length > 0 ? mockProducts.slice(0, 4) : []}
-            onProductPress={openProduct}
-          />
-        </View>
-
-        {/* Compact Discovery Controls */}
-        <View style={styles.discoverySection}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.discoveryControls}
-          >
-            <FilterPill
-              active={showFilter}
-              onPress={() => setShowFilter(!showFilter)}
-            />
-            <DiscoveryPill
-              label="Trending"
-              icon="trending-up"
-              active={activeTab === "trending" && !showFilter}
-              onPress={() => { setActiveTab("trending"); setShowFilter(false); }}
-            />
-            <DiscoveryPill
-              label="Discount"
-              icon="local-offer"
-              active={activeTab === "discount" && !showFilter}
-              onPress={() => { setActiveTab("discount"); setShowFilter(false); }}
-            />
-            <DiscoveryPill
-              label="New Arrivals"
-              icon="new-releases"
-              active={activeTab === "new" && !showFilter}
-              onPress={() => { setActiveTab("new"); setShowFilter(false); }}
-            />
-          </ScrollView>
-
-          {/* Category Filter Panel */}
-          {showFilter ? (
-            <View style={styles.filterPanel}>
-              <Text style={styles.filterTitle}>Categories</Text>
-              <View style={styles.categoryGrid}>
-                {mockCategories.map((category) => (
-                  <Pressable
-                    key={category.id}
-                    style={styles.categoryItem}
-                    accessibilityRole="button"
-                    onPress={() => {
-                      setShowFilter(false);
-                      router.push({
-                        pathname: "/(customer)/products/category/[categoryId]",
-                        params: { categoryId: category.id },
-                      });
-                    }}
-                  >
-                    <Icon name="category" size={18} color={colors.primary} />
-                    <Text style={styles.categoryName}>{category.name}</Text>
-                  </Pressable>
-                ))}
-                {mockCategories.length === 0 ? (
-                  <Text style={styles.noResults}>No categories available</Text>
-                ) : null}
-              </View>
-            </View>
-          ) : null}
-
-          {/* Products Grid */}
-          <View style={styles.productsGrid}>
-            {activeProducts.length > 0 ? (
-              activeProducts.map((product) => (
-                <View key={product.id} style={styles.productGridItem}>
-                  <ProductCard product={product} compact onPress={openProduct} />
+            {/* Category Filter Panel */}
+            {showFilter ? (
+              <View style={styles.filterPanel}>
+                <Text style={styles.filterTitle}>Categories</Text>
+                <View style={styles.categoryGrid}>
+                  {mockCategories.map((category) => (
+                    <Pressable
+                      key={category.id}
+                      style={styles.categoryItem}
+                      accessibilityRole="button"
+                      onPress={() => {
+                        setShowFilter(false);
+                        router.push({
+                          pathname: "/(customer)/products/category/[categoryId]",
+                          params: { categoryId: category.id },
+                        });
+                      }}
+                    >
+                      <Icon name="category" size={18} color={colors.primary} />
+                      <Text style={styles.categoryName}>{category.name}</Text>
+                    </Pressable>
+                  ))}
+                  {mockCategories.length === 0 ? (
+                    <Text style={styles.noResults}>No categories available</Text>
+                  ) : null}
                 </View>
-              ))
-            ) : (
-              <View style={styles.emptyProducts}>
-                <Icon name="inventory-2" size={32} color={colors.textMuted} />
-                <Text style={styles.emptyText}>No products to display</Text>
               </View>
-            )}
+            ) : null}
+
+            {/* Products Grid */}
+            <View style={[styles.productsGrid, gridColumns > 1 && styles.productsGridMulti]}>
+              {activeProducts.length > 0 ? (
+                activeProducts.map((product) => (
+                  <View
+                    key={product.id}
+                    style={[
+                      styles.productGridItem,
+                      gridColumns > 1 && { flexBasis: `${100 / gridColumns - 1}%` },
+                    ]}
+                  >
+                    <ProductCard product={product} compact onPress={openProduct} />
+                  </View>
+                ))
+              ) : (
+                <View style={styles.emptyProducts}>
+                  <Icon name="inventory-2" size={32} color={colors.textMuted} />
+                  <Text style={styles.emptyText}>No products to display</Text>
+                </View>
+              )}
+            </View>
           </View>
-        </View>
+        </ResponsiveContainer>
       </ScrollView>
     </SafeAreaView>
   );
@@ -318,7 +331,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
     marginBottom: spacing.md,
   },
@@ -358,7 +370,6 @@ const styles = StyleSheet.create({
 
   // Search
   searchArea: {
-    paddingHorizontal: spacing.lg,
     position: "relative",
     zIndex: 10,
     marginBottom: spacing.lg,
@@ -366,13 +377,11 @@ const styles = StyleSheet.create({
   searchPanel: {
     position: "absolute",
     top: layout.inputHeight + spacing.xs,
-    left: spacing.lg,
-    right: spacing.lg,
+    left: 0,
+    right: 0,
     maxHeight: 290,
-    backgroundColor: colors.backgroundAlt,
     borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: colors.border,
     padding: spacing.md,
     zIndex: 20,
     elevation: 5,
@@ -406,9 +415,7 @@ const styles = StyleSheet.create({
   },
 
   // Discovery
-  discoverySection: {
-    paddingHorizontal: spacing.lg,
-  },
+  discoverySection: {},
   discoveryControls: {
     gap: spacing.sm,
     paddingVertical: spacing.sm,
@@ -478,6 +485,11 @@ const styles = StyleSheet.create({
   // Products
   productsGrid: {
     marginTop: spacing.sm,
+  },
+  productsGridMulti: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.md,
   },
   productGridItem: {
     marginBottom: spacing.md,

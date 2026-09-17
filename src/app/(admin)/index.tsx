@@ -5,7 +5,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  useWindowDimensions,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -14,9 +13,11 @@ import AdminStatCard from "../../components/admin/AdminStatCard";
 import InventoryStatus from "../../components/admin/InventoryStatus";
 import Button from "../../components/common/Button";
 import EmptyState from "../../components/common/EmptyState";
+import ResponsiveContainer from "../../components/common/ResponsiveContainer";
 import StatusBadge from "../../components/common/StatusBadge";
 import Icon from "../../components/common/Icon";
 import { useThemeColors } from "../../providers/ThemeProvider";
+import { useResponsive } from "../../hooks/useResponsive";
 import config from "../../constants/config";
 import sizes from "../../constants/sizes";
 import spacing from "../../constants/spacing";
@@ -100,9 +101,8 @@ function ActionChip({ label, colors }: { label: string; colors: ReturnType<typeo
 export default function AdminDashboardScreen() {
   const colors = useThemeColors();
   const user = { name: "Admin" } as { name: string };
-  const { width } = useWindowDimensions();
-  const isCompact = width < 768;
-  const isWide = width >= 1024;
+  const { isMobile, isTablet, isWide } = useResponsive();
+  const isCompact = isMobile;
 
   // frontend-only placeholder dashboard — empty typed data keeps UI intact
   const dashboard = {
@@ -190,13 +190,8 @@ export default function AdminDashboardScreen() {
         }
       />
       <ScrollView contentContainerStyle={styles.scroll}>
-        <View
-          style={[
-            styles.page,
-            !isCompact && styles.pageTablet,
-            isWide && styles.pageWide,
-          ]}
-        >
+        <ResponsiveContainer sidebarAware maxWidth={isWide ? 1200 : 960}>
+          <View style={styles.page}>
           {/* Key statistics */}
           <SectionHead index="01" title="Summary" colors={colors} />
           <View style={styles.grid}>
@@ -511,7 +506,8 @@ export default function AdminDashboardScreen() {
             </View>
           </View>
 
-        </View>
+          </View>
+        </ResponsiveContainer>
       </ScrollView>
     </SafeAreaView>
   );

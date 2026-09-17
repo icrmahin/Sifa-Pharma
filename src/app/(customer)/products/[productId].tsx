@@ -5,11 +5,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Button from "../../../components/common/Button";
 import EmptyState from "../../../components/common/EmptyState";
 import Header from "../../../components/common/Header";
+import ResponsiveContainer from "../../../components/common/ResponsiveContainer";
 import StatusBadge from "../../../components/common/StatusBadge";
 import ProductImage from "../../../components/products/ProductImage";
 import colors from "../../../constants/colors";
 import spacing from "../../../constants/spacing";
 import typography from "../../../constants/typography";
+import { useResponsive } from "../../../hooks/useResponsive";
 import { useCart } from "../../../hooks/useCart";
 import type { Product } from "../../../types/product";
 import type { Category } from "../../../types/category";
@@ -33,6 +35,7 @@ export default function ProductDetailScreen() {
   const [feedback, setFeedback] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
   const { addItem } = useCart();
+  const { isDesktop } = useResponsive();
 
   if (!product) {
     return (
@@ -65,82 +68,120 @@ export default function ProductDetailScreen() {
     <SafeAreaView style={styles.safeArea}>
       <Header title="Product details" onBack={() => router.back()} />
       <ScrollView contentContainerStyle={styles.container}>
-        <ProductImage
-          uri={product.image}
-          recyclingKey={product.id}
-          style={styles.image}
-        />
-        <Text style={styles.brand}>{product.brand}</Text>
-        <Text style={styles.name}>{product.name}</Text>
-        <Text style={styles.generic}>{product.genericName}</Text>
-        <View style={styles.priceRow}>
-          <Text style={styles.price}>{formatCurrency(product.price)}</Text>
-          {product.originalPrice ? (
-            <Text style={styles.original}>
-              {formatCurrency(product.originalPrice)}
-            </Text>
-          ) : null}
-        </View>
-        <View style={styles.metaRow}>
-          <StatusBadge
-            label={product.stock > 0 ? "In stock" : "Out of stock"}
-            tone={product.stock > 0 ? "success" : "danger"}
-          />
-          {product.discountPercent ? (
-            <StatusBadge
-              label={`${product.discountPercent}% off`}
-              tone="info"
-            />
-          ) : null}
-        </View>
-        <Text style={styles.description}>{product.description}</Text>
+        <ResponsiveContainer maxWidth={isDesktop ? 960 : 1320}>
+          {isDesktop ? (
+            <View style={styles.desktopLayout}>
+              {/* Image column */}
+              <View style={styles.imageColumn}>
+                <ProductImage
+                  uri={product.image}
+                  recyclingKey={product.id}
+                  style={styles.imageDesktop}
+                />
+              </View>
 
-        <View style={styles.infoBlock}>
-          <Text style={styles.infoTitle}>Product details</Text>
-          <Text style={styles.infoText}>
-            Manufacturer:{" "}
-            {mockManufacturers.find(
-              (item) => item.id === product.manufacturerId,
-            )?.name ?? "Not specified"}
-          </Text>
-          <Text style={styles.infoText}>
-            Category:{" "}
-            {mockCategories.find((item) => item.id === product.categoryId)
-              ?.name ?? "Not specified"}
-          </Text>
-          <Text style={styles.infoText}>Batch: {product.batchNumber}</Text>
-          <Text style={styles.infoText}>
-            Expiry: {formatDate(product.expiryDate ?? new Date())}
-          </Text>
-        </View>
+              {/* Details column */}
+              <View style={styles.detailsColumn}>
+                <Text style={styles.brand}>{product.brand}</Text>
+                <Text style={styles.name}>{product.name}</Text>
+                <Text style={styles.generic}>{product.genericName}</Text>
+                <View style={styles.priceRow}>
+                  <Text style={styles.price}>{formatCurrency(product.price)}</Text>
+                  {product.originalPrice ? (
+                    <Text style={styles.original}>{formatCurrency(product.originalPrice)}</Text>
+                  ) : null}
+                </View>
+                <View style={styles.metaRow}>
+                  <StatusBadge label={product.stock > 0 ? "In stock" : "Out of stock"} tone={product.stock > 0 ? "success" : "danger"} />
+                  {product.discountPercent ? (
+                    <StatusBadge label={`${product.discountPercent}% off`} tone="info" />
+                  ) : null}
+                </View>
+                <Text style={styles.description}>{product.description}</Text>
 
-        <View style={styles.quantityRow}>
-          <Text style={styles.qtyLabel}>Quantity</Text>
-          <View style={styles.qtySelector}>
-            <Text
-              style={styles.qtyAction}
-              onPress={() => setQuantity((value) => Math.max(1, value - 1))}
-            >
-              −
-            </Text>
-            <Text style={styles.qtyValue}>{quantity}</Text>
-            <Text
-              style={styles.qtyAction}
-              onPress={() => setQuantity((value) => value + 1)}
-            >
-              +
-            </Text>
-          </View>
-        </View>
+                <View style={styles.infoBlock}>
+                  <Text style={styles.infoTitle}>Product details</Text>
+                  <Text style={styles.infoText}>
+                    Manufacturer: {mockManufacturers.find((item) => item.id === product.manufacturerId)?.name ?? "Not specified"}
+                  </Text>
+                  <Text style={styles.infoText}>
+                    Category: {mockCategories.find((item) => item.id === product.categoryId)?.name ?? "Not specified"}
+                  </Text>
+                  <Text style={styles.infoText}>Batch: {product.batchNumber}</Text>
+                  <Text style={styles.infoText}>Expiry: {formatDate(product.expiryDate ?? new Date())}</Text>
+                </View>
 
-        {feedback ? <Text style={styles.feedback}>{feedback}</Text> : null}
-        <Button
-          title={product.stock > 0 ? "Add to cart" : "Out of stock"}
-          onPress={handleAddToCart}
-          loading={adding}
-          disabled={product.stock === 0}
-          fullWidth
-        />
+                <View style={styles.quantityRow}>
+                  <Text style={styles.qtyLabel}>Quantity</Text>
+                  <View style={styles.qtySelector}>
+                    <Text style={styles.qtyAction} onPress={() => setQuantity((v) => Math.max(1, v - 1))}>-</Text>
+                    <Text style={styles.qtyValue}>{quantity}</Text>
+                    <Text style={styles.qtyAction} onPress={() => setQuantity((v) => v + 1)}>+</Text>
+                  </View>
+                </View>
+
+                {feedback ? <Text style={styles.feedback}>{feedback}</Text> : null}
+                <Button
+                  title={product.stock > 0 ? "Add to cart" : "Out of stock"}
+                  onPress={handleAddToCart}
+                  loading={adding}
+                  disabled={product.stock === 0}
+                  fullWidth
+                />
+              </View>
+            </View>
+          ) : (
+            <>
+              <ProductImage uri={product.image} recyclingKey={product.id} style={styles.image} />
+              <Text style={styles.brand}>{product.brand}</Text>
+              <Text style={styles.name}>{product.name}</Text>
+              <Text style={styles.generic}>{product.genericName}</Text>
+              <View style={styles.priceRow}>
+                <Text style={styles.price}>{formatCurrency(product.price)}</Text>
+                {product.originalPrice ? (
+                  <Text style={styles.original}>{formatCurrency(product.originalPrice)}</Text>
+                ) : null}
+              </View>
+              <View style={styles.metaRow}>
+                <StatusBadge label={product.stock > 0 ? "In stock" : "Out of stock"} tone={product.stock > 0 ? "success" : "danger"} />
+                {product.discountPercent ? (
+                  <StatusBadge label={`${product.discountPercent}% off`} tone="info" />
+                ) : null}
+              </View>
+              <Text style={styles.description}>{product.description}</Text>
+
+              <View style={styles.infoBlock}>
+                <Text style={styles.infoTitle}>Product details</Text>
+                <Text style={styles.infoText}>
+                  Manufacturer: {mockManufacturers.find((item) => item.id === product.manufacturerId)?.name ?? "Not specified"}
+                </Text>
+                <Text style={styles.infoText}>
+                  Category: {mockCategories.find((item) => item.id === product.categoryId)?.name ?? "Not specified"}
+                </Text>
+                <Text style={styles.infoText}>Batch: {product.batchNumber}</Text>
+                <Text style={styles.infoText}>Expiry: {formatDate(product.expiryDate ?? new Date())}</Text>
+              </View>
+
+              <View style={styles.quantityRow}>
+                <Text style={styles.qtyLabel}>Quantity</Text>
+                <View style={styles.qtySelector}>
+                  <Text style={styles.qtyAction} onPress={() => setQuantity((v) => Math.max(1, v - 1))}>-</Text>
+                  <Text style={styles.qtyValue}>{quantity}</Text>
+                  <Text style={styles.qtyAction} onPress={() => setQuantity((v) => v + 1)}>+</Text>
+                </View>
+              </View>
+
+              {feedback ? <Text style={styles.feedback}>{feedback}</Text> : null}
+              <Button
+                title={product.stock > 0 ? "Add to cart" : "Out of stock"}
+                onPress={handleAddToCart}
+                loading={adding}
+                disabled={product.stock === 0}
+                fullWidth
+              />
+            </>
+          )}
+        </ResponsiveContainer>
       </ScrollView>
     </SafeAreaView>
   );
@@ -148,10 +189,17 @@ export default function ProductDetailScreen() {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: colors.background },
-  container: {
-    padding: spacing.lg,
-    paddingBottom: spacing.xxl,
-    gap: spacing.lg,
+  container: { padding: spacing.lg, paddingBottom: spacing.xxl, gap: spacing.lg },
+  desktopLayout: {
+    flexDirection: "row",
+    gap: spacing.xxxl,
+  },
+  imageColumn: {
+    flex: 1,
+  },
+  detailsColumn: {
+    flex: 1,
+    gap: spacing.md,
   },
   image: {
     width: "100%",
@@ -159,12 +207,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primarySoft,
     borderRadius: 18,
   },
-  brand: {
-    color: colors.textMuted,
-    fontSize: typography.caption,
-    fontWeight: "700",
-    textTransform: "uppercase",
+  imageDesktop: {
+    width: "100%",
+    height: 360,
+    backgroundColor: colors.primarySoft,
+    borderRadius: 18,
   },
+  brand: { color: colors.textMuted, fontSize: typography.caption, fontWeight: "700", textTransform: "uppercase" },
   name: { color: colors.text, fontSize: typography.title, fontWeight: "800" },
   generic: { color: colors.textMuted, fontSize: typography.bodySmall },
   priceRow: { flexDirection: "row", alignItems: "baseline", gap: spacing.sm },
@@ -179,12 +228,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     padding: spacing.lg,
   },
-  infoTitle: {
-    color: colors.text,
-    fontSize: typography.body,
-    fontWeight: "700",
-    marginBottom: spacing.sm,
-  },
+  infoTitle: { color: colors.text, fontSize: typography.body, fontWeight: "700", marginBottom: spacing.sm },
   infoText: { color: colors.textMuted, fontSize: typography.bodySmall, marginBottom: spacing.xs },
   quantityRow: {
     flexDirection: "row",
@@ -205,9 +249,5 @@ const styles = StyleSheet.create({
   },
   qtyAction: { color: colors.primary, fontSize: 24, fontWeight: "700" },
   qtyValue: { color: colors.text, fontSize: typography.h3, fontWeight: "700" },
-  feedback: {
-    color: colors.success,
-    fontSize: typography.bodySmall,
-    textAlign: "center",
-  },
+  feedback: { color: colors.success, fontSize: typography.bodySmall, textAlign: "center" },
 });

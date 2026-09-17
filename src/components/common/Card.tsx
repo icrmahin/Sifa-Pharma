@@ -1,10 +1,10 @@
 /* eslint-disable react-hooks/immutability -- Reanimated shared values are mutable by design */
 import { Pressable, StyleSheet, type ViewProps } from "react-native";
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, useReducedMotion } from "react-native-reanimated";
-import { border as borderToken, surface } from "../../constants/colors";
+import { useThemeColors } from "../../providers/ThemeProvider";
+import { useShadows } from "../../constants/shadows";
 import { radius } from "../../constants/sizes";
 import { spacing } from "../../constants/spacing";
-import { useShadows } from "../../constants/shadows";
 import { springConfigs, compression as compressionValues } from "../../lib/motion";
 
 type CardProps = ViewProps & {
@@ -21,6 +21,7 @@ export default function Card({
   children,
   ...props
 }: CardProps) {
+  const colors = useThemeColors();
   const shadows = useShadows();
   const shadowStyle = shadows[elevation];
   const reducedMotion = useReducedMotion();
@@ -47,6 +48,10 @@ export default function Card({
 
   const cardStyles = [
     styles.card,
+    {
+      backgroundColor: colors.backgroundAlt,
+      borderColor: colors.borderLight,
+    },
     shadowStyle,
     pressed && styles.pressed,
     style,
@@ -76,11 +81,9 @@ export default function Card({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: surface.DEFAULT,
     borderRadius: radius.lg,
     padding: spacing.lg,
     borderWidth: 1,
-    borderColor: borderToken.light,
   },
   pressed: {
     opacity: 0.92,

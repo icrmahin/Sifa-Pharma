@@ -2,21 +2,22 @@ import React, { useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import { useThemeColors } from "../../providers/ThemeProvider";
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import Header from '../../components/common/Header';
-import colors from '../../constants/colors';
 import spacing from '../../constants/spacing';
 import typography from '../../constants/typography';
 
 export default function ForgotPasswordScreen() {
+  const colors = useThemeColors();
   const [email, setEmail] = useState('');
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
       <Header title="Reset password" onBack={() => router.back()} />
       <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.subtitle}>Enter the email address associated with your account and we’ll send a reset link.</Text>
+        <Text style={[styles.subtitle, { color: colors.textMuted }]}>Enter the email address associated with your account and we'll send a reset link.</Text>
         <Input label="Email" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
         <Button title="Send reset link" onPress={() => router.push('/(auth)/reset-password')} fullWidth />
       </ScrollView>
@@ -25,7 +26,7 @@ export default function ForgotPasswordScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: colors.background },
+  safeArea: { flex: 1 },
   container: { flexGrow: 1, padding: spacing.xxl, gap: spacing.xl },
-  subtitle: { color: colors.textMuted, fontSize: typography.bodySmall },
+  subtitle: { fontSize: 12 },
 });

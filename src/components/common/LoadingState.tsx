@@ -1,6 +1,6 @@
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { useThemeColors } from "../../providers/ThemeProvider";
 import AppLogo from "./AppLogo";
-import { colors } from "../../constants/colors";
 import { spacing } from "../../constants/spacing";
 import { fontFamily, fontSize, lineHeight } from "../../constants/typography";
 
@@ -9,11 +9,12 @@ type LoadingStateProps = {
 };
 
 export default function LoadingState({ label = "Loading…" }: LoadingStateProps) {
+  const colors = useThemeColors();
   return (
     <View style={styles.container} accessibilityRole="progressbar" accessibilityLabel={label}>
       <AppLogo size={64} />
       <ActivityIndicator size="small" color={colors.primary} />
-      <Text style={styles.text}>{label}</Text>
+      <Text style={[styles.text, { color: colors.textMuted }]}>{label}</Text>
     </View>
   );
 }
@@ -30,6 +31,5 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.regular,
     fontSize: fontSize.footnote,
     lineHeight: fontSize.footnote * lineHeight.normal,
-    color: colors.textMuted,
   },
 });

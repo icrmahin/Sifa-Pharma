@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, Text } from "react-native";
-import colors from "../../constants/colors";
+import { useThemeColors } from "../../providers/ThemeProvider";
 import sizes from "../../constants/sizes";
 import spacing from "../../constants/spacing";
 import typography from "../../constants/typography";
@@ -12,22 +12,30 @@ export default function CategoryCard({
   category: Category;
   onPress?: () => void;
 }) {
+  const colors = useThemeColors();
   return (
-    <Pressable style={styles.card} onPress={onPress}>
-      <Text style={styles.name}>{category.name}</Text>
-      <Text style={styles.meta}>{category.productCount ?? 0} products</Text>
+    <Pressable
+      style={[
+        styles.card,
+        {
+          backgroundColor: colors.backgroundAlt,
+          borderColor: colors.border,
+        },
+      ]}
+      onPress={onPress}
+    >
+      <Text style={[styles.name, { color: colors.text }]}>{category.name}</Text>
+      <Text style={[styles.meta, { color: colors.textMuted }]}>{category.productCount ?? 0} products</Text>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.backgroundAlt,
     borderRadius: sizes.cardRadius,
     borderWidth: 1,
-    borderColor: colors.hairline,
     padding: spacing.lg,
   },
-  name: { color: colors.text, fontSize: typography.body, fontWeight: "600" },
-  meta: { color: colors.textMuted, fontSize: typography.caption, marginTop: 4 },
+  name: { fontSize: typography.body, fontWeight: "600" },
+  meta: { fontSize: typography.caption, marginTop: 4 },
 });

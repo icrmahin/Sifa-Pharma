@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import colors from "../../constants/colors";
+import { useThemeColors } from "../../providers/ThemeProvider";
 import sizes from "../../constants/sizes";
 import spacing from "../../constants/spacing";
 import typography from "../../constants/typography";
@@ -15,8 +15,9 @@ export default function QuantitySelector({
   min?: number;
   max?: number;
 }) {
+  const colors = useThemeColors();
   return (
-    <View style={styles.row}>
+    <View style={[styles.row, { backgroundColor: colors.backgroundAlt, borderColor: colors.border }]}>
       <Pressable
         onPress={() => onChange(Math.max(min, value - 1))}
         style={styles.control}
@@ -25,9 +26,9 @@ export default function QuantitySelector({
         accessibilityLabel="Decrease quantity"
         accessibilityState={{ disabled: value <= min }}
       >
-        <Text style={styles.symbol}>−</Text>
+        <Text style={[styles.symbol, { color: colors.primary }]}>−</Text>
       </Pressable>
-      <Text style={styles.value} accessibilityRole="text">{value}</Text>
+      <Text style={[styles.value, { color: colors.text }]} accessibilityRole="text">{value}</Text>
       <Pressable
         onPress={() => onChange(Math.min(max, value + 1))}
         style={styles.control}
@@ -36,7 +37,7 @@ export default function QuantitySelector({
         accessibilityLabel="Increase quantity"
         accessibilityState={{ disabled: value >= max }}
       >
-        <Text style={styles.symbol}>+</Text>
+        <Text style={[styles.symbol, { color: colors.primary }]}>+</Text>
       </Pressable>
     </View>
   );
@@ -47,10 +48,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
-    backgroundColor: colors.backgroundAlt,
     borderRadius: sizes.borderRadius.pill,
     borderWidth: 1,
-    borderColor: colors.border,
     paddingHorizontal: spacing.sm,
     minHeight: sizes.touch,
   },
@@ -60,6 +59,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  symbol: { color: colors.primary, fontSize: typography.headline, fontWeight: "600" },
-  value: { color: colors.text, fontSize: typography.headline, fontWeight: "600", minWidth: 24, textAlign: "center" },
+  symbol: { fontSize: typography.headline, fontWeight: "600" },
+  value: { fontSize: typography.headline, fontWeight: "600", minWidth: 24, textAlign: "center" },
 });

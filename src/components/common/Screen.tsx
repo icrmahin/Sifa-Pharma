@@ -1,6 +1,6 @@
 import { StyleSheet, View, type ViewProps } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { surface } from "../../constants/colors";
+import { useThemeColors } from "../../providers/ThemeProvider";
 import { spacing } from "../../constants/spacing";
 
 type ScreenProps = ViewProps & {
@@ -12,25 +12,23 @@ type ScreenProps = ViewProps & {
   backgroundColor?: string;
 };
 
-/**
- * Full-screen container with safe-area awareness.
- * Wraps content in a flex:1 View with optional safe-area insets.
- */
 export default function Screen({
   safeTop = true,
   safeBottom = false,
-  backgroundColor = surface.background,
+  backgroundColor,
   style,
   children,
   ...props
 }: ScreenProps) {
   const insets = useSafeAreaInsets();
+  const colors = useThemeColors();
+  const bgColor = backgroundColor ?? colors.background;
 
   return (
     <View
       style={[
         styles.screen,
-        { backgroundColor },
+        { backgroundColor: bgColor },
         safeTop && { paddingTop: insets.top },
         safeBottom && { paddingBottom: insets.bottom },
         style,

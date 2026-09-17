@@ -1,5 +1,5 @@
 import { Pressable, ScrollView, StyleSheet, Text, View, type ViewStyle } from "react-native";
-import { colors } from "../../constants/colors";
+import { useThemeColors } from "../../providers/ThemeProvider";
 import { radius, layout } from "../../constants/sizes";
 import { spacing } from "../../constants/spacing";
 import { fontFamily, fontSize, lineHeight } from "../../constants/typography";
@@ -18,10 +18,8 @@ type TabsProps = {
   style?: ViewStyle;
 };
 
-/**
- * Horizontal pill-style tab bar. Scrolls horizontally when tabs overflow.
- */
 export default function Tabs({ tabs, activeKey, onChange, fullWidth = false, style }: TabsProps) {
+  const colors = useThemeColors();
   return (
     <ScrollView
       horizontal
@@ -34,11 +32,23 @@ export default function Tabs({ tabs, activeKey, onChange, fullWidth = false, sty
           <Pressable
             key={tab.key}
             onPress={() => onChange(tab.key)}
-            style={[styles.tab, active && styles.tabActive, fullWidth && styles.tabFull]}
+            style={[
+              styles.tab,
+              active && styles.tabActive,
+              fullWidth && styles.tabFull,
+              {
+                backgroundColor: active ? colors.primary : colors.backgroundAlt,
+                borderColor: active ? colors.primary : colors.border,
+              },
+            ]}
             accessibilityRole="tab"
             accessibilityState={{ selected: active }}
           >
-            <Text style={[styles.label, active && styles.labelActive]} numberOfLines={1}>
+            <Text style={[
+              styles.label,
+              active && styles.labelActive,
+              { color: active ? colors.white : colors.textMuted },
+            ]} numberOfLines={1}>
               {tab.label}
             </Text>
           </Pressable>
@@ -66,22 +76,15 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     gap: spacing.xs,
     borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.backgroundAlt,
   },
   tabFull: { flex: 1 },
-  tabActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
+  tabActive: {},
   label: {
     fontFamily: fontFamily.medium,
     fontSize: fontSize.footnote,
     lineHeight: fontSize.footnote * lineHeight.normal,
-    color: colors.textMuted,
   },
   labelActive: {
-    color: colors.white,
     fontFamily: fontFamily.semiBold,
   },
 });

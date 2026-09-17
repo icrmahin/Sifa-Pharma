@@ -1,6 +1,6 @@
 import { Text as RNText, type TextProps as RNTextProps, type TextStyle } from "react-native";
 import { fontFamily, fontSize, lineHeight as lh, letterSpacing as ls } from "../../constants/typography";
-import { colors } from "../../constants/colors";
+import { useThemeColors } from "../../providers/ThemeProvider";
 
 type TextVariant =
   | "largeTitle"
@@ -44,24 +44,22 @@ const weightMap: Record<TextWeight, string> = {
   bold: fontFamily.bold,
 };
 
-/**
- * Unified typography component.
- * Renders text with the Sora typeface at the correct weight and size.
- */
 export default function Text({
   variant = "body",
   weight = "regular",
-  color = colors.text,
+  color,
   align,
   style,
   children,
   ...props
 }: Props) {
+  const themeColors = useThemeColors();
+  const textColor = color ?? themeColors.text;
   return (
     <RNText
       style={[
         variantStyles[variant],
-        { fontFamily: weightMap[weight], color },
+        { fontFamily: weightMap[weight], color: textColor },
         align && { textAlign: align },
         style,
       ]}

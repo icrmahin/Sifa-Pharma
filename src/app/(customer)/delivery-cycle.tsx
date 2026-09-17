@@ -2,16 +2,15 @@ import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import { useThemeColors } from '../../providers/ThemeProvider';
 import Header from '../../components/common/Header';
 import StatusBadge from '../../components/common/StatusBadge';
-import colors from '../../constants/colors';
 import spacing from '../../constants/spacing';
 import typography from '../../constants/typography';
 import type { DeliveryCycle } from '../../types/deliveryCycle';
 import { formatCurrency } from '../../utils/currency';
 import { formatDateTime } from '../../utils/date';
 
-// frontend-only placeholder — no backend required
 const mockDeliveryCycle: DeliveryCycle = {
   id: "placeholder-cycle",
   customerId: "placeholder-customer",
@@ -23,25 +22,22 @@ const mockDeliveryCycle: DeliveryCycle = {
 };
 
 export default function DeliveryCycleScreen() {
+  const colors = useThemeColors();
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
       <Header title="Delivery cycle" onBack={() => router.back()} />
       <ScrollView contentContainerStyle={styles.container}>
-        <View style={styles.card}>
-          <Text style={styles.title}>Active order cycle</Text>
+        <View style={[styles.card, { backgroundColor: colors.backgroundAlt, borderColor: colors.border }]}>
+          <Text style={[styles.title, { color: colors.text }]}>Active order cycle</Text>
           <StatusBadge label={mockDeliveryCycle.status} tone={mockDeliveryCycle.status === 'PENDING' ? 'warning' : 'info'} />
-          <Text style={styles.meta}>Start: {formatDateTime(mockDeliveryCycle.startedAt)}</Text>
-          <Text style={styles.meta}>Closes: {formatDateTime(mockDeliveryCycle.closesAt)}</Text>
-          <Text style={styles.total}>Estimated total: {formatCurrency(mockDeliveryCycle.estimatedTotal)}</Text>
+          <Text style={[styles.meta, { color: colors.textMuted }]}>Start: {formatDateTime(mockDeliveryCycle.startedAt)}</Text>
+          <Text style={[styles.meta, { color: colors.textMuted }]}>Closes: {formatDateTime(mockDeliveryCycle.closesAt)}</Text>
+          <Text style={[styles.total, { color: colors.text }]}>Estimated total: {formatCurrency(mockDeliveryCycle.estimatedTotal)}</Text>
         </View>
-
-        <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Products in cycle</Text>
+        <View style={[styles.card, { backgroundColor: colors.backgroundAlt, borderColor: colors.border }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Products in cycle</Text>
           {mockDeliveryCycle.products.map((product) => (
-            <View key={product.id} style={styles.row}>
-              <Text style={styles.itemName}>{product.name}</Text>
-              <Text style={styles.itemPrice}>{formatCurrency(product.price)}</Text>
-            </View>
+            <View key={product.id} style={styles.row}><Text style={[styles.itemName, { color: colors.text }]}>{product.name}</Text><Text style={[styles.itemPrice, { color: colors.text }]}>{formatCurrency(product.price)}</Text></View>
           ))}
         </View>
       </ScrollView>
@@ -50,14 +46,14 @@ export default function DeliveryCycleScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: colors.background },
+  safeArea: { flex: 1 },
   container: { padding: spacing.lg, gap: spacing.lg, paddingBottom: spacing.xxl },
-  card: { backgroundColor: colors.backgroundAlt, borderRadius: 16, borderWidth: 1, borderColor: colors.border, padding: spacing.lg },
-  title: { color: colors.text, fontSize: typography.h3, fontWeight: '700', marginBottom: spacing.md },
-  meta: { color: colors.textMuted, marginTop: spacing.sm },
-  total: { marginTop: spacing.md, color: colors.text, fontWeight: '700' },
-  sectionTitle: { color: colors.text, fontSize: typography.h3, fontWeight: '700', marginBottom: spacing.md },
+  card: { borderRadius: 16, borderWidth: 1, padding: spacing.lg },
+  title: { fontSize: 20, fontWeight: '700', marginBottom: spacing.md },
+  meta: { fontSize: 12, marginTop: spacing.sm },
+  total: { marginTop: spacing.md, fontWeight: '700' },
+  sectionTitle: { fontSize: 20, fontWeight: '700', marginBottom: spacing.md },
   row: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: spacing.sm },
-  itemName: { color: colors.text, flex: 1 },
-  itemPrice: { color: colors.text },
+  itemName: { flex: 1 },
+  itemPrice: { color: '#3D4A46' },
 });

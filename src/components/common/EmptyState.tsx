@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View } from "react-native";
-import { colors } from "../../constants/colors";
+import { useThemeColors } from "../../providers/ThemeProvider";
 import { spacing } from "../../constants/spacing";
 import { fontFamily, fontSize, lineHeight } from "../../constants/typography";
 import Button from "./Button";
@@ -15,10 +15,11 @@ export default function EmptyState({
   actionLabel?: string;
   onAction?: () => void;
 }) {
+  const colors = useThemeColors();
   return (
     <View style={styles.container}>
-      <Text style={styles.title} accessibilityRole="header">{title}</Text>
-      {message ? <Text style={styles.message}>{message}</Text> : null}
+      <Text style={[styles.title, { color: colors.text }]} accessibilityRole="header">{title}</Text>
+      {message ? <Text style={[styles.message, { color: colors.textSecondary }]}>{message}</Text> : null}
       {actionLabel && onAction ? <Button title={actionLabel} onPress={onAction} /> : null}
     </View>
   );
@@ -35,13 +36,11 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.semiBold,
     fontSize: fontSize.title3,
     lineHeight: fontSize.title3 * lineHeight.normal,
-    color: colors.text,
   },
   message: {
     fontFamily: fontFamily.regular,
     fontSize: fontSize.footnote,
     lineHeight: fontSize.footnote * lineHeight.relaxed,
     textAlign: "center",
-    color: colors.textSecondary,
   },
 });

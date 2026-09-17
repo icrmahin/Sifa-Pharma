@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, Text } from "react-native";
-import { colors, surface } from "../../constants/colors";
+import { useThemeColors } from "../../providers/ThemeProvider";
 import { radius } from "../../constants/sizes";
 import { spacing } from "../../constants/spacing";
 import { fontFamily, fontSize, lineHeight } from "../../constants/typography";
@@ -16,9 +16,6 @@ type ChipProps = {
   onRemove?: () => void;
 };
 
-/**
- * Compact chip for filters, selectable tags, and inline actions.
- */
 export default function Chip({
   label,
   selected = false,
@@ -27,18 +24,27 @@ export default function Chip({
   icon,
   onRemove,
 }: ChipProps) {
+  const colors = useThemeColors();
   const isFilter = variant === "filter";
 
   return (
     <Pressable
       onPress={onPress}
-      style={[styles.chip, isFilter && styles.filter, selected && styles.selected]}
+      style={[
+        styles.chip,
+        isFilter && styles.filter,
+        {
+          backgroundColor: selected ? colors.primarySoft : colors.backgroundAlt,
+          borderColor: selected ? colors.primary : colors.border,
+        },
+        selected && styles.selected,
+      ]}
       accessibilityRole="button"
       accessibilityState={{ selected }}
       accessibilityLabel={label}
     >
       {icon}
-      <Text style={[styles.text, selected && styles.selectedText]} numberOfLines={1}>
+      <Text style={[styles.text, selected && styles.selectedText, { color: selected ? colors.primary : colors.text }]} numberOfLines={1}>
         {label}
       </Text>
       {onRemove ? (
@@ -49,7 +55,7 @@ export default function Chip({
           accessibilityLabel={`Remove ${label}`}
           style={styles.removeBtn}
         >
-          <Text style={[styles.removeText, selected && styles.selectedText]}>×</Text>
+          <Text style={[styles.removeText, { color: colors.textMuted }]}>×</Text>
         </Pressable>
       ) : null}
     </Pressable>
@@ -65,29 +71,20 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     borderRadius: radius.pill,
     minHeight: 36,
-    backgroundColor: surface.DEFAULT,
     borderWidth: 1,
-    borderColor: colors.border,
   },
-  filter: {
-    backgroundColor: surface.DEFAULT,
-  },
-  selected: {
-    backgroundColor: colors.primarySoft,
-    borderColor: colors.primary,
-  },
+  filter: {},
+  selected: {},
   text: {
     fontFamily: fontFamily.semiBold,
     fontSize: fontSize.footnote,
     lineHeight: fontSize.footnote * lineHeight.normal,
-    color: colors.text,
   },
-  selectedText: { color: colors.primary },
+  selectedText: {},
   removeBtn: { marginLeft: spacing.xxs },
   removeText: {
     fontFamily: fontFamily.bold,
     fontSize: fontSize.body,
     lineHeight: fontSize.body * lineHeight.tight,
-    color: colors.textMuted,
   },
 });

@@ -8,7 +8,7 @@ import Animated, {
   useReducedMotion,
 } from "react-native-reanimated";
 import { Image } from "expo-image";
-import { colors } from "../../constants/colors";
+import { useThemeColors } from "../../providers/ThemeProvider";
 import { radius, layout } from "../../constants/sizes";
 import { spacing } from "../../constants/spacing";
 import { fontFamily, fontSize, lineHeight } from "../../constants/typography";
@@ -34,6 +34,7 @@ export default function ProductHeroSlider({
   const flatListRef = useRef<any>(null);
   const reducedMotion = useReducedMotion();
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const colors = useThemeColors();
 
   useEffect(() => {
     if (products.length <= 1 || reducedMotion) return;
@@ -84,7 +85,11 @@ export default function ProductHeroSlider({
           {products.map((_, index) => (
             <View
               key={index}
-              style={[styles.dot, index === currentIndex && styles.dotActive]}
+              style={[
+                styles.dot,
+                index === currentIndex && styles.dotActive,
+                { backgroundColor: index === currentIndex ? colors.primary : colors.border },
+              ]}
             />
           ))}
         </View>
@@ -103,6 +108,7 @@ function HeroSlide({
   onPress?: () => void;
 }) {
   const scale = useSharedValue(1);
+  const colors = useThemeColors();
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
@@ -134,15 +140,15 @@ function HeroSlide({
           style={styles.image}
         />
         <View style={styles.info}>
-          <Text style={styles.name} numberOfLines={1}>{product.name}</Text>
+          <Text style={[styles.name, { color: colors.text }]} numberOfLines={1}>{product.name}</Text>
           <View style={styles.priceRow}>
-            <Text style={styles.price}>{formatCurrency(product.price)}</Text>
+            <Text style={[styles.price, { color: colors.primary }]}>{formatCurrency(product.price)}</Text>
             {product.originalPrice && product.originalPrice > product.price ? (
-              <Text style={styles.originalPrice}>{formatCurrency(product.originalPrice)}</Text>
+              <Text style={[styles.originalPrice, { color: colors.textMuted }]}>{formatCurrency(product.originalPrice)}</Text>
             ) : null}
             {product.discountPercent ? (
-              <View style={styles.discountBadge}>
-                <Text style={styles.discountText}>{product.discountPercent}% OFF</Text>
+              <View style={[styles.discountBadge, { backgroundColor: colors.goldSoft }]}>
+                <Text style={[styles.discountText, { color: colors.goldDark }]}>{product.discountPercent}% OFF</Text>
               </View>
             ) : null}
           </View>
@@ -163,23 +169,21 @@ const styles = StyleSheet.create({
   },
   slide: {
     width: slideWidth,
-    backgroundColor: colors.backgroundAlt,
     borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: colors.borderLight,
+    borderColor: "#2E3A36",
     overflow: "hidden",
     marginRight: spacing.md,
   },
   image: {
     width: "100%",
     height: layout.productImage,
-    backgroundColor: colors.background,
+    backgroundColor: "#1A2420",
   },
   info: {
     padding: spacing.md,
   },
   name: {
-    color: colors.text,
     fontSize: fontSize.bodySmall,
     fontFamily: fontFamily.semiBold,
     lineHeight: fontSize.bodySmall * lineHeight.normal,
@@ -191,23 +195,19 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   price: {
-    color: colors.primary,
     fontSize: fontSize.body,
     fontFamily: fontFamily.bold,
   },
   originalPrice: {
-    color: colors.textMuted,
     fontSize: fontSize.caption,
     textDecorationLine: "line-through",
   },
   discountBadge: {
-    backgroundColor: colors.goldSoft,
     borderRadius: radius.pill,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xxs,
   },
   discountText: {
-    color: colors.goldDark,
     fontSize: fontSize.micro,
     fontFamily: fontFamily.semiBold,
   },
@@ -221,10 +221,8 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: colors.border,
   },
   dotActive: {
-    backgroundColor: colors.primary,
     width: 18,
   },
 });

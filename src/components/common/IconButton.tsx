@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/immutability -- Reanimated shared values are mutable by design */
 import { Pressable, StyleSheet, View, type PressableProps, type ViewStyle } from "react-native";
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, useReducedMotion } from "react-native-reanimated";
-import { colors, surface } from "../../constants/colors";
+import { useThemeColors } from "../../providers/ThemeProvider";
 import { radius, layout, opacity as opacityToken } from "../../constants/sizes";
 import { springConfigs, compression as compressionValues } from "../../lib/motion";
 
@@ -29,11 +29,12 @@ export default function IconButton({
   style,
   ...props
 }: IconButtonProps) {
+  const colors = useThemeColors();
   const reducedMotion = useReducedMotion();
 
   const bg = {
     primary: colors.primary,
-    secondary: surface.DEFAULT,
+    secondary: colors.backgroundAlt,
     ghost: "transparent",
     danger: colors.dangerSoft,
   }[variant];
@@ -69,7 +70,7 @@ export default function IconButton({
     <Pressable
       {...props}
       disabled={disabled}
-      android_ripple={{ color: ripple }}
+      android_ripple={{ color: ripple, borderless: false }}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
       accessibilityState={{ disabled: !!disabled }}
@@ -79,15 +80,21 @@ export default function IconButton({
       <Animated.View
         style={[
           styles.base,
-          { width: size, height: size, borderRadius: size / 2, backgroundColor: bg },
+          {
+            width: size,
+            height: size,
+            borderRadius: size / 2,
+            backgroundColor: bg,
+            borderColor: variant === "secondary" ? colors.border : undefined,
+            opacity: disabled ? opacityToken.disabled : 1,
+          },
           variant === "secondary" && styles.bordered,
-          disabled && styles.disabled,
           animatedStyle,
           style,
         ]}
       >
         {icon}
-        {badge && <View style={styles.badgeDot} />}
+        {badge && <View style={[styles.badgeDot, { backgroundColor: colors.danger }]} />}
       </Animated.View>
     </Pressable>
   );
@@ -98,8 +105,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  bordered: { borderWidth: 1, borderColor: colors.border },
-  disabled: { opacity: opacityToken.disabled },
+  bordered: { borderWidth: 1 },
   badgeDot: {
     position: "absolute",
     top: 6,
@@ -107,6 +113,5 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: colors.danger,
   },
 });

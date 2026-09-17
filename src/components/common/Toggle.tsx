@@ -1,5 +1,5 @@
 import { Platform, Switch, type SwitchProps, type ViewStyle } from "react-native";
-import { colors, surface } from "../../constants/colors";
+import { useThemeColors } from "../../providers/ThemeProvider";
 import { opacity as opacityToken, layout } from "../../constants/sizes";
 
 type ToggleProps = Omit<SwitchProps, "value" | "onValueChange" | "trackColor" | "thumbColor"> & {
@@ -10,10 +10,6 @@ type ToggleProps = Omit<SwitchProps, "value" | "onValueChange" | "trackColor" | 
   style?: ViewStyle;
 };
 
-/**
- * Toggle switch built on React Native's native Switch.
- * Adapts to platform conventions (iOS green, Android accent).
- */
 export default function Toggle({
   value,
   onValueChange,
@@ -23,9 +19,10 @@ export default function Toggle({
   style,
   ...props
 }: ToggleProps) {
+  const colors = useThemeColors();
   const trackOn = variant === "danger" ? colors.danger : colors.primary;
   const trackOff = colors.border;
-  const thumbOff = surface.DEFAULT;
+  const thumbOff = colors.backgroundAlt;
 
   const isSmall = size === "sm";
 

@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View, type ViewStyle } from "react-native";
-import { colors } from "../../constants/colors";
+import { useThemeColors } from "../../providers/ThemeProvider";
 import { radius } from "../../constants/sizes";
 import { spacing } from "../../constants/spacing";
 import { fontFamily, fontSize, lineHeight } from "../../constants/typography";
@@ -16,16 +16,6 @@ type AlertProps = {
   style?: ViewStyle;
 };
 
-const palette: Record<AlertVariant, { bg: string; border: string; fg: string; icon: string }> = {
-  success: { bg: colors.successSoft, border: colors.successBorder, fg: colors.success, icon: "✓" },
-  warning: { bg: colors.warningSoft, border: colors.warningBorder, fg: colors.warning, icon: "!" },
-  danger:  { bg: colors.dangerSoft,  border: colors.dangerBorder,  fg: colors.danger,  icon: "✕" },
-  info:    { bg: colors.infoSoft,    border: colors.infoBorder,    fg: colors.info,    icon: "i" },
-};
-
-/**
- * Inline alert banner for feedback messages.
- */
 export default function Alert({
   variant = "info",
   title,
@@ -34,6 +24,14 @@ export default function Alert({
   onAction,
   style,
 }: AlertProps) {
+  const colors = useThemeColors();
+  const palette: Record<AlertVariant, { bg: string; border: string; fg: string }> = {
+    success: { bg: colors.successSoft, border: colors.successBorder, fg: colors.success },
+    warning: { bg: colors.warningSoft, border: colors.warningBorder, fg: colors.warning },
+    danger:  { bg: colors.dangerSoft,  border: colors.dangerBorder,  fg: colors.danger },
+    info:    { bg: colors.infoSoft,    border: colors.infoBorder,    fg: colors.info },
+  };
+
   const p = palette[variant];
 
   return (
@@ -43,13 +41,15 @@ export default function Alert({
     >
       <View style={styles.row}>
         <View style={[styles.iconCircle, { backgroundColor: p.fg }]}>
-          <Text style={styles.iconText}>{p.icon}</Text>
+          <Text style={styles.iconText}>
+            {variant === "success" ? "✓" : variant === "warning" ? "!" : variant === "danger" ? "✕" : "i"}
+          </Text>
         </View>
         <View style={styles.content}>
           {title ? (
             <Text style={[styles.title, { color: p.fg }]}>{title}</Text>
           ) : null}
-          <Text style={styles.message}>{message}</Text>
+          <Text style={[styles.message, { color: colors.textSecondary }]}>{message}</Text>
         </View>
       </View>
       {actionLabel && onAction ? (
@@ -78,7 +78,7 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   iconText: {
-    color: colors.white,
+    color: "#FFFFFF",
     fontSize: fontSize.micro,
     fontFamily: fontFamily.bold,
   },
@@ -92,7 +92,6 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.regular,
     fontSize: fontSize.footnote,
     lineHeight: fontSize.footnote * lineHeight.normal,
-    color: colors.textSecondary,
   },
   action: {
     fontFamily: fontFamily.semiBold,

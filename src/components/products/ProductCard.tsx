@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import colors from "../../constants/colors";
+import { useThemeColors } from "../../providers/ThemeProvider";
 import sizes from "../../constants/sizes";
 import spacing from "../../constants/spacing";
 import typography from "../../constants/typography";
@@ -16,20 +16,28 @@ type ProductCardProps = {
 };
 
 function ProductCard({ product, compact, onPress }: ProductCardProps) {
+  const colors = useThemeColors();
   return (
     <Pressable
-      style={[styles.card, compact && styles.compact]}
+      style={[
+        styles.card,
+        compact && styles.compact,
+        {
+          backgroundColor: colors.backgroundAlt,
+          borderColor: colors.borderLight,
+        },
+      ]}
       onPress={() => onPress?.(product)}
       accessibilityRole="button"
       accessibilityLabel={`${product.name}, ${product.brand}, ${product.stock > 0 ? "In stock" : "Out of stock"}`}
     >
       <ProductImage uri={product.image} recyclingKey={product.id} style={styles.image} />
       <View style={styles.content}>
-        <Text style={styles.brand}>{product.brand}</Text>
-        <Text style={styles.name} numberOfLines={2}>
+        <Text style={[styles.brand, { color: colors.textMuted }]}>{product.brand}</Text>
+        <Text style={[styles.name, { color: colors.text }]} numberOfLines={2}>
           {product.name}
         </Text>
-        <Text style={styles.generic} numberOfLines={1}>
+        <Text style={[styles.generic, { color: colors.textMuted }]} numberOfLines={1}>
           {product.genericName}
         </Text>
         <ProductPrice price={product.price} originalPrice={product.originalPrice} />
@@ -46,31 +54,27 @@ function ProductCard({ product, compact, onPress }: ProductCardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.backgroundAlt,
     borderRadius: sizes.borderRadius.lg,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: colors.borderLight,
     marginBottom: spacing.lg,
   },
   compact: { marginBottom: 0 },
   image: { height: 132 },
   content: { padding: spacing.lg },
   brand: {
-    color: colors.textMuted,
     fontSize: typography.caption2,
     fontWeight: "600",
     textTransform: "uppercase",
     letterSpacing: 0.4,
   },
   name: {
-    color: colors.text,
     fontSize: typography.subhead,
     fontWeight: "600",
     letterSpacing: typography.letterSpacing.tight,
     marginTop: spacing.xs,
   },
-  generic: { color: colors.textMuted, fontSize: typography.caption2, marginTop: 2 },
+  generic: { fontSize: typography.caption2, marginTop: 2 },
   footer: {
     marginTop: spacing.md,
     flexDirection: "row",
@@ -78,8 +82,8 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   stock: { fontSize: typography.caption2, fontWeight: "600" },
-  inStock: { color: colors.success },
-  outOfStock: { color: colors.danger },
+  inStock: { color: "#4CAF80" },
+  outOfStock: { color: "#EF5350" },
 });
 
 export default memo(ProductCard);

@@ -1,7 +1,7 @@
 import { Image } from "expo-image";
 import { memo } from "react";
 import { StyleSheet, type ImageStyle, type StyleProp } from "react-native";
-import colors from "../../constants/colors";
+import { useThemeColors } from "../../providers/ThemeProvider";
 
 const placeholder = require("@/assets/images/placeholders/product-placeholder.png");
 
@@ -12,9 +12,9 @@ type ProductImageProps = {
 };
 
 function ProductImage({ uri, recyclingKey, style }: ProductImageProps) {
+  const colors = useThemeColors();
   return (
     <Image
-      // Remote URLs are temporary seed data; Expo Image handles cache reuse and recycling.
       source={uri ? { uri } : placeholder}
       placeholder={placeholder}
       recyclingKey={recyclingKey}
@@ -22,7 +22,7 @@ function ProductImage({ uri, recyclingKey, style }: ProductImageProps) {
       priority="low"
       contentFit="cover"
       transition={recyclingKey ? 0 : 180}
-      style={[styles.image, style]}
+      style={[styles.image, { backgroundColor: colors.background }, style]}
     />
   );
 }
@@ -31,7 +31,6 @@ const styles = StyleSheet.create({
   image: {
     width: "100%",
     height: 140,
-    backgroundColor: colors.background,
   },
 });
 

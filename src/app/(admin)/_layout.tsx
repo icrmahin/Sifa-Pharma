@@ -8,7 +8,7 @@ export default function AdminLayout() {
   const { isMobile } = useResponsive();
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, !isMobile && styles.containerRow]}>
       {!isMobile && <AdminSidebar />}
       <View style={styles.content}>
         <Stack screenOptions={{ headerShown: false }}>
@@ -39,6 +39,7 @@ export default function AdminLayout() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, flexDirection: "row" },
+  container: { flex: 1 },
+  containerRow: { flexDirection: "row" },
   content: { flex: 1 },
 });

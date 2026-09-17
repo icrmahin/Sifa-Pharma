@@ -127,14 +127,13 @@ export default function CustomerDesktopHeader() {
 const styles = StyleSheet.create({
   container: {
     borderBottomWidth: 1,
+    width: "100%",
   },
   inner: {
     flexDirection: "row",
     alignItems: "center",
     height: 56,
     paddingHorizontal: spacing.xl,
-    maxWidth: 1400,
-    alignSelf: "center",
     width: "100%",
   },
   brandRow: {

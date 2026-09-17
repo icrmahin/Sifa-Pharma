@@ -3,7 +3,7 @@ import { useResponsive } from "../../hooks/useResponsive";
 
 type ResponsiveContainerProps = {
   children: React.ReactNode;
-  /** Max width constraint (default: 1320) */
+  /** Max width constraint (default: 1320) — only applied on desktop */
   maxWidth?: number;
   /** Horizontal padding on mobile (default: 16) */
   mobilePadding?: number;
@@ -20,15 +20,16 @@ export default function ResponsiveContainer({
   style,
   sidebarAware = false,
 }: ResponsiveContainerProps) {
-  const { width, isMobile, isTablet, sidebarWidth } = useResponsive();
+  const { width, isMobile, isTablet, isDesktop, sidebarWidth } = useResponsive();
 
-  const availableWidth = sidebarAware && !isMobile ? width - sidebarWidth : width;
+  const availableWidth = !isMobile && sidebarAware ? width - sidebarWidth : width;
   const horizontalPadding = isMobile ? mobilePadding : isTablet ? 24 : 32;
-  const contentMaxWidth = Math.min(maxWidth, availableWidth - horizontalPadding * 2);
+  const shouldConstrainWidth = !isMobile;
+  const contentMaxWidth = shouldConstrainWidth ? Math.min(maxWidth, availableWidth - horizontalPadding * 2) : undefined;
 
   return (
     <View style={[styles.container, { paddingHorizontal: horizontalPadding }, style]}>
-      <View style={[styles.inner, { maxWidth: contentMaxWidth }]}>
+      <View style={[styles.inner, shouldConstrainWidth && { maxWidth: contentMaxWidth }]}>
         {children}
       </View>
     </View>
@@ -42,9 +43,9 @@ export function WideContainer({
   style,
   sidebarAware = false,
 }: Omit<ResponsiveContainerProps, "maxWidth">) {
-  const { width, isMobile, isTablet, sidebarWidth } = useResponsive();
+  const { width, isMobile, isTablet, isDesktop, sidebarWidth } = useResponsive();
 
-  const availableWidth = sidebarAware && !isMobile ? width - sidebarWidth : width;
+  const availableWidth = !isMobile && sidebarAware ? width - sidebarWidth : width;
   const horizontalPadding = isMobile ? mobilePadding : isTablet ? 24 : 32;
 
   return (
@@ -57,10 +58,8 @@ export function WideContainer({
 const styles = StyleSheet.create({
   container: {
     width: "100%",
-    alignSelf: "center",
   },
   inner: {
     width: "100%",
-    alignSelf: "center",
   },
 });

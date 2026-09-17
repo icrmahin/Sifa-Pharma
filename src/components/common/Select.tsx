@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { Modal, Pressable, StyleSheet, Text, View, type ViewStyle } from "react-native";
-import { SymbolView } from "expo-symbols";
 import { colors, surface } from "../../constants/colors";
 import { radius, layout, opacity as opacityToken } from "../../constants/sizes";
 import { spacing } from "../../constants/spacing";
 import { fontFamily, fontSize, lineHeight } from "../../constants/typography";
 import { shadows } from "../../constants/shadows";
+import Icon from "./Icon";
 
 type Option = {
   label: string;
@@ -58,11 +58,7 @@ export default function Select({
         >
           {selected?.label || placeholder}
         </Text>
-        <SymbolView
-          name={{ ios: "chevron.down", android: "expand_more", web: "expand_more" }}
-          tintColor={colors.textMuted}
-          size={16}
-        />
+        <Icon name="expand-more" size={18} color={colors.textMuted} />
       </Pressable>
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
@@ -85,11 +81,7 @@ export default function Select({
                   {opt.label}
                 </Text>
                 {opt.value === value && (
-                  <SymbolView
-                    name={{ ios: "checkmark", android: "check", web: "check" }}
-                    tintColor={colors.primary}
-                    size={18}
-                  />
+                  <Icon name="check" size={18} color={colors.primary} />
                 )}
               </Pressable>
             ))}

@@ -1,10 +1,10 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { SymbolView } from "expo-symbols";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import colors from "../../constants/colors";
 import sizes from "../../constants/sizes";
 import spacing from "../../constants/spacing";
 import typography from "../../constants/typography";
+import Icon from "./Icon";
 
 type HeaderProps = {
   title: string;
@@ -32,11 +32,7 @@ export default function Header({
             accessibilityLabel="Go back"
             hitSlop={8}
           >
-            <SymbolView
-              name={{ ios: "chevron.left", android: "arrow_back", web: "arrow_back" }}
-              tintColor={colors.primary}
-              size={21}
-            />
+            <Icon name="arrow-back" size={22} color={colors.primary} />
           </Pressable>
         ) : null}
         <View style={styles.titleArea}>

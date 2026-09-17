@@ -1,5 +1,4 @@
 import * as ImagePicker from "expo-image-picker";
-import { SymbolView } from "expo-symbols";
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -13,6 +12,7 @@ import {
 import colors from "../../constants/colors";
 import spacing from "../../constants/spacing";
 import typography from "../../constants/typography";
+import Icon from "./Icon";
 
 type ImageUploadProps = {
   label: string;
@@ -89,11 +89,7 @@ export default function ImageUpload({
               activeOpacity={0.7}
               onPress={() => setMenuOpen(!menuOpen)}
             >
-              <SymbolView
-                name={{ ios: "pencil", android: "edit", web: "edit" }}
-                tintColor={colors.white}
-                size={14}
-              />
+              <Icon name="edit" size={14} color={colors.white} />
               <Text style={styles.previewActionText}>Replace</Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -101,11 +97,7 @@ export default function ImageUpload({
               activeOpacity={0.7}
               onPress={onRemove}
             >
-              <SymbolView
-                name={{ ios: "trash", android: "delete", web: "delete" }}
-                tintColor={colors.danger}
-                size={14}
-              />
+              <Icon name="delete" size={14} color={colors.danger} />
               <Text style={[styles.previewActionText, styles.removeActionText]}>
                 Remove
               </Text>
@@ -114,20 +106,12 @@ export default function ImageUpload({
           {menuOpen ? (
             <View style={styles.dropdown}>
               <TouchableOpacity style={styles.dropdownItem} activeOpacity={0.7} onPress={pickFromLibrary}>
-                <SymbolView
-                  name={{ ios: "photo.on.rectangle", android: "photo_library", web: "photo_library" }}
-                  tintColor={colors.primary}
-                  size={16}
-                />
+                <Icon name="photo-library" size={18} color={colors.primary} />
                 <Text style={styles.dropdownText}>Choose from library</Text>
               </TouchableOpacity>
               <View style={styles.hairline} />
               <TouchableOpacity style={styles.dropdownItem} activeOpacity={0.7} onPress={takePhoto}>
-                <SymbolView
-                  name={{ ios: "camera.fill", android: "camera_alt", web: "camera_alt" }}
-                  tintColor={colors.primary}
-                  size={16}
-                />
+                <Icon name="camera-alt" size={18} color={colors.primary} />
                 <Text style={styles.dropdownText}>Take photo</Text>
               </TouchableOpacity>
             </View>
@@ -145,11 +129,7 @@ export default function ImageUpload({
           {uploading ? (
             <ActivityIndicator size="small" color={colors.primary} />
           ) : (
-            <SymbolView
-              name={{ ios: "photo.badge.plus", android: "add_a_photo", web: "add_a_photo" }}
-              tintColor={colors.textMuted}
-              size={24}
-            />
+            <Icon name="add-a-photo" size={28} color={colors.textMuted} />
           )}
           <Text style={styles.emptyText}>
             {uploading ? "Uploading…" : "Add image"}
@@ -158,20 +138,12 @@ export default function ImageUpload({
           {menuOpen ? (
             <View style={styles.dropdown}>
               <TouchableOpacity style={styles.dropdownItem} activeOpacity={0.7} onPress={pickFromLibrary}>
-                <SymbolView
-                  name={{ ios: "photo.on.rectangle", android: "photo_library", web: "photo_library" }}
-                  tintColor={colors.primary}
-                  size={16}
-                />
+                <Icon name="photo-library" size={18} color={colors.primary} />
                 <Text style={styles.dropdownText}>Choose from library</Text>
               </TouchableOpacity>
               <View style={styles.hairline} />
               <TouchableOpacity style={styles.dropdownItem} activeOpacity={0.7} onPress={takePhoto}>
-                <SymbolView
-                  name={{ ios: "camera.fill", android: "camera_alt", web: "camera_alt" }}
-                  tintColor={colors.primary}
-                  size={16}
-                />
+                <Icon name="camera-alt" size={18} color={colors.primary} />
                 <Text style={styles.dropdownText}>Take photo</Text>
               </TouchableOpacity>
             </View>

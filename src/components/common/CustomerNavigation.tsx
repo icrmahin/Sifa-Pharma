@@ -1,54 +1,56 @@
 import { router, usePathname } from "expo-router";
-import { SymbolView } from "expo-symbols";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import colors from "../../constants/colors";
 import spacing from "../../constants/spacing";
-import typography from "../../constants/typography";
 import { useCart } from "../../providers/CartProvider";
+import Icon from "./Icon";
+import type { IconName } from "./Icon";
 
-const navigationItems = [
+const navigationItems: {
+  label: string;
+  path: string;
+  icon: IconName;
+  activeIcon: IconName;
+}[] = [
   {
     label: "Home",
     path: "/(customer)/(tabs)",
-    icon: { ios: "house.fill", android: "home", web: "home" },
+    icon: "home",
+    activeIcon: "home",
   },
   {
-    label: "Products",
-    path: "/(customer)/(tabs)/products",
-    icon: {
-      ios: "square.grid.2x2.fill",
-      android: "grid_view",
-      web: "grid_view",
-    },
-  },
-  {
-    label: "Orders",
-    path: "/(customer)/(tabs)/orders",
-    icon: {
-      ios: "shippingbox.fill",
-      android: "inventory_2",
-      web: "inventory_2",
-    },
+    label: "Search",
+    path: "/(customer)/search",
+    icon: "search",
+    activeIcon: "search",
   },
   {
     label: "Cart",
     path: "/(customer)/(tabs)/cart",
-    icon: { ios: "cart.fill", android: "shopping_cart", web: "shopping_cart" },
+    icon: "shopping-cart",
+    activeIcon: "shopping-cart",
   },
   {
-    label: "Account",
+    label: "Favorites",
+    path: "/(customer)/(tabs)/products",
+    icon: "favorite-border",
+    activeIcon: "favorite",
+  },
+  {
+    label: "Settings",
     path: "/(customer)/(tabs)/account",
-    icon: { ios: "person.fill", android: "person", web: "person" },
+    icon: "settings",
+    activeIcon: "settings",
   },
 ] as const;
 
 function getActivePath(pathname: string) {
   if (pathname.includes("/cart")) return "/(customer)/(tabs)/cart";
-  if (pathname.includes("/products")) return "/(customer)/(tabs)/products";
-  if (pathname.includes("/orders") || pathname.includes("/order/"))
-    return "/(customer)/(tabs)/orders";
-  if (pathname.includes("/account") || pathname.includes("/address"))
+  if (pathname.includes("/search")) return "/(customer)/search";
+  if (pathname.includes("/products") || pathname.includes("/product/"))
+    return "/(customer)/(tabs)/products";
+  if (pathname.includes("/account") || pathname.includes("/address") || pathname.includes("/settings"))
     return "/(customer)/(tabs)/account";
   return "/(customer)/(tabs)";
 }
@@ -68,29 +70,32 @@ export default function CustomerNavigation() {
         return (
           <Pressable
             key={item.label}
-            style={({ pressed }) => [styles.item, pressed && styles.pressed]}
+            style={({ pressed }) => [
+              styles.item,
+              active && styles.activeItem,
+              pressed && styles.pressed,
+            ]}
             onPress={() => router.replace(item.path as never)}
             android_ripple={{ color: colors.ripple.primary }}
             accessibilityRole="button"
-            accessibilityLabel={`Open ${item.label}${item.label === "Cart" && itemCount > 0 ? `, ${itemCount} items` : ""}`}
+            accessibilityLabel={`${item.label}${item.label === "Cart" && itemCount > 0 ? `, ${itemCount} items` : ""}`}
             accessibilityState={{ selected: active }}
           >
-            {active ? <View style={styles.activeBar} /> : null}
-            <SymbolView
-              name={item.icon}
-              tintColor={active ? colors.primary : colors.textMuted}
-              size={20}
-            />
-            {item.label === "Cart" && itemCount > 0 ? (
-              <View style={styles.badge} accessibilityLabel={`${itemCount} items in cart`}>
-                <Text style={styles.badgeText}>
-                  {itemCount > 99 ? "99+" : itemCount}
-                </Text>
-              </View>
-            ) : null}
-            <Text style={[styles.label, active && styles.activeLabel]}>
-              {item.label}
-            </Text>
+            {active ? <View style={styles.activeIndicator} /> : null}
+            <View style={[styles.iconContainer, active && styles.activeIconContainer]}>
+              <Icon
+                name={active ? item.activeIcon : item.icon}
+                size={22}
+                color={active ? colors.primary : colors.textMuted}
+              />
+              {item.label === "Cart" && itemCount > 0 ? (
+                <View style={styles.badge} accessibilityLabel={`${itemCount} items in cart`}>
+                  <Text style={styles.badgeText}>
+                    {itemCount > 99 ? "99+" : itemCount}
+                  </Text>
+                </View>
+              ) : null}
+            </View>
           </Pressable>
         );
       })}
@@ -111,22 +116,33 @@ const styles = StyleSheet.create({
     minHeight: 44,
     alignItems: "center",
     justifyContent: "center",
-    gap: spacing.xxs,
     position: "relative",
-    paddingTop: spacing.sm,
+    paddingTop: spacing.xs,
   },
-  activeBar: {
+  activeItem: {},
+  activeIndicator: {
     position: "absolute",
     top: 0,
-    width: 20,
+    width: 24,
     height: 2,
     borderRadius: 1,
     backgroundColor: colors.primary,
   },
+  iconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
+  },
+  activeIconContainer: {
+    backgroundColor: colors.primarySoft,
+  },
   badge: {
     position: "absolute",
-    top: 0,
-    marginLeft: 22,
+    top: -2,
+    right: -4,
     minWidth: 16,
     height: 16,
     paddingHorizontal: 3,
@@ -137,16 +153,8 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     color: colors.white,
-    fontSize: typography.caption2,
+    fontSize: 9,
     fontWeight: "700",
   },
-  label: {
-    color: colors.textMuted,
-    fontSize: typography.caption2,
-    fontWeight: "700",
-    letterSpacing: 0.6,
-    textTransform: "uppercase",
-  },
-  activeLabel: { color: colors.primary },
   pressed: { opacity: 0.7 },
 });

@@ -1,6 +1,6 @@
 import { Tabs } from "expo-router";
-import { SymbolView } from "expo-symbols";
 import colors from "../../../constants/colors";
+import Icon from "../../../components/common/Icon";
 
 export default function CustomerTabsLayout() {
   return (
@@ -20,11 +20,7 @@ export default function CustomerTabsLayout() {
         options={{
           title: "Home",
           tabBarIcon: ({ color }) => (
-            <SymbolView
-              name={{ ios: "house.fill", android: "home", web: "home" }}
-              tintColor={color}
-              size={22}
-            />
+            <Icon name="home" size={22} color={color} />
           ),
         }}
       />
@@ -33,15 +29,7 @@ export default function CustomerTabsLayout() {
         options={{
           title: "Products",
           tabBarIcon: ({ color }) => (
-            <SymbolView
-              name={{
-                ios: "square.grid.2x2.fill",
-                android: "grid_view",
-                web: "grid_view",
-              }}
-              tintColor={color}
-              size={22}
-            />
+            <Icon name="grid-view" size={22} color={color} />
           ),
         }}
       />
@@ -50,15 +38,7 @@ export default function CustomerTabsLayout() {
         options={{
           title: "Orders",
           tabBarIcon: ({ color }) => (
-            <SymbolView
-              name={{
-                ios: "shippingbox.fill",
-                android: "inventory_2",
-                web: "inventory_2",
-              }}
-              tintColor={color}
-              size={22}
-            />
+            <Icon name="inventory-2" size={22} color={color} />
           ),
         }}
       />
@@ -71,13 +51,9 @@ export default function CustomerTabsLayout() {
       <Tabs.Screen
         name="account"
         options={{
-          title: "Account",
+          title: "Settings",
           tabBarIcon: ({ color }) => (
-            <SymbolView
-              name={{ ios: "person.fill", android: "person", web: "person" }}
-              tintColor={color}
-              size={22}
-            />
+            <Icon name="settings" size={22} color={color} />
           ),
         }}
       />

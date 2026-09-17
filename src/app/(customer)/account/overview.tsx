@@ -1,26 +1,16 @@
 import { router } from "expo-router";
-import { SymbolView, type SymbolViewProps } from "expo-symbols";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Header from "../../../components/common/Header";
+import Icon from "../../../components/common/Icon";
 import colors from "../../../constants/colors";
 import spacing from "../../../constants/spacing";
 import typography from "../../../constants/typography";
+import { radius, layout } from "../../../constants/sizes";
 import { useAuth } from "../../../hooks/useAuth";
 
-type IconName = SymbolViewProps["name"];
-
-const ROW_ICON_SIZE = 18;
 const RIPPLE = "rgba(18, 60, 53, 0.08)";
-const CHEVRON: IconName = { ios: "chevron.right", android: "chevron_right", web: "chevron_right" };
-const SIGN_OUT_ICON: IconName = {
-  ios: "rectangle.portrait.and.arrow.right",
-  android: "logout",
-  web: "logout",
-};
 
-// Rows point only at screens already registered in account/_layout.tsx
-// and the customer tabs — no routes added, none renamed.
 const SECTIONS: {
   index: string;
   title: string;
@@ -28,7 +18,7 @@ const SECTIONS: {
     label: string;
     meta: string;
     route: string;
-    icon: IconName;
+    icon: any;
   }[];
 }[] = [
   {
@@ -39,13 +29,13 @@ const SECTIONS: {
         label: "Profile",
         meta: "Name and contact",
         route: "/(customer)/account/profile",
-        icon: { ios: "person.crop.circle.fill", android: "person", web: "person" },
+        icon: "person",
       },
       {
         label: "Addresses",
         meta: "Delivery locations",
         route: "/(customer)/account/addresses",
-        icon: { ios: "location.fill", android: "place", web: "place" },
+        icon: "place",
       },
     ],
   },
@@ -57,13 +47,13 @@ const SECTIONS: {
         label: "Orders",
         meta: "Track deliveries",
         route: "/(customer)/(tabs)/orders",
-        icon: { ios: "shippingbox.fill", android: "inventory_2", web: "inventory_2" },
+        icon: "inventory-2",
       },
       {
         label: "Notifications",
         meta: "Updates and alerts",
         route: "/(customer)/account/notifications",
-        icon: { ios: "bell.fill", android: "notifications", web: "notifications" },
+        icon: "notifications",
       },
     ],
   },
@@ -75,7 +65,7 @@ const SECTIONS: {
         label: "Settings",
         meta: "App preferences",
         route: "/(customer)/account/settings",
-        icon: { ios: "gearshape.fill", android: "settings", web: "settings" },
+        icon: "settings",
       },
     ],
   },
@@ -93,7 +83,7 @@ export default function CustomerAccountDashboard() {
         onBack={() => router.back()}
       />
       <ScrollView contentContainerStyle={styles.container}>
-        {/* Identity block uses only the authenticated user — nothing fabricated. */}
+        {/* Identity block */}
         <View style={styles.identityPanel}>
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>{initial}</Text>
@@ -132,21 +122,13 @@ export default function CustomerAccountDashboard() {
                     onPress={() => router.push(item.route as never)}
                   >
                     <View style={styles.iconTile}>
-                      <SymbolView
-                        name={item.icon}
-                        tintColor={colors.primary}
-                        size={ROW_ICON_SIZE}
-                      />
+                      <Icon name={item.icon} size={18} color={colors.primary} />
                     </View>
                     <View style={styles.rowText}>
                       <Text style={styles.rowLabel}>{item.label}</Text>
                       <Text style={styles.rowMeta}>{item.meta}</Text>
                     </View>
-                    <SymbolView
-                      name={CHEVRON}
-                      tintColor={colors.textMuted}
-                      size={16}
-                    />
+                    <Icon name="chevron-right" size={18} color={colors.textMuted} />
                   </Pressable>
                   {itemIndex < section.items.length - 1 ? (
                     <View style={styles.hairline} />
@@ -164,7 +146,7 @@ export default function CustomerAccountDashboard() {
           accessibilityLabel="Sign out"
           onPress={signOut}
         >
-          <SymbolView name={SIGN_OUT_ICON} tintColor={colors.primary} size={16} />
+          <Icon name="logout" size={18} color={colors.primary} />
           <Text style={styles.signOutText}>Sign out</Text>
         </Pressable>
       </ScrollView>
@@ -173,7 +155,6 @@ export default function CustomerAccountDashboard() {
 }
 
 const styles = StyleSheet.create({
-  // Solid light surfaces only; no blur, no translucency.
   safeArea: { flex: 1, backgroundColor: colors.background },
   container: {
     paddingHorizontal: spacing.lg,
@@ -188,13 +169,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.backgroundAlt,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 8,
+    borderRadius: radius.lg,
     padding: spacing.md,
   },
   avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: colors.primary,
     alignItems: "center",
     justifyContent: "center",
@@ -243,7 +224,7 @@ const styles = StyleSheet.create({
   sectionRule: { flex: 1, height: 1, backgroundColor: colors.border },
   panel: {
     backgroundColor: colors.backgroundAlt,
-    borderRadius: 8,
+    borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.border,
     paddingHorizontal: spacing.md,
@@ -253,12 +234,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: spacing.md,
     paddingVertical: spacing.md,
-    minHeight: 44,
+    minHeight: layout.touch,
   },
   iconTile: {
-    width: 28,
-    height: 28,
-    borderRadius: 4,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.background,
@@ -283,10 +264,10 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 8,
+    borderRadius: radius.lg,
     backgroundColor: colors.backgroundAlt,
     paddingVertical: spacing.md,
-    minHeight: 44,
+    minHeight: layout.touch,
     marginTop: spacing.sm,
   },
   signOutText: {
@@ -294,6 +275,5 @@ const styles = StyleSheet.create({
     fontSize: typography.bodySmall,
     fontWeight: "700",
   },
-  // Press feedback: fading + a subtle scale reads as tactile without animation.
   pressed: { opacity: 0.6, transform: [{ scale: 0.99 }] },
 });

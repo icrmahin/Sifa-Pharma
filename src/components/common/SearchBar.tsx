@@ -1,9 +1,9 @@
-import { SymbolView } from "expo-symbols";
 import { Pressable, StyleSheet, TextInput, View } from "react-native";
 import { colors, surface } from "../../constants/colors";
 import { radius, layout } from "../../constants/sizes";
 import { spacing } from "../../constants/spacing";
 import { fontFamily, fontSize, lineHeight } from "../../constants/typography";
+import Icon from "./Icon";
 
 type SearchBarProps = {
   value: string;
@@ -24,11 +24,10 @@ export default function SearchBar({
 }: SearchBarProps) {
   return (
     <View style={styles.wrapper}>
-      <SymbolView
-        name={{ ios: "magnifyingglass", android: "search", web: "search" }}
-        tintColor={colors.textMuted}
-        size={18}
-        style={styles.icon}
+      <Icon
+        name="search"
+        size={20}
+        color={colors.textMuted}
       />
       <TextInput
         value={value}
@@ -49,11 +48,7 @@ export default function SearchBar({
           accessibilityRole="button"
           accessibilityLabel="Clear search"
         >
-          <SymbolView
-            name={{ ios: "xmark", android: "close", web: "close" }}
-            tintColor={colors.primary}
-            size={13}
-          />
+          <Icon name="close" size={14} color={colors.primary} />
         </Pressable>
       ) : null}
     </View>
@@ -64,14 +59,13 @@ const styles = StyleSheet.create({
   wrapper: {
     flexDirection: "row",
     alignItems: "center",
-    borderRadius: radius.md,
+    borderRadius: radius.pill,
     backgroundColor: surface.DEFAULT,
     borderWidth: 1,
     borderColor: colors.border,
-    paddingHorizontal: spacing.md,
-    minHeight: layout.touch,
+    paddingHorizontal: spacing.lg,
+    height: layout.inputHeight,
   },
-  icon: { marginRight: spacing.sm },
   input: {
     flex: 1,
     fontFamily: fontFamily.regular,
@@ -79,6 +73,7 @@ const styles = StyleSheet.create({
     lineHeight: fontSize.footnote * lineHeight.normal,
     color: colors.text,
     paddingVertical: spacing.sm,
+    marginLeft: spacing.sm,
   },
   clearButton: {
     width: 24,

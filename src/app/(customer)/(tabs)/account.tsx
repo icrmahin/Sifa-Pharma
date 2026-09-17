@@ -1,112 +1,164 @@
-import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from "react-native";
+import React, { useState } from "react";
+import { View, Text, StyleSheet, Pressable, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
-import { SymbolView } from "expo-symbols";
 import { useAuth } from "../../../hooks/useAuth";
 import colors from "../../../constants/colors";
 import spacing from "../../../constants/spacing";
 import typography from "../../../constants/typography";
+import { radius, layout } from "../../../constants/sizes";
+import Icon from "../../../components/common/Icon";
+import type { IconName } from "../../../components/common/Icon";
+import Toggle from "../../../components/common/Toggle";
+
+type SettingsSection = {
+  title: string;
+  items: {
+    label: string;
+    icon: IconName;
+    route?: string;
+    destructive?: boolean;
+    toggle?: boolean;
+  }[];
+};
+
+const SECTIONS: SettingsSection[] = [
+  {
+    title: "Account",
+    items: [
+      { label: "Profile Details", icon: "person", route: "/(customer)/account/profile" },
+      { label: "Password & Security", icon: "lock", route: "/(customer)/account/profile" },
+      { label: "Notifications", icon: "notifications", route: "/(customer)/account/notifications" },
+      { label: "Dark Mode", icon: "dark-mode", toggle: true },
+    ],
+  },
+  {
+    title: "Support",
+    items: [
+      { label: "Help & FAQ", icon: "help-outline" },
+      { label: "Contact Us", icon: "phone" },
+    ],
+  },
+  {
+    title: "App",
+    items: [
+      { label: "About Sifa-Pharma", icon: "info-outline" },
+      { label: "Terms & Privacy", icon: "description" },
+      { label: "Log Out", icon: "logout", destructive: true },
+    ],
+  },
+];
 
 export default function AccountScreen() {
   const router = useRouter();
   const { user, isAdmin, signOut } = useAuth();
+  const [darkMode, setDarkMode] = useState(false);
 
-  const initial = user?.name ? user.name.charAt(0).toUpperCase() : "T";
+  const initial = user?.name ? user.name.charAt(0).toUpperCase() : "U";
+
+  const handleItemPress = (item: SettingsSection["items"][0]) => {
+    if (item.destructive) {
+      signOut();
+      return;
+    }
+    if (item.route) {
+      router.push(item.route as never);
+    }
+  };
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Account</Text>
-        <Text style={styles.subtitle}>Your personal preferences</Text>
-      </View>
+      {/* Centered Title */}
+      <Text style={styles.title}>Settings</Text>
 
-      <View style={styles.userCard}>
+      {/* Profile Card */}
+      <Pressable
+        style={({ pressed }) => [styles.profileCard, pressed && styles.pressed]}
+        onPress={() => router.push("/(customer)/account/profile")}
+        accessibilityRole="button"
+        accessibilityLabel="Open profile"
+      >
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>{initial}</Text>
         </View>
-        <View style={styles.userInfo}>
-          <Text style={styles.userName}>{user?.name || "User"}</Text>
-          <Text style={styles.userEmail}>{user?.email || ""}</Text>
+        <View style={styles.profileInfo}>
+          <Text style={styles.profileName} numberOfLines={1}>
+            {user?.name || "User"}
+          </Text>
+          <Text style={styles.profileEmail} numberOfLines={1}>
+            {user?.email || ""}
+          </Text>
         </View>
-      </View>
+        <Icon name="chevron-right" size={20} color={colors.textMuted} />
+      </Pressable>
 
       {/* Admin Dashboard — visible only to admin users */}
       {isAdmin ? (
-        <View style={styles.section}>
-          <Text style={styles.sectionLabel}>ADMIN</Text>
-          <TouchableOpacity
-            style={styles.optionButton}
-            activeOpacity={0.7}
-            onPress={() => router.push("/(admin)")}
-          >
-            <View style={styles.optionRow}>
-              <View style={styles.optionIcon}>
-                <SymbolView
-                  name={{ ios: "square.grid.2x2.fill", android: "grid_view", web: "grid_view" }}
-                  tintColor={colors.primary}
-                  size={18}
-                />
-              </View>
-              <View style={styles.optionContent}>
-                <Text style={styles.optionText}>Dashboard</Text>
-                <Text style={styles.optionHint}>Manage store operations</Text>
-              </View>
-            </View>
-          </TouchableOpacity>
-        </View>
+        <Pressable
+          style={({ pressed }) => [styles.adminCard, pressed && styles.pressed]}
+          onPress={() => router.push("/(admin)")}
+          accessibilityRole="button"
+          accessibilityLabel="Open admin dashboard"
+        >
+          <View style={styles.adminIconContainer}>
+            <Icon name="dashboard" size={20} color={colors.primary} />
+          </View>
+          <View style={styles.adminInfo}>
+            <Text style={styles.adminLabel}>Admin Dashboard</Text>
+            <Text style={styles.adminHint}>Manage store operations</Text>
+          </View>
+          <Icon name="chevron-right" size={20} color={colors.textMuted} />
+        </Pressable>
       ) : null}
 
-      <View style={styles.section}>
-        <Text style={styles.sectionLabel}>ACCOUNT</Text>
-        <TouchableOpacity
-          style={styles.optionButton}
-          activeOpacity={0.7}
-          onPress={() => router.push("/(customer)/account/profile")}
-        >
-          <Text style={styles.optionText}>Profile</Text>
-          <Text style={styles.optionHint}>Name and contact details</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.optionButton}
-          activeOpacity={0.7}
-          onPress={() => router.push("/(customer)/account/addresses" as any)}
-        >
-          <Text style={styles.optionText}>Addresses</Text>
-          <Text style={styles.optionHint}>Delivery locations</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.optionButton}
-          activeOpacity={0.7}
-          onPress={() => router.push("/(customer)/(tabs)/orders" as any)}
-        >
-          <Text style={styles.optionText}>Orders</Text>
-          <Text style={styles.optionHint}>Order history</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.optionButton}
-          activeOpacity={0.7}
-          onPress={() => router.push("/(customer)/account/notifications" as any)}
-        >
-          <Text style={styles.optionText}>Notifications</Text>
-          <Text style={styles.optionHint}>Alerts and updates</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.optionButton}
-          activeOpacity={0.7}
-          onPress={() => router.push("/(customer)/account/settings" as any)}
-        >
-          <Text style={styles.optionText}>Settings</Text>
-          <Text style={styles.optionHint}>App preferences</Text>
-        </TouchableOpacity>
-      </View>
-
-      <TouchableOpacity style={styles.logoutButton} activeOpacity={0.7} onPress={signOut}>
-        <Text style={styles.logoutText}>Sign out</Text>
-      </TouchableOpacity>
+      {/* Settings Sections */}
+      {SECTIONS.map((section) => (
+        <View key={section.title} style={styles.section}>
+          <Text style={styles.sectionTitle}>{section.title}</Text>
+          <View style={styles.sectionGroup}>
+            {section.items.map((item, index) => (
+              <View key={item.label}>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.row,
+                    pressed && styles.pressed,
+                  ]}
+                  onPress={() => handleItemPress(item)}
+                  accessibilityRole="button"
+                  accessibilityLabel={item.label}
+                >
+                  <View style={styles.rowIcon}>
+                    <Icon
+                      name={item.icon}
+                      size={20}
+                      color={item.destructive ? colors.danger : colors.primary}
+                    />
+                  </View>
+                  <Text
+                    style={[
+                      styles.rowLabel,
+                      item.destructive && styles.destructiveLabel,
+                    ]}
+                  >
+                    {item.label}
+                  </Text>
+                  {item.toggle ? (
+                    <Toggle
+                      value={darkMode}
+                      onValueChange={setDarkMode}
+                      size="sm"
+                    />
+                  ) : (
+                    <Icon name="chevron-right" size={18} color={colors.textMuted} />
+                  )}
+                </Pressable>
+                {index < section.items.length - 1 ? (
+                  <View style={styles.divider} />
+                ) : null}
+              </View>
+            ))}
+          </View>
+        </View>
+      ))}
     </ScrollView>
   );
 }
@@ -118,36 +170,35 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.xxl,
-    gap: spacing.md,
+    paddingTop: spacing.xl,
+    paddingBottom: spacing.xxxl,
   },
-  header: {
-    gap: spacing.xs,
-  },
+
+  // Title
   title: {
-    fontSize: typography.h2,
+    fontSize: typography.title2,
     fontWeight: "700",
     color: colors.text,
+    textAlign: "center",
+    marginBottom: spacing.xl,
   },
-  subtitle: {
-    fontSize: typography.caption,
-    color: colors.textMuted,
-  },
-  userCard: {
+
+  // Profile Card
+  profileCard: {
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.md,
     backgroundColor: colors.backgroundAlt,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 8,
-    padding: spacing.md,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+    marginBottom: spacing.xl,
   },
   avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: colors.primary,
     alignItems: "center",
     justifyContent: "center",
@@ -157,78 +208,107 @@ const styles = StyleSheet.create({
     fontSize: typography.body,
     fontWeight: "700",
   },
-  userInfo: {
+  profileInfo: {
     flex: 1,
-    gap: 2,
+    gap: spacing.xxs,
   },
-  userName: {
+  profileName: {
     fontSize: typography.bodySmall,
     fontWeight: "700",
     color: colors.text,
   },
-  userEmail: {
+  profileEmail: {
     fontSize: typography.caption,
     color: colors.textMuted,
   },
-  section: {
-    gap: spacing.sm,
-  },
-  sectionLabel: {
-    fontSize: typography.label,
-    fontWeight: "700",
-    letterSpacing: 0.8,
-    color: colors.textMuted,
-    textTransform: "uppercase",
-  },
-  optionButton: {
-    backgroundColor: colors.backgroundAlt,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    minHeight: 48,
-    justifyContent: "center",
-  },
-  optionRow: {
+
+  // Admin Card
+  adminCard: {
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.md,
-  },
-  optionIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 6,
+    backgroundColor: colors.backgroundAlt,
     borderWidth: 1,
     borderColor: colors.border,
-    backgroundColor: colors.background,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+    marginBottom: spacing.xl,
+  },
+  adminIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.primarySoft,
     alignItems: "center",
     justifyContent: "center",
   },
-  optionContent: { flex: 1 },
-  optionText: {
+  adminInfo: {
+    flex: 1,
+  },
+  adminLabel: {
+    fontSize: typography.bodySmall,
+    fontWeight: "700",
+    color: colors.text,
+  },
+  adminHint: {
+    fontSize: typography.caption,
+    color: colors.textMuted,
+    marginTop: spacing.xxs,
+  },
+
+  // Sections
+  section: {
+    marginBottom: spacing.xl,
+  },
+  sectionTitle: {
+    fontSize: typography.caption,
+    fontWeight: "700",
+    color: colors.textMuted,
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
+    marginBottom: spacing.sm,
+    marginLeft: spacing.xs,
+  },
+  sectionGroup: {
+    backgroundColor: colors.backgroundAlt,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.lg,
+    overflow: "hidden",
+  },
+
+  // Row
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    minHeight: layout.touch,
+  },
+  rowIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.primarySoft,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  rowLabel: {
+    flex: 1,
     fontSize: typography.bodySmall,
     fontWeight: "600",
     color: colors.text,
   },
-  optionHint: {
-    fontSize: typography.caption,
-    color: colors.textMuted,
-    marginTop: spacing.xs,
-  },
-  logoutButton: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
-    backgroundColor: colors.backgroundAlt,
-    paddingVertical: spacing.md,
-    alignItems: "center",
-    minHeight: 44,
-    marginTop: spacing.sm,
-  },
-  logoutText: {
+  destructiveLabel: {
     color: colors.danger,
-    fontSize: typography.bodySmall,
-    fontWeight: "700",
   },
+  divider: {
+    height: 1,
+    backgroundColor: colors.borderSoft,
+    marginLeft: spacing.lg + 32 + spacing.md,
+  },
+
+  // Press feedback
+  pressed: { opacity: 0.6, transform: [{ scale: 0.99 }] },
 });

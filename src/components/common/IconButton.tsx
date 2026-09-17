@@ -12,7 +12,7 @@ type IconButtonProps = PressableProps & {
   accessibilityLabel: string;
   /** Visual variant. Default: "ghost" */
   variant?: "primary" | "secondary" | "ghost" | "danger";
-  /** Size of the hit target. Default: 44 */
+  /** Size of the hit target. Default: 40 */
   size?: number;
   /** Optional badge dot indicator */
   badge?: boolean;
@@ -23,7 +23,7 @@ export default function IconButton({
   icon,
   accessibilityLabel,
   variant = "ghost",
-  size = layout.touch,
+  size = layout.iconButtonSize,
   badge = false,
   disabled,
   style,
@@ -79,7 +79,7 @@ export default function IconButton({
       <Animated.View
         style={[
           styles.base,
-          { width: size, height: size, backgroundColor: bg },
+          { width: size, height: size, borderRadius: size / 2, backgroundColor: bg },
           variant === "secondary" && styles.bordered,
           disabled && styles.disabled,
           animatedStyle,
@@ -95,7 +95,6 @@ export default function IconButton({
 
 const styles = StyleSheet.create({
   base: {
-    borderRadius: radius.md,
     alignItems: "center",
     justifyContent: "center",
   },

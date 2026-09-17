@@ -3,6 +3,10 @@ export { default as Screen } from "./Screen";
 export { default as Stack, Row } from "./Layout";
 export { default as Text } from "./Text";
 
+// Icons
+export { default as Icon } from "./Icon";
+export type { IconName } from "./Icon";
+
 // Actions
 export { default as Button } from "./Button";
 export { default as IconButton } from "./IconButton";

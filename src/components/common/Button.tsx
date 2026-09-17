@@ -83,6 +83,7 @@ export default function Button({
           style,
         ]}
       >
+        {icon}
         {loading ? (
           <Text style={[styles.label, { color: p.fg }]}>Please wait…</Text>
         ) : (
@@ -95,10 +96,10 @@ export default function Button({
 
 const styles = StyleSheet.create({
   base: {
-    minHeight: layout.buttonHeight,
-    paddingHorizontal: spacing.lg,
+    minHeight: layout.controlHeight,
+    paddingHorizontal: spacing.xl,
     paddingVertical: spacing.md,
-    borderRadius: radius.md,
+    borderRadius: radius.pill,
     alignItems: "center",
     justifyContent: "center",
     flexDirection: "row",

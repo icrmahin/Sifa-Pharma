@@ -30,8 +30,18 @@ export const layout = {
   touch: 44,
   /** 48px — default button height */
   buttonHeight: 48,
+  /** 40px — small button / compact control height */
+  controlHeightSmall: 40,
+  /** 44px — standard control height (pill buttons, tabs) */
+  controlHeight: 44,
+  /** 48px — large control height */
+  controlHeightLarge: 48,
   /** 48px — default input height */
   inputHeight: 48,
+  /** 40px — icon button default size */
+  iconButtonSize: 40,
+  /** 32px — small icon button size */
+  iconButtonSizeSmall: 32,
   /** 20px — default icon size */
   icon: 20,
   /** 44px — avatar diameter */

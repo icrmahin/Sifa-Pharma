@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View, type ViewStyle } from "react-native";
 import { colors } from "../../constants/colors";
 import { radius, layout } from "../../constants/sizes";
@@ -20,7 +19,7 @@ type TabsProps = {
 };
 
 /**
- * Horizontal tab bar. Scrolls horizontally when tabs overflow.
+ * Horizontal pill-style tab bar. Scrolls horizontally when tabs overflow.
  */
 export default function Tabs({ tabs, activeKey, onChange, fullWidth = false, style }: TabsProps) {
   return (
@@ -42,7 +41,6 @@ export default function Tabs({ tabs, activeKey, onChange, fullWidth = false, sty
             <Text style={[styles.label, active && styles.labelActive]} numberOfLines={1}>
               {tab.label}
             </Text>
-            {active && <View style={styles.indicator} />}
           </Pressable>
         );
       })}
@@ -53,9 +51,9 @@ export default function Tabs({ tabs, activeKey, onChange, fullWidth = false, sty
 const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
-    gap: spacing.xs,
+    gap: spacing.sm,
     paddingHorizontal: spacing.lg,
-    minHeight: layout.touch,
+    minHeight: layout.controlHeight,
     alignItems: "center",
   },
   fullWidth: { gap: 0, paddingHorizontal: 0 },
@@ -63,27 +61,27 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: spacing.md,
-    minHeight: layout.touch,
-    borderRadius: radius.md,
+    paddingHorizontal: spacing.lg,
+    height: layout.controlHeight,
+    borderRadius: radius.pill,
     gap: spacing.xs,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.backgroundAlt,
   },
   tabFull: { flex: 1 },
-  tabActive: { backgroundColor: colors.primarySoft },
+  tabActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
   label: {
     fontFamily: fontFamily.medium,
     fontSize: fontSize.footnote,
     lineHeight: fontSize.footnote * lineHeight.normal,
     color: colors.textMuted,
   },
-  labelActive: { color: colors.primary, fontFamily: fontFamily.semiBold },
-  indicator: {
-    position: "absolute",
-    bottom: 4,
-    left: "25%",
-    right: "25%",
-    height: 2,
-    borderRadius: 1,
-    backgroundColor: colors.primary,
+  labelActive: {
+    color: colors.white,
+    fontFamily: fontFamily.semiBold,
   },
 });

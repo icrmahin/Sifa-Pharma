@@ -1,12 +1,13 @@
 /* eslint-disable react-hooks/immutability -- Reanimated shared values are mutable by design */
 import { Pressable, StyleSheet, Text, View, type ViewStyle } from "react-native";
-import { SymbolView } from "expo-symbols";
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, useReducedMotion } from "react-native-reanimated";
 import { colors, border as borderToken } from "../../constants/colors";
 import { layout } from "../../constants/sizes";
 import { spacing } from "../../constants/spacing";
 import { fontFamily, fontSize, lineHeight } from "../../constants/typography";
 import { springConfigs } from "../../lib/motion";
+import Icon from "./Icon";
+import type { IconName } from "./Icon";
 
 type ListItemProps = {
   /** Primary text */
@@ -74,11 +75,7 @@ export default function ListItem({
       {right ? (
         <View style={styles.right}>{right}</View>
       ) : onPress ? (
-        <SymbolView
-          name={{ ios: "chevron.right", android: "chevron_right", web: "chevron_right" }}
-          tintColor={colors.textMuted}
-          size={16}
-        />
+        <Icon name="chevron-right" size={18} color={colors.textMuted} />
       ) : null}
     </View>
   );

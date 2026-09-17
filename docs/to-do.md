@@ -73,7 +73,7 @@
   * Reduced-motion handling
   * Performance-safe animation architecture
 
-* [ ] **07 — Product architecture**
+* [x] **07 — Product architecture**
 
   * Define actual Sifa-Pharma requirements
   * Define domain entities

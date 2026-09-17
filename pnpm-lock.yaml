@@ -11,6 +11,9 @@ importers:
       '@expo-google-fonts/inter':
         specifier: ^0.4.2
         version: 0.4.2
+      '@expo-google-fonts/plus-jakarta-sans':
+        specifier: ^0.4.2
+        version: 0.4.2
       '@expo-google-fonts/sora':
         specifier: ^0.4.2
         version: 0.4.2
@@ -543,6 +546,9 @@ packages:
 
   '@expo-google-fonts/material-symbols@0.4.47':
     resolution: {integrity: sha512-5G4ObZlyGvDzx6g/+NC+RAMeeCc3dc0/HLu/llY5dYZUlNDYzaZWQZwPUzoTixf27riT8I7ur9mQKPYCPFDJzQ==}
+
+  '@expo-google-fonts/plus-jakarta-sans@0.4.2':
+    resolution: {integrity: sha512-6LYVmVGwjQvH+uzzWlVc9+oMj4lkNQ41aymVDjO+x8aFk8kCye20wOyLomYMZaMezA++Uf1mZRCw3W3Fy/hxEA==}
 
   '@expo-google-fonts/sora@0.4.2':
     resolution: {integrity: sha512-X86Kl1cfObcSUzTLIbtmrPCLRlIbCNh0uBOo8bjmXb8gWgVVhnI8CZJEK2btsdq85JPn5k4P6sbV9JLbAm7dqQ==}
@@ -4611,6 +4617,8 @@ snapshots:
   '@expo-google-fonts/inter@0.4.2': {}
 
   '@expo-google-fonts/material-symbols@0.4.47': {}
+
+  '@expo-google-fonts/plus-jakarta-sans@0.4.2': {}
 
   '@expo-google-fonts/sora@0.4.2': {}
 

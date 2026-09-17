@@ -1,15 +1,15 @@
 // ─── Border radius ───────────────────────────────────────
 export const radius = {
-  /** 4px — subtle rounding for small elements */
-  sm: 4,
-  /** 8px — default for buttons, inputs */
-  md: 8,
-  /** 12px — cards, panels */
-  lg: 12,
-  /** 16px — large cards, modals */
-  xl: 16,
-  /** 20px — feature cards */
-  xxl: 20,
+  /** 3px — subtle rounding for small elements */
+  sm: 3,
+  /** 6px — default for buttons, inputs */
+  md: 6,
+  /** 10px — cards, panels */
+  lg: 10,
+  /** 14px — large cards, modals */
+  xl: 14,
+  /** 18px — feature cards */
+  xxl: 18,
   /** 999px — pill shape */
   pill: 999,
 } as const;
@@ -26,38 +26,38 @@ export const borderWidth = {
 
 // ─── Touch targets & layout sizes ────────────────────────
 export const layout = {
-  /** 44px — minimum touch target (iOS/Android guideline) */
-  touch: 44,
-  /** 48px — default button height */
-  buttonHeight: 48,
-  /** 40px — small button / compact control height */
-  controlHeightSmall: 40,
-  /** 44px — standard control height (pill buttons, tabs) */
-  controlHeight: 44,
-  /** 48px — large control height */
-  controlHeightLarge: 48,
-  /** 48px — default input height */
-  inputHeight: 48,
-  /** 40px — icon button default size */
-  iconButtonSize: 40,
-  /** 32px — small icon button size */
-  iconButtonSizeSmall: 32,
-  /** 20px — default icon size */
-  icon: 20,
-  /** 44px — avatar diameter */
-  avatar: 44,
-  /** 140px — product card image */
-  productImage: 140,
-  /** 72px — thumbnail */
-  thumbnail: 72,
+  /** 40px — minimum touch target (compact) */
+  touch: 40,
+  /** 40px — default button height */
+  buttonHeight: 40,
+  /** 36px — small button / compact control height */
+  controlHeightSmall: 36,
+  /** 40px — standard control height (pill buttons, tabs) */
+  controlHeight: 40,
+  /** 44px — large control height */
+  controlHeightLarge: 44,
+  /** 44px — default input height */
+  inputHeight: 44,
+  /** 36px — icon button default size */
+  iconButtonSize: 36,
+  /** 28px — small icon button size */
+  iconButtonSizeSmall: 28,
+  /** 18px — default icon size */
+  icon: 18,
+  /** 40px — avatar diameter */
+  avatar: 40,
+  /** 120px — product card image */
+  productImage: 120,
+  /** 60px — thumbnail */
+  thumbnail: 60,
 } as const;
 
 // ─── Container padding (responsive) ──────────────────────
 export const containerPadding = {
-  xs: 12,
-  sm: 16,
-  md: 20,
-  lg: 24,
+  xs: 10,
+  sm: 14,
+  md: 18,
+  lg: 22,
 } as const;
 
 // ─── Max widths ──────────────────────────────────────────

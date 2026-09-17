@@ -2,6 +2,7 @@
 import { Pressable, StyleSheet, Text, type PressableProps, type ViewStyle } from "react-native";
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, useReducedMotion } from "react-native-reanimated";
 import { useThemeColors } from "../../providers/ThemeProvider";
+import { useShadows } from "../../constants/shadows";
 import { spacing } from "../../constants/spacing";
 import { fontFamily, fontSize, lineHeight } from "../../constants/typography";
 import { radius, layout, opacity as opacityToken } from "../../constants/sizes";
@@ -29,6 +30,7 @@ export default function Button({
   ...props
 }: ButtonProps) {
   const colors = useThemeColors();
+  const shadows = useShadows();
   const isDisabled = disabled || loading;
   const reducedMotion = useReducedMotion();
 

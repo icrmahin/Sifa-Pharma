@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useThemeColors } from "../../providers/ThemeProvider";
+import { useShadows } from "../../constants/shadows";
 import sizes from "../../constants/sizes";
 import spacing from "../../constants/spacing";
 import typography from "../../constants/typography";
@@ -16,6 +17,7 @@ export default function AdminProductCard({
   onPress?: (product: Product) => void;
 }) {
   const colors = useThemeColors();
+  const shadows = useShadows();
   const available = product.isActive && product.stock > 0;
 
   return (
@@ -25,6 +27,7 @@ export default function AdminProductCard({
         {
           backgroundColor: colors.backgroundAlt,
           borderColor: colors.borderLight,
+          ...shadows.sm,
         },
         pressed && styles.pressed,
       ]}

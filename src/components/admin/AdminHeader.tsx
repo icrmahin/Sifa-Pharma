@@ -1,6 +1,7 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { useThemeColors } from "../../providers/ThemeProvider";
+import { useShadows } from "../../constants/shadows";
 import spacing from "../../constants/spacing";
 import typography from "../../constants/typography";
 
@@ -12,6 +13,7 @@ type AdminHeaderProps = {
 
 export default function AdminHeader({ title, subtitle, action }: AdminHeaderProps) {
   const colors = useThemeColors();
+  const shadows = useShadows();
 
   return (
     <View
@@ -20,6 +22,7 @@ export default function AdminHeader({ title, subtitle, action }: AdminHeaderProp
         {
           backgroundColor: colors.backgroundAlt,
           borderBottomColor: colors.borderLight,
+          ...shadows.sm,
         },
       ]}
     >

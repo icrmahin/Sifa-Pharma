@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { ScrollView, StyleSheet, Switch, Text, View } from "react-native";
 import { useThemeColors } from "../../providers/ThemeProvider";
+import { useShadows } from "../../constants/shadows";
 import sizes from "../../constants/sizes";
 import spacing from "../../constants/spacing";
 import typography from "../../constants/typography";
@@ -31,6 +32,7 @@ export default function ProductForm({
   onSubmit,
 }: ProductFormProps) {
   const colors = useThemeColors();
+  const shadows = useShadows();
   const [name, setName] = useState(product?.name ?? "");
   const [brand, setBrand] = useState(product?.brand ?? "");
   const [genericName, setGenericName] = useState(product?.genericName ?? "");
@@ -157,7 +159,7 @@ export default function ProductForm({
         contentContainerStyle={styles.container}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={[styles.form, { backgroundColor: colors.backgroundAlt, borderColor: colors.borderLight }]}>
+        <View style={[styles.form, { backgroundColor: colors.backgroundAlt, borderColor: colors.borderLight, ...shadows.sm }]}>
           {SECTION("Basics")}
 
           <View style={styles.row}>

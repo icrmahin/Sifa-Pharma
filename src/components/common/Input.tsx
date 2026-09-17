@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { StyleSheet, Text, TextInput, View, type TextInputProps, type ViewStyle } from "react-native";
 import { useThemeColors } from "../../providers/ThemeProvider";
+import { useShadows } from "../../constants/shadows";
 import { radius, layout, opacity as opacityToken } from "../../constants/sizes";
 import { spacing } from "../../constants/spacing";
 import { fontFamily, fontSize, lineHeight } from "../../constants/typography";
@@ -24,6 +25,7 @@ export default function Input({
   ...props
 }: InputProps) {
   const colors = useThemeColors();
+  const shadows = useShadows();
   const [focused, setFocused] = useState(false);
 
   return (
@@ -35,6 +37,7 @@ export default function Input({
           {
             borderColor: focused ? colors.primary : error ? colors.danger : colors.border,
             backgroundColor: colors.backgroundAlt,
+            ...shadows.xs,
           },
           focused && styles.inputRowFocused,
           !!error && styles.inputRowError,

@@ -2,6 +2,7 @@ import { router } from "expo-router";
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import Icon from "../common/Icon";
 import { useThemeColors } from "../../providers/ThemeProvider";
+import { useShadows } from "../../constants/shadows";
 import sizes from "../../constants/sizes";
 import spacing from "../../constants/spacing";
 import typography from "../../constants/typography";
@@ -25,6 +26,7 @@ export default function AdminDrawer({
   onClose: () => void;
 }) {
   const colors = useThemeColors();
+  const shadows = useShadows();
 
   const navigate = (path: string) => {
     onClose();
@@ -40,7 +42,16 @@ export default function AdminDrawer({
     >
       <View style={styles.container}>
         <Pressable style={styles.backdrop} onPress={onClose} />
-        <View style={[styles.drawer, { backgroundColor: colors.backgroundAlt, borderTopColor: colors.borderLight }]}>
+        <View
+          style={[
+            styles.drawer,
+            {
+              backgroundColor: colors.backgroundAlt,
+              borderTopColor: colors.borderLight,
+              ...shadows.xl,
+            },
+          ]}
+        >
           <View style={[styles.drawerHeader, { borderBottomColor: colors.borderLight }]}>
             <Text style={[styles.drawerTitle, { color: colors.text }]}>Menu</Text>
             <Pressable

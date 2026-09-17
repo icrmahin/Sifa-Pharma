@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from "react-native";
 import Icon from "../common/Icon";
 import { useThemeColors } from "../../providers/ThemeProvider";
+import { useShadows } from "../../constants/shadows";
 import sizes from "../../constants/sizes";
 import spacing from "../../constants/spacing";
 import typography from "../../constants/typography";
@@ -22,6 +23,7 @@ export default function AdminStatCard({
   icon,
 }: AdminStatCardProps) {
   const colors = useThemeColors();
+  const shadows = useShadows();
 
   const accentColor =
     accent === "green"
@@ -37,6 +39,7 @@ export default function AdminStatCard({
         {
           backgroundColor: colors.backgroundAlt,
           borderColor: colors.borderLight,
+          ...shadows.sm,
         },
       ]}
     >

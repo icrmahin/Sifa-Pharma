@@ -10,12 +10,19 @@ type AppLogoProps = {
   variant?: "dark" | "white";
 };
 
-export default function AppLogo({ size = 88, style, variant = "dark" }: AppLogoProps) {
+export default function AppLogo({ size = 40, style, variant = "dark" }: AppLogoProps) {
   return (
     <Image
       source={variant === "white" ? logoWhite : logoDark}
-      style={[{ width: size, height: size }, style]}
-      contentFit="contain"
+      style={[
+        { 
+          width: size, 
+          height: size, 
+          borderRadius: size / 2, // FIX: Makes it perfectly round
+        }, 
+        style
+      ]}
+      contentFit="cover" // NOTE: Ensures the image fills the rounded container fully
       priority="high"
       accessibilityLabel="Sifa-Pharma logo"
     />

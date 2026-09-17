@@ -4,22 +4,15 @@ import Animated, { useSharedValue, useAnimatedStyle, withSpring, useReducedMotio
 import { border as borderToken, surface } from "../../constants/colors";
 import { radius } from "../../constants/sizes";
 import { spacing } from "../../constants/spacing";
-import { shadows } from "../../constants/shadows";
+import { useShadows } from "../../constants/shadows";
 import { springConfigs, compression as compressionValues } from "../../lib/motion";
 
 type CardProps = ViewProps & {
-  /** Make the card pressable */
   onPress?: () => void;
-  /** Show a pressed visual state */
   pressed?: boolean;
-  /** Card elevation. Default: "sm" */
   elevation?: "none" | "xs" | "sm" | "md";
 };
 
-/**
- * Surface container for grouping related content.
- * Optional onPress wraps the card in a Pressable with animated spring compression.
- */
 export default function Card({
   onPress,
   pressed = false,
@@ -28,6 +21,7 @@ export default function Card({
   children,
   ...props
 }: CardProps) {
+  const shadows = useShadows();
   const shadowStyle = shadows[elevation];
   const reducedMotion = useReducedMotion();
 

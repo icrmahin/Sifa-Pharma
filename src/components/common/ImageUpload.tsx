@@ -10,6 +10,7 @@ import {
   View,
 } from "react-native";
 import { useThemeColors } from "../../providers/ThemeProvider";
+import { useShadows } from "../../constants/shadows";
 import spacing from "../../constants/spacing";
 import typography from "../../constants/typography";
 import Icon from "./Icon";
@@ -32,6 +33,7 @@ export default function ImageUpload({
   error,
 }: ImageUploadProps) {
   const colors = useThemeColors();
+  const shadows = useShadows();
   const [menuOpen, setMenuOpen] = useState(false);
 
   const pickFromLibrary = async () => {
@@ -72,7 +74,7 @@ export default function ImageUpload({
       <Text style={[styles.label, { color: colors.text }]}>{label}</Text>
 
       {uri ? (
-        <View style={[styles.previewContainer, { borderColor: colors.borderLight, backgroundColor: colors.background }]}>
+        <View style={[styles.previewContainer, { borderColor: colors.borderLight, backgroundColor: colors.background, ...shadows.sm }]}>
           <Image source={{ uri }} style={[styles.preview, { backgroundColor: colors.borderSoft }]} resizeMode="cover" />
           {uploading ? (
             <View style={styles.loadingOverlay}>
@@ -118,6 +120,7 @@ export default function ImageUpload({
             {
               borderColor: error ? colors.danger : colors.borderLight,
               backgroundColor: colors.background,
+              ...shadows.xs,
             },
             pressed && styles.pressed,
           ]}

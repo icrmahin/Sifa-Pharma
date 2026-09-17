@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, TextInput, View } from "react-native";
 import { useThemeColors } from "../../providers/ThemeProvider";
+import { useShadows } from "../../constants/shadows";
 import { radius, layout } from "../../constants/sizes";
 import { spacing } from "../../constants/spacing";
 import { fontFamily, fontSize, lineHeight } from "../../constants/typography";
@@ -23,6 +24,7 @@ export default function SearchBar({
   onBlur,
 }: SearchBarProps) {
   const colors = useThemeColors();
+  const shadows = useShadows();
 
   return (
     <View
@@ -31,6 +33,7 @@ export default function SearchBar({
         {
           backgroundColor: colors.backgroundAlt,
           borderColor: colors.borderLight,
+          ...shadows.sm,
         },
       ]}
     >

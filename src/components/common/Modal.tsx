@@ -1,5 +1,6 @@
 import { Modal as RNModal, Pressable, StyleSheet, Text, View } from "react-native";
 import { useThemeColors } from "../../providers/ThemeProvider";
+import { useShadows } from "../../constants/shadows";
 import sizes from "../../constants/sizes";
 import spacing from "../../constants/spacing";
 import typography from "../../constants/typography";
@@ -21,6 +22,7 @@ export default function Modal({
   onAction?: () => void;
 }) {
   const colors = useThemeColors();
+  const shadows = useShadows();
 
   return (
     <RNModal
@@ -34,7 +36,7 @@ export default function Modal({
         style={[styles.backdrop, { backgroundColor: colors.overlay }]}
         onPress={onClose}
       >
-        <View style={[styles.card, { backgroundColor: colors.backgroundAlt }]}>
+        <View style={[styles.card, { backgroundColor: colors.backgroundAlt, ...shadows.xl }]}>
           <Text style={[styles.title, { color: colors.text }]} accessibilityRole="header">
             {title}
           </Text>

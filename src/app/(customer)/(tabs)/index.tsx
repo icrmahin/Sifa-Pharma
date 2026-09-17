@@ -106,10 +106,6 @@ export default function CustomerHomeScreen() {
             <AppLogo size={38} />
             <Text style={styles.brandName}>Sifa-Pharma</Text>
           </View>
-          <IconButtonCart
-            itemCount={itemCount}
-            onPress={() => router.push("/(customer)/(tabs)/cart")}
-          />
         </View>
 
         {/* Search */}

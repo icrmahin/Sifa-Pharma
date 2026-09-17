@@ -2,6 +2,7 @@ import { router, usePathname } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useThemeColors } from "../../providers/ThemeProvider";
+import { useShadows } from "../../constants/shadows";
 import spacing from "../../constants/spacing";
 import { useCart } from "../../providers/CartProvider";
 import Icon from "./Icon";
@@ -59,6 +60,7 @@ export default function CustomerNavigation() {
   const pathname = usePathname();
   const insets = useSafeAreaInsets();
   const colors = useThemeColors();
+  const shadows = useShadows();
   const { itemCount } = useCart();
   const activePath = getActivePath(pathname);
 
@@ -67,9 +69,10 @@ export default function CustomerNavigation() {
       style={[
         styles.container,
         {
-          paddingBottom: Math.max(insets.bottom, spacing.sm),
+          paddingBottom: Math.max(insets.bottom, spacing.xs),
           backgroundColor: colors.backgroundAlt,
           borderTopColor: colors.borderLight,
+          ...shadows.xl,
         },
       ]}
     >
@@ -93,7 +96,7 @@ export default function CustomerNavigation() {
             >
               <Icon
                 name={active ? item.activeIcon : item.icon}
-                size={22}
+                size={20}
                 color={active ? colors.primary : colors.textMuted}
               />
               {item.label === "Cart" && itemCount > 0 ? (
@@ -104,6 +107,14 @@ export default function CustomerNavigation() {
                 </View>
               ) : null}
             </View>
+            <Text
+              style={[
+                styles.label,
+                { color: active ? colors.primary : colors.textMuted },
+              ]}
+            >
+              {item.label}
+            </Text>
           </Pressable>
         );
       })}
@@ -115,36 +126,44 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     borderTopWidth: 1,
-    paddingTop: spacing.sm,
+    paddingTop: spacing.xs,
+    paddingHorizontal: spacing.xs,
   },
   item: {
     flex: 1,
-    minHeight: 44,
     alignItems: "center",
     justifyContent: "center",
-    paddingTop: spacing.xs,
+    gap: 1,
+    minHeight: 40,
+    paddingHorizontal: 2,
   },
   iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: "center",
     justifyContent: "center",
     position: "relative",
   },
+  label: {
+    fontSize: 9,
+    fontWeight: "600",
+    letterSpacing: 0.1,
+    lineHeight: 11,
+  },
   badge: {
     position: "absolute",
-    top: -2,
-    right: -4,
-    minWidth: 16,
-    height: 16,
-    paddingHorizontal: 3,
-    borderRadius: 8,
+    top: -1,
+    right: -3,
+    minWidth: 14,
+    height: 14,
+    paddingHorizontal: 2,
+    borderRadius: 7,
     alignItems: "center",
     justifyContent: "center",
   },
   badgeText: {
-    fontSize: 9,
+    fontSize: 8,
     fontWeight: "700",
   },
   pressed: { opacity: 0.7 },

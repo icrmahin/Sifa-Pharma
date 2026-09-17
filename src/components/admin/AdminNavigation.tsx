@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import AdminDrawer from "./AdminDrawer";
 import Icon from "../common/Icon";
 import { useThemeColors } from "../../providers/ThemeProvider";
+import { useShadows } from "../../constants/shadows";
 import sizes from "../../constants/sizes";
 import spacing from "../../constants/spacing";
 import typography from "../../constants/typography";
@@ -27,6 +28,7 @@ export default function AdminNavigation() {
   const pathname = usePathname();
   const insets = useSafeAreaInsets();
   const colors = useThemeColors();
+  const shadows = useShadows();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const activePath = getActivePath(pathname);
   const isMenuActive = !["/(admin)", "/(admin)/orders", "/(admin)/products"].some(
@@ -39,9 +41,10 @@ export default function AdminNavigation() {
         style={[
           styles.container,
           {
-            paddingBottom: Math.max(insets.bottom, spacing.sm),
+            paddingBottom: Math.max(insets.bottom, spacing.xs),
             backgroundColor: colors.backgroundAlt,
             borderTopColor: colors.borderLight,
+            ...shadows.xl,
           },
         ]}
       >
@@ -68,7 +71,7 @@ export default function AdminNavigation() {
               >
                 <Icon
                   name={item.icon}
-                  size={20}
+                  size={18}
                   color={active ? colors.primary : colors.textMuted}
                 />
               </View>
@@ -100,7 +103,7 @@ export default function AdminNavigation() {
           >
             <Icon
               name="menu"
-              size={20}
+              size={18}
               color={isMenuActive ? colors.primary : colors.textMuted}
             />
           </View>
@@ -124,26 +127,29 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     borderTopWidth: 1,
-    paddingTop: spacing.sm,
+    paddingTop: spacing.xs,
+    paddingHorizontal: spacing.xs,
   },
   item: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    gap: spacing.xxs,
-    minHeight: layout.controlHeight,
+    gap: 2,
+    minHeight: 40,
+    paddingHorizontal: 4,
   },
   pill: {
-    width: 40,
-    height: 32,
+    width: 36,
+    height: 28,
     borderRadius: sizes.borderRadius.pill,
     alignItems: "center",
     justifyContent: "center",
   },
   label: {
-    fontSize: typography.caption2,
+    fontSize: 9,
     fontWeight: "600",
-    letterSpacing: 0.3,
+    letterSpacing: 0.1,
+    lineHeight: 11,
   },
   pressed: { opacity: 0.6 },
 });

@@ -2,6 +2,7 @@
 import { Pressable, StyleSheet, Text, View, type ViewStyle } from "react-native";
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, useReducedMotion } from "react-native-reanimated";
 import { useThemeColors } from "../../providers/ThemeProvider";
+import { useShadows } from "../../constants/shadows";
 import { layout } from "../../constants/sizes";
 import { spacing } from "../../constants/spacing";
 import { fontFamily, fontSize, lineHeight } from "../../constants/typography";
@@ -31,6 +32,7 @@ export default function ListItem({
   style,
 }: ListItemProps) {
   const colors = useThemeColors();
+  const shadows = useShadows();
   const reducedMotion = useReducedMotion();
 
   const padding = compact
@@ -89,7 +91,7 @@ export default function ListItem({
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
       >
-        <Animated.View style={animatedStyle}>{content}</Animated.View>
+        <Animated.View style={[animatedStyle, { backgroundColor: colors.backgroundAlt, ...shadows.xs }]}>{content}</Animated.View>
       </Pressable>
     );
   }
@@ -103,6 +105,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: spacing.md,
     minHeight: layout.touch,
+    borderRadius: 10,
   },
   left: { flexShrink: 0 },
   content: { flex: 1, gap: 2 },

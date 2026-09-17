@@ -5,33 +5,42 @@ import { router } from 'expo-router';
 import AdminHeader from '../../../components/admin/AdminHeader';
 import EmptyState from '../../../components/common/EmptyState';
 import StatusBadge from '../../../components/common/StatusBadge';
-import colors from '../../../constants/colors';
+import { useThemeColors } from '../../../providers/ThemeProvider';
 import spacing from '../../../constants/spacing';
 import typography from '../../../constants/typography';
 import type { ReturnRequest } from '../../../types/return';
 
 export default function AdminReturnsScreen() {
-  // frontend-only: empty typed array — no backend
+  const colors = useThemeColors();
   const returns: ReturnRequest[] = [];
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
       <AdminHeader title="Returns" subtitle="Customer return requests" />
       <ScrollView contentContainerStyle={styles.container}>
         {returns.length === 0 ? (
           <EmptyState title="No returns" message="Return requests will appear here." />
         ) : (
           returns.map((item) => (
-            <View key={item.id} style={styles.card}>
-              <Text style={styles.order}>{item.orderId}</Text>
-              <Text style={styles.reason}>{item.reason}</Text>
+            <View
+              key={item.id}
+              style={[
+                styles.card,
+                {
+                  backgroundColor: colors.backgroundAlt,
+                  borderColor: colors.borderLight,
+                },
+              ]}
+            >
+              <Text style={[styles.order, { color: colors.text }]}>{item.orderId}</Text>
+              <Text style={[styles.reason, { color: colors.textMuted }]}>{item.reason}</Text>
               <View style={styles.footer}>
                 <StatusBadge
                   label={item.status}
                   tone={item.status === 'APPROVED' || item.status === 'PROCESSED' ? 'success' : item.status === 'REJECTED' ? 'danger' : 'warning'}
                 />
                 <Text
-                  style={styles.link}
+                  style={[styles.link, { color: colors.primary }]}
                   onPress={() =>
                     router.push({
                       pathname: '/(admin)/returns/[returnId]',
@@ -51,17 +60,15 @@ export default function AdminReturnsScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: colors.background },
+  safeArea: { flex: 1 },
   container: { padding: spacing.lg, gap: spacing.md, paddingBottom: spacing.xxl },
   card: {
-    backgroundColor: colors.backgroundAlt,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: colors.border,
     padding: spacing.lg,
   },
-  order: { color: colors.text, fontSize: typography.body, fontWeight: '700' },
-  reason: { color: colors.textMuted, fontSize: typography.bodySmall, marginTop: spacing.xs, marginBottom: spacing.sm },
+  order: { fontSize: typography.body, fontWeight: '700' },
+  reason: { fontSize: typography.bodySmall, marginTop: spacing.xs, marginBottom: spacing.sm },
   footer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  link: { color: colors.primary, fontWeight: '700' },
+  link: { fontWeight: '700' },
 });

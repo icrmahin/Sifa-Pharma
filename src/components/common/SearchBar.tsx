@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, TextInput, View } from "react-native";
-import { colors, surface } from "../../constants/colors";
+import { useThemeColors } from "../../providers/ThemeProvider";
 import { radius, layout } from "../../constants/sizes";
 import { spacing } from "../../constants/spacing";
 import { fontFamily, fontSize, lineHeight } from "../../constants/typography";
@@ -22,13 +22,19 @@ export default function SearchBar({
   onFocus,
   onBlur,
 }: SearchBarProps) {
+  const colors = useThemeColors();
+
   return (
-    <View style={styles.wrapper}>
-      <Icon
-        name="search"
-        size={20}
-        color={colors.textMuted}
-      />
+    <View
+      style={[
+        styles.wrapper,
+        {
+          backgroundColor: colors.backgroundAlt,
+          borderColor: colors.borderLight,
+        },
+      ]}
+    >
+      <Icon name="search" size={20} color={colors.textMuted} />
       <TextInput
         value={value}
         onChangeText={onChangeText}
@@ -39,12 +45,12 @@ export default function SearchBar({
         onBlur={onBlur}
         returnKeyType="search"
         accessibilityLabel="Search products"
-        style={styles.input}
+        style={[styles.input, { color: colors.text }]}
       />
       {value ? (
         <Pressable
           onPress={() => onChangeText("")}
-          style={styles.clearButton}
+          style={[styles.clearButton, { backgroundColor: colors.primarySoft }]}
           accessibilityRole="button"
           accessibilityLabel="Clear search"
         >
@@ -60,9 +66,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     borderRadius: radius.pill,
-    backgroundColor: surface.DEFAULT,
     borderWidth: 1,
-    borderColor: colors.border,
     paddingHorizontal: spacing.lg,
     height: layout.inputHeight,
   },
@@ -71,7 +75,6 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.regular,
     fontSize: fontSize.footnote,
     lineHeight: fontSize.footnote * lineHeight.normal,
-    color: colors.text,
     paddingVertical: spacing.sm,
     marginLeft: spacing.sm,
   },
@@ -79,7 +82,6 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: colors.primarySoft,
     alignItems: "center",
     justifyContent: "center",
   },

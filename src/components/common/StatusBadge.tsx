@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View } from "react-native";
-import { colors, surface } from "../../constants/colors";
+import { useThemeColors } from "../../providers/ThemeProvider";
 import { radius } from "../../constants/sizes";
 import { spacing } from "../../constants/spacing";
 import { fontFamily, fontSize, lineHeight } from "../../constants/typography";
@@ -9,15 +9,17 @@ type StatusBadgeProps = {
   tone?: "success" | "warning" | "danger" | "info" | "neutral";
 };
 
-const palette = {
-  success: { bg: colors.successSoft, fg: colors.success, border: colors.successBorder, dot: colors.success },
-  warning: { bg: colors.warningSoft, fg: colors.warning, border: colors.warningBorder, dot: colors.warning },
-  danger:  { bg: colors.dangerSoft,  fg: colors.danger,  border: colors.dangerBorder,  dot: colors.danger },
-  info:    { bg: colors.primarySoft, fg: colors.primary, border: colors.primaryMuted,   dot: colors.primary },
-  neutral: { bg: surface.disabled, fg: colors.textMuted, border: colors.border,  dot: colors.textMuted },
-} as const;
-
 export default function StatusBadge({ label, tone = "neutral" }: StatusBadgeProps) {
+  const colors = useThemeColors();
+
+  const palette = {
+    success: { bg: colors.successSoft, fg: colors.success, border: colors.successBorder, dot: colors.success },
+    warning: { bg: colors.warningSoft, fg: colors.warning, border: colors.warningBorder, dot: colors.warning },
+    danger: { bg: colors.dangerSoft, fg: colors.danger, border: colors.dangerBorder, dot: colors.danger },
+    info: { bg: colors.primarySoft, fg: colors.primary, border: colors.primaryMuted, dot: colors.primary },
+    neutral: { bg: colors.background, fg: colors.textMuted, border: colors.border, dot: colors.textMuted },
+  } as const;
+
   const p = palette[tone];
 
   return (

@@ -4,12 +4,14 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import AdminHeader from "../../../components/admin/AdminHeader";
 import Button from "../../../components/common/Button";
 import Input from "../../../components/common/Input";
-import colors from "../../../constants/colors";
+import { useThemeColors } from "../../../providers/ThemeProvider";
 import spacing from "../../../constants/spacing";
 
 export default function InventoryAdjustmentScreen() {
+  const colors = useThemeColors();
+
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
       <AdminHeader title="Stock adjustment" subtitle="Record stock changes" />
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.form}>
@@ -29,7 +31,7 @@ export default function InventoryAdjustmentScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: colors.background },
+  safeArea: { flex: 1 },
   container: {
     padding: spacing.lg,
     gap: spacing.lg,

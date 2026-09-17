@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/immutability -- Reanimated shared values are mutable by design */
 import { Pressable, StyleSheet, Text, type PressableProps, type ViewStyle } from "react-native";
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, useReducedMotion } from "react-native-reanimated";
-import { colors, surface } from "../../constants/colors";
+import { useThemeColors } from "../../providers/ThemeProvider";
 import { spacing } from "../../constants/spacing";
 import { fontFamily, fontSize, lineHeight } from "../../constants/typography";
 import { radius, layout, opacity as opacityToken } from "../../constants/sizes";
@@ -14,17 +14,8 @@ type ButtonProps = PressableProps & {
   variant?: ButtonVariant;
   fullWidth?: boolean;
   loading?: boolean;
-  /** Render an icon before the title */
   icon?: React.ReactNode;
   style?: ViewStyle;
-};
-
-const palette: Record<ButtonVariant, { bg: string; fg: string; border?: string; ripple: string }> = {
-  primary:   { bg: colors.primary,   fg: colors.white, ripple: "rgba(255,255,255,0.22)" },
-  secondary: { bg: surface.DEFAULT, fg: colors.primary, border: colors.border, ripple: colors.ripple.primary },
-  danger:    { bg: colors.dangerSoft, fg: colors.danger, border: colors.dangerBorder, ripple: colors.ripple.danger },
-  ghost:     { bg: colors.primarySoft, fg: colors.primary, ripple: colors.ripple.primary },
-  link:      { bg: "transparent",   fg: colors.primary, ripple: colors.ripple.primary },
 };
 
 export default function Button({
@@ -37,9 +28,19 @@ export default function Button({
   style,
   ...props
 }: ButtonProps) {
-  const p = palette[variant];
+  const colors = useThemeColors();
   const isDisabled = disabled || loading;
   const reducedMotion = useReducedMotion();
+
+  const palette: Record<ButtonVariant, { bg: string; fg: string; border?: string; ripple: string }> = {
+    primary: { bg: colors.primary, fg: colors.white, ripple: "rgba(255,255,255,0.22)" },
+    secondary: { bg: colors.backgroundAlt, fg: colors.primary, border: colors.border, ripple: colors.ripple.primary },
+    danger: { bg: colors.dangerSoft, fg: colors.danger, border: colors.dangerBorder, ripple: colors.ripple.danger },
+    ghost: { bg: colors.primarySoft, fg: colors.primary, ripple: colors.ripple.primary },
+    link: { bg: "transparent", fg: colors.primary, ripple: colors.ripple.primary },
+  };
+
+  const p = palette[variant];
 
   const scale = useSharedValue(1);
   const opacity = useSharedValue(1);
@@ -85,7 +86,7 @@ export default function Button({
       >
         {icon}
         {loading ? (
-          <Text style={[styles.label, { color: p.fg }]}>Please wait…</Text>
+          <Text style={[styles.label, { color: p.fg }]}>Please wait...</Text>
         ) : (
           <Text style={[styles.label, { color: p.fg }]}>{title}</Text>
         )}

@@ -2,7 +2,7 @@ import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AdminHeader from '../../../components/admin/AdminHeader';
-import colors from '../../../constants/colors';
+import { useThemeColors } from '../../../providers/ThemeProvider';
 import spacing from '../../../constants/spacing';
 import typography from '../../../constants/typography';
 import { formatCurrency } from '../../../utils/currency';
@@ -16,7 +16,7 @@ type ReportState = {
 };
 
 export default function AdminReportsScreen() {
-  // frontend-only: placeholder report — no backend
+  const colors = useThemeColors();
   const report: ReportState = {
     revenue: 0,
     ordersToday: 0,
@@ -34,13 +34,22 @@ export default function AdminReportsScreen() {
   ];
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
       <AdminHeader title="Reports" subtitle="High-level performance" />
       <ScrollView contentContainerStyle={styles.container}>
         {reports.map((r) => (
-          <View key={r.label} style={styles.card}>
-            <Text style={styles.label}>{r.label}</Text>
-            <Text style={styles.value}>{r.value}</Text>
+          <View
+            key={r.label}
+            style={[
+              styles.card,
+              {
+                backgroundColor: colors.backgroundAlt,
+                borderColor: colors.borderLight,
+              },
+            ]}
+          >
+            <Text style={[styles.label, { color: colors.textMuted }]}>{r.label}</Text>
+            <Text style={[styles.value, { color: colors.text }]}>{r.value}</Text>
           </View>
         ))}
       </ScrollView>
@@ -49,15 +58,13 @@ export default function AdminReportsScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: colors.background },
+  safeArea: { flex: 1 },
   container: { padding: spacing.lg, gap: spacing.md, paddingBottom: spacing.xxl },
   card: {
-    backgroundColor: colors.backgroundAlt,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: colors.border,
     padding: spacing.lg,
   },
-  label: { color: colors.textMuted, fontSize: typography.bodySmall },
-  value: { color: colors.text, fontWeight: '700', marginTop: spacing.xs, fontSize: typography.h2 },
+  label: { fontSize: typography.bodySmall },
+  value: { fontWeight: '700', marginTop: spacing.xs, fontSize: typography.h2 },
 });

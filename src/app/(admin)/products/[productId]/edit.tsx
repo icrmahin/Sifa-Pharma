@@ -4,16 +4,16 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import AdminHeader from "../../../../components/admin/AdminHeader";
 import ProductForm from "../../../../components/admin/ProductForm";
 import EmptyState from "../../../../components/common/EmptyState";
-import colors from "../../../../constants/colors";
+import { useThemeColors } from "../../../../providers/ThemeProvider";
 import type { Category } from "../../../../types/category";
 import type { Manufacturer } from "../../../../types/manufacturer";
 import type { Product } from "../../../../types/product";
 
 export default function AdminEditProductScreen() {
+  const colors = useThemeColors();
   const params = useLocalSearchParams<{ productId: string }>();
   const productId = params.productId;
 
-  // frontend-only: placeholder product — no backend
   const categories: Category[] = [];
   const manufacturers: Manufacturer[] = [];
   const product: Product | null = productId
@@ -35,7 +35,7 @@ export default function AdminEditProductScreen() {
 
   if (!product) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
         <AdminHeader title="Edit product" subtitle="Update catalog item" />
         <EmptyState
           title="Product not found"
@@ -48,7 +48,7 @@ export default function AdminEditProductScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
       <AdminHeader title="Edit product" subtitle="Update catalog item" />
       <ProductForm
         product={product}
@@ -56,7 +56,6 @@ export default function AdminEditProductScreen() {
         manufacturers={manufacturers}
         submitLabel="Save changes"
         onSubmit={async () => {
-          // backend required — no-op frontend-only
           router.back();
         }}
       />
@@ -65,5 +64,5 @@ export default function AdminEditProductScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: colors.background },
+  safeArea: { flex: 1 },
 });

@@ -8,7 +8,7 @@ import Button from "../../../components/common/Button";
 import EmptyState from "../../../components/common/EmptyState";
 import FilterChip from "../../../components/common/FilterChip";
 import SearchBar from "../../../components/common/SearchBar";
-import colors from "../../../constants/colors";
+import { useThemeColors } from "../../../providers/ThemeProvider";
 import config from "../../../constants/config";
 import spacing from "../../../constants/spacing";
 import typography from "../../../constants/typography";
@@ -32,10 +32,10 @@ const STOCK_FILTERS: { label: string; value: StockFilter }[] = [
 ];
 
 export default function AdminProductsScreen() {
+  const colors = useThemeColors();
   const { width } = useWindowDimensions();
   const twoColumns = width >= 720;
 
-  // frontend-only: empty typed arrays — no backend
   const [products] = useState<Product[]>([]);
   const [categories] = useState<Category[]>([]);
   const [query, setQuery] = useState("");
@@ -71,7 +71,7 @@ export default function AdminProductsScreen() {
   }, [products, query, status, stockFilter, categoryId]);
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
       <AdminHeader
         title="Products"
         subtitle="Manage catalog and stock"
@@ -140,7 +140,7 @@ export default function AdminProductsScreen() {
           />
         ) : (
           <>
-            <Text style={styles.count}>
+            <Text style={[styles.count, { color: colors.textMuted }]}>
               {filtered.length} {filtered.length === 1 ? "product" : "products"}
             </Text>
             <View style={[styles.list, twoColumns && styles.listTwoCol]}>
@@ -166,7 +166,7 @@ export default function AdminProductsScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: colors.background },
+  safeArea: { flex: 1 },
   container: {
     padding: spacing.lg,
     gap: spacing.md,
@@ -175,7 +175,6 @@ const styles = StyleSheet.create({
   filters: { gap: spacing.sm },
   chipRow: { gap: spacing.sm, paddingRight: spacing.sm },
   count: {
-    color: colors.textMuted,
     fontSize: typography.caption,
     fontWeight: "600",
     letterSpacing: 0.4,

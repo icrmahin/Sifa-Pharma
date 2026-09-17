@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import AdminHeader from '../../../components/admin/AdminHeader';
 import EmptyState from '../../../components/common/EmptyState';
-import colors from '../../../constants/colors';
+import { useThemeColors } from '../../../providers/ThemeProvider';
 import spacing from '../../../constants/spacing';
 import typography from '../../../constants/typography';
 import { formatCurrency } from '../../../utils/currency';
@@ -18,10 +18,10 @@ type CustomerRecord = {
 };
 
 export default function AdminCustomerDetailScreen() {
+  const colors = useThemeColors();
   const params = useLocalSearchParams<{ customerId: string }>();
   const customerId = params.customerId;
 
-  // frontend-only: placeholder single object — no backend
   const customer: CustomerRecord | null = customerId
     ? {
         id: String(customerId),
@@ -34,7 +34,7 @@ export default function AdminCustomerDetailScreen() {
 
   if (!customer) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
         <AdminHeader title="Customer" subtitle="Customer overview" />
         <EmptyState
           title="Customer not found"
@@ -47,17 +47,17 @@ export default function AdminCustomerDetailScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
       <AdminHeader title={customer?.name ?? "Customer"} subtitle="Customer overview" />
 
       <ScrollView contentContainerStyle={styles.container}>
-        <View style={styles.card}>
-          <Text style={styles.label}>Phone</Text>
-          <Text style={styles.value}>{customer.phone}</Text>
-          <Text style={styles.label}>Orders</Text>
-          <Text style={styles.value}>{customer.orderCount}</Text>
-          <Text style={styles.label}>Total spending</Text>
-          <Text style={styles.value}>{formatCurrency(customer.totalSpent)}</Text>
+        <View style={[styles.card, { backgroundColor: colors.backgroundAlt, borderColor: colors.borderLight }]}>
+          <Text style={[styles.label, { color: colors.text }]}>Phone</Text>
+          <Text style={[styles.value, { color: colors.textMuted }]}>{customer.phone}</Text>
+          <Text style={[styles.label, { color: colors.text }]}>Orders</Text>
+          <Text style={[styles.value, { color: colors.textMuted }]}>{customer.orderCount}</Text>
+          <Text style={[styles.label, { color: colors.text }]}>Total spending</Text>
+          <Text style={[styles.value, { color: colors.textMuted }]}>{formatCurrency(customer.totalSpent)}</Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -65,16 +65,13 @@ export default function AdminCustomerDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: colors.background },
+  safeArea: { flex: 1 },
   container: { padding: spacing.lg, gap: spacing.lg, paddingBottom: spacing.xxl },
-  errorWrap: { padding: spacing.lg },
   card: {
-    backgroundColor: colors.backgroundAlt,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: colors.border,
     padding: spacing.lg,
   },
-  label: { color: colors.text, fontSize: typography.bodySmall, fontWeight: '700', marginTop: spacing.md },
-  value: { color: colors.textMuted, fontSize: typography.body, marginTop: spacing.xs },
+  label: { fontSize: typography.bodySmall, fontWeight: '700', marginTop: spacing.md },
+  value: { fontSize: typography.body, marginTop: spacing.xs },
 });

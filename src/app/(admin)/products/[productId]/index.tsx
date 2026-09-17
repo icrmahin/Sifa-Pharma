@@ -8,28 +8,28 @@ import EmptyState from "../../../../components/common/EmptyState";
 import Modal from "../../../../components/common/Modal";
 import StatusBadge from "../../../../components/common/StatusBadge";
 import ProductImage from "../../../../components/products/ProductImage";
-import colors from "../../../../constants/colors";
+import { useThemeColors } from "../../../../providers/ThemeProvider";
 import config from "../../../../constants/config";
 import spacing from "../../../../constants/spacing";
 import typography from "../../../../constants/typography";
 import type { Product } from "../../../../types/product";
 import { formatCurrency } from "../../../../utils/currency";
 
-function InfoRow({ label, value }: { label: string; value: string }) {
+function InfoRow({ label, value, colors }: { label: string; value: string; colors: ReturnType<typeof useThemeColors> }) {
   if (!value) return null;
   return (
     <View style={styles.infoRow}>
-      <Text style={styles.infoLabel}>{label}</Text>
-      <Text style={styles.infoValue} numberOfLines={1}>{value}</Text>
+      <Text style={[styles.infoLabel, { color: colors.textMuted }]}>{label}</Text>
+      <Text style={[styles.infoValue, { color: colors.text }]} numberOfLines={1}>{value}</Text>
     </View>
   );
 }
 
 export default function AdminProductDetailScreen() {
+  const colors = useThemeColors();
   const params = useLocalSearchParams<{ productId: string }>();
   const productId = params.productId;
 
-  // frontend-only: placeholder product — no backend
   const placeholderProduct: Product | null = productId
     ? {
         id: String(productId),
@@ -53,10 +53,9 @@ export default function AdminProductDetailScreen() {
   const manufacturerName = "";
   const [deleteConfirm, setDeleteConfirm] = useState(false);
 
-  // Show EmptyState if no placeholder (e.g. missing param) to keep UI intact
   if (!product) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
         <AdminHeader title="Product" subtitle="Product overview" />
         <EmptyState
           title="Product not found"
@@ -69,29 +68,19 @@ export default function AdminProductDetailScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <AdminHeader
-        title={product?.name ?? "Product"}
-        subtitle="Product overview"
-      />
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+      <AdminHeader title={product?.name ?? "Product"} subtitle="Product overview" />
 
       <ScrollView contentContainerStyle={styles.container}>
-        <ProductImage
-          uri={product.image}
-          recyclingKey={product.id}
-          style={styles.image}
-        />
+        <ProductImage uri={product.image} recyclingKey={product.id} style={styles.image} />
 
-        <View style={styles.card}>
-          <Text style={styles.brand}>{product.brand}</Text>
-          <Text style={styles.name}>{product.name}</Text>
-          <Text style={styles.generic}>{product.genericName}</Text>
+        <View style={[styles.card, { backgroundColor: colors.backgroundAlt, borderColor: colors.borderLight }]}>
+          <Text style={[styles.brand, { color: colors.textMuted }]}>{product.brand}</Text>
+          <Text style={[styles.name, { color: colors.text }]}>{product.name}</Text>
+          <Text style={[styles.generic, { color: colors.textMuted }]}>{product.genericName}</Text>
 
           <View style={styles.badges}>
-            <StatusBadge
-              label={product.isActive ? "Active" : "Inactive"}
-              tone={product.isActive ? "info" : "neutral"}
-            />
+            <StatusBadge label={product.isActive ? "Active" : "Inactive"} tone={product.isActive ? "info" : "neutral"} />
             <StatusBadge
               label={
                 product.stock === 0
@@ -111,9 +100,9 @@ export default function AdminProductDetailScreen() {
           </View>
 
           <View style={styles.priceRow}>
-            <Text style={styles.price}>{formatCurrency(product.price)}</Text>
+            <Text style={[styles.price, { color: colors.text }]}>{formatCurrency(product.price)}</Text>
             {product.originalPrice && product.originalPrice > product.price ? (
-              <Text style={styles.original}>
+              <Text style={[styles.original, { color: colors.textMuted }]}>
                 {formatCurrency(product.originalPrice)}
               </Text>
             ) : null}
@@ -122,13 +111,13 @@ export default function AdminProductDetailScreen() {
             ) : null}
           </View>
 
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: colors.borderLight }]} />
 
-          <InfoRow label="Category" value={categoryName} />
-          <InfoRow label="Manufacturer" value={manufacturerName} />
-          <InfoRow label="Unit" value={product.unit} />
-          <InfoRow label="Stock" value={`${product.stock} units`} />
-          <InfoRow label="Batch number" value={product.batchNumber ?? ""} />
+          <InfoRow label="Category" value={categoryName} colors={colors} />
+          <InfoRow label="Manufacturer" value={manufacturerName} colors={colors} />
+          <InfoRow label="Unit" value={product.unit} colors={colors} />
+          <InfoRow label="Stock" value={`${product.stock} units`} colors={colors} />
+          <InfoRow label="Batch number" value={product.batchNumber ?? ""} colors={colors} />
           <InfoRow
             label="Expiry date"
             value={
@@ -136,12 +125,13 @@ export default function AdminProductDetailScreen() {
                 ? new Date(product.expiryDate).toLocaleDateString()
                 : ""
             }
+            colors={colors}
           />
-          <InfoRow label="Featured" value={product.isFeatured ? "Yes" : "No"} />
+          <InfoRow label="Featured" value={product.isFeatured ? "Yes" : "No"} colors={colors} />
 
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: colors.borderLight }]} />
 
-          <Text style={styles.description}>{product.description}</Text>
+          <Text style={[styles.description, { color: colors.textMuted }]}>{product.description}</Text>
         </View>
 
         <View style={styles.actions}>
@@ -158,9 +148,7 @@ export default function AdminProductDetailScreen() {
           <Button
             title={product.isActive ? "Deactivate" : "Activate"}
             variant={product.isActive ? "secondary" : "primary"}
-            onPress={() => {
-              // backend required — no-op frontend-only
-            }}
+            onPress={() => {}}
             fullWidth
           />
           <Button
@@ -178,7 +166,6 @@ export default function AdminProductDetailScreen() {
         message={`"${product?.name ?? "This product"}" will be permanently removed from the catalog.`}
         actionLabel="Delete product"
         onAction={() => {
-          // backend required — no-op frontend-only
           setDeleteConfirm(false);
           router.replace("/(admin)/products");
         }}
@@ -189,7 +176,7 @@ export default function AdminProductDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: colors.background },
+  safeArea: { flex: 1 },
   container: {
     padding: spacing.lg,
     gap: spacing.lg,
@@ -200,22 +187,19 @@ const styles = StyleSheet.create({
   },
   image: { height: 180, borderRadius: 12 },
   card: {
-    backgroundColor: colors.backgroundAlt,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.hairline,
     padding: spacing.lg,
     gap: spacing.sm,
   },
   brand: {
-    color: colors.textMuted,
     fontSize: typography.caption,
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: 0.6,
   },
-  name: { color: colors.text, fontSize: typography.h2, fontWeight: "700" },
-  generic: { color: colors.textMuted, fontSize: typography.bodySmall },
+  name: { fontSize: typography.h2, fontWeight: "700" },
+  generic: { fontSize: typography.bodySmall },
   badges: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm, marginTop: spacing.sm },
   priceRow: {
     flexDirection: "row",
@@ -223,26 +207,24 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     marginTop: spacing.sm,
   },
-  price: { color: colors.text, fontSize: typography.h3, fontWeight: "800" },
+  price: { fontSize: typography.h3, fontWeight: "800" },
   original: {
-    color: colors.textMuted,
     fontSize: typography.caption,
     textDecorationLine: "line-through",
   },
-  divider: { height: 1, backgroundColor: colors.borderSoft, marginVertical: spacing.sm },
+  divider: { height: 1, marginVertical: spacing.sm },
   infoRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     gap: spacing.md,
   },
-  infoLabel: { color: colors.textMuted, fontSize: typography.bodySmall },
+  infoLabel: { fontSize: typography.bodySmall },
   infoValue: {
-    color: colors.text,
     fontSize: typography.bodySmall,
     fontWeight: "600",
     flexShrink: 1,
   },
-  description: { color: colors.textMuted, fontSize: typography.bodySmall, lineHeight: 20 },
+  description: { fontSize: typography.bodySmall, lineHeight: 20 },
   actions: { gap: spacing.md, marginTop: spacing.xs },
 });

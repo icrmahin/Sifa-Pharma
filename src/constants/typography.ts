@@ -1,5 +1,20 @@
-// ─── Font families (Sora via @expo-google-fonts/sora) ────
+// ─── Font families ──────────────────────────────────────
+// Sora — brand personality, headings, prominent UI
+// Inter — operational density, data, tables, body
 export const fontFamily = {
+  // Sora
+  soraRegular: "Sora_400Regular",
+  soraMedium: "Sora_500Medium",
+  soraSemiBold: "Sora_600SemiBold",
+  soraBold: "Sora_700Bold",
+
+  // Inter
+  interRegular: "Inter_400Regular",
+  interMedium: "Inter_500Medium",
+  interSemiBold: "Inter_600SemiBold",
+  interBold: "Inter_700Bold",
+
+  // Legacy aliases (backward compat — maps to Sora)
   regular: "Sora_400Regular",
   medium: "Sora_500Medium",
   semiBold: "Sora_600SemiBold",
@@ -7,33 +22,52 @@ export const fontFamily = {
 } as const;
 
 // ─── Type scale ──────────────────────────────────────────
-// All sizes in px. Corresponds to the Sora typeface rhythm.
 export const fontSize = {
-  /** 34px — hero / splash brand */
   largeTitle: 34,
-  /** 28px — screen titles */
   title1: 28,
-  /** 22px — section headers */
   title2: 22,
-  /** 20px — card titles */
   title3: 20,
-  /** 17px — primary body */
   body: 17,
-  /** 16px — callout / secondary body */
   callout: 16,
-  /** 15px — secondary body / subhead */
   bodySmall: 15,
-  /** 15px — subhead (alias) */
   subhead: 15,
-  /** 13px — footnotes, helper text */
   footnote: 13,
-  /** 12px — captions, labels */
   caption: 12,
-  /** 11px — micro labels, badges */
   micro: 11,
 } as const;
 
-// ─── Legacy aliases (kept for backward compatibility) ────
+// ─── Semantic typography tokens ──────────────────────────
+// Use these instead of raw font-family + size combinations.
+export const semanticType = {
+  /** 34px Sora Bold — splash, hero */
+  display: { fontFamily: fontFamily.soraBold, fontSize: fontSize.largeTitle },
+  /** 28px Sora Bold — screen titles */
+  h1: { fontFamily: fontFamily.soraBold, fontSize: fontSize.title1 },
+  /** 22px Sora SemiBold — section headers */
+  h2: { fontFamily: fontFamily.soraSemiBold, fontSize: fontSize.title2 },
+  /** 20px Sora SemiBold — card titles */
+  h3: { fontFamily: fontFamily.soraSemiBold, fontSize: fontSize.title3 },
+  /** 17px Sora Medium — primary headings */
+  title: { fontFamily: fontFamily.soraMedium, fontSize: fontSize.body },
+  /** 15px Inter Regular — body text, descriptions */
+  body: { fontFamily: fontFamily.interRegular, fontSize: fontSize.bodySmall },
+  /** 15px Inter Medium — emphasized body */
+  bodyMedium: { fontFamily: fontFamily.interMedium, fontSize: fontSize.bodySmall },
+  /** 13px Inter Regular — labels, metadata */
+  label: { fontFamily: fontFamily.interRegular, fontSize: fontSize.footnote },
+  /** 12px Inter Regular — captions, hints */
+  caption: { fontFamily: fontFamily.interRegular, fontSize: fontSize.caption },
+  /** 13px Inter SemiBold — buttons */
+  button: { fontFamily: fontFamily.interSemiBold, fontSize: fontSize.footnote },
+  /** 11px Inter SemiBold — navigation, badges */
+  navigation: { fontFamily: fontFamily.interSemiBold, fontSize: fontSize.micro },
+  /** 13px Inter Regular — table content */
+  table: { fontFamily: fontFamily.interRegular, fontSize: fontSize.footnote },
+  /** 22px Inter Bold — dashboard metrics */
+  metric: { fontFamily: fontFamily.interBold, fontSize: fontSize.title2 },
+} as const;
+
+// ─── Legacy aliases (backward compat) ────────────────────
 export const legacyFontSizes = {
   largeTitle: fontSize.largeTitle,
   title1: fontSize.title1,
@@ -47,7 +81,6 @@ export const legacyFontSizes = {
   footnote: fontSize.footnote,
   caption1: fontSize.caption,
   caption2: fontSize.micro,
-  // aliases used by existing screens
   title: fontSize.largeTitle,
   h1: fontSize.title1,
   h2: fontSize.title2,

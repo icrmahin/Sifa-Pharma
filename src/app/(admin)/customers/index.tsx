@@ -5,7 +5,7 @@ import { router } from 'expo-router';
 import AdminHeader from '../../../components/admin/AdminHeader';
 import EmptyState from '../../../components/common/EmptyState';
 import SearchBar from '../../../components/common/SearchBar';
-import colors from '../../../constants/colors';
+import { useThemeColors } from '../../../providers/ThemeProvider';
 import spacing from '../../../constants/spacing';
 import typography from '../../../constants/typography';
 
@@ -19,7 +19,7 @@ type CustomerRecord = {
 };
 
 export default function AdminCustomersScreen() {
-  // frontend-only: empty typed array — no backend
+  const colors = useThemeColors();
   const customers: CustomerRecord[] = [];
   const [query, setQuery] = useState('');
 
@@ -28,7 +28,7 @@ export default function AdminCustomersScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
       <AdminHeader title="Customers" subtitle="Manage customer records" />
       <ScrollView contentContainerStyle={styles.container}>
         <SearchBar value={query} onChangeText={setQuery} placeholder="Search customer" />
@@ -41,13 +41,22 @@ export default function AdminCustomersScreen() {
           />
         ) : (
           filtered.map((customer) => (
-            <View key={customer.id} style={styles.row}>
+            <View
+              key={customer.id}
+              style={[
+                styles.row,
+                {
+                  backgroundColor: colors.backgroundAlt,
+                  borderColor: colors.borderLight,
+                },
+              ]}
+            >
               <View>
-                <Text style={styles.name}>{customer.name}</Text>
-                <Text style={styles.info}>{customer.phone}</Text>
+                <Text style={[styles.name, { color: colors.text }]}>{customer.name}</Text>
+                <Text style={[styles.info, { color: colors.textMuted }]}>{customer.phone}</Text>
               </View>
               <Text
-                style={styles.link}
+                style={[styles.link, { color: colors.primary }]}
                 onPress={() =>
                   router.push({
                     pathname: '/(admin)/customers/[customerId]',
@@ -66,19 +75,17 @@ export default function AdminCustomersScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: colors.background },
+  safeArea: { flex: 1 },
   container: { padding: spacing.lg, gap: spacing.md, paddingBottom: spacing.xxl },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: colors.backgroundAlt,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: colors.border,
     padding: spacing.md,
   },
-  name: { color: colors.text, fontSize: typography.body, fontWeight: '700' },
-  info: { color: colors.textMuted, fontSize: typography.caption },
-  link: { color: colors.primary, fontWeight: '700' },
+  name: { fontSize: typography.body, fontWeight: '700' },
+  info: { fontSize: typography.caption },
+  link: { fontWeight: '700' },
 });

@@ -6,17 +6,17 @@ import AdminHeader from '../../../components/admin/AdminHeader';
 import Button from '../../../components/common/Button';
 import EmptyState from '../../../components/common/EmptyState';
 import StatusBadge from '../../../components/common/StatusBadge';
-import colors from '../../../constants/colors';
+import { useThemeColors } from '../../../providers/ThemeProvider';
 import spacing from '../../../constants/spacing';
 import typography from '../../../constants/typography';
 import type { Order } from '../../../types/order';
 import { formatCurrency } from '../../../utils/currency';
 
 export default function AdminOrderDetailScreen() {
+  const colors = useThemeColors();
   const params = useLocalSearchParams<{ orderId: string }>();
   const orderId = params.orderId;
 
-  // frontend-only: placeholder single object — no backend
   const placeholderOrder: Order | null = orderId
     ? {
         id: String(orderId),
@@ -41,7 +41,7 @@ export default function AdminOrderDetailScreen() {
 
   if (!order) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
         <AdminHeader title="Order" subtitle="Review order details" />
         <EmptyState
           title="Order not found"
@@ -54,49 +54,45 @@ export default function AdminOrderDetailScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
       <AdminHeader title={order?.orderNumber ?? "Order"} subtitle="Review order details" />
 
       <>
         <ScrollView contentContainerStyle={styles.container}>
-          <View style={styles.card}>
-            <Text style={styles.customer}>{order.customerName}</Text>
+          <View style={[styles.card, { backgroundColor: colors.backgroundAlt, borderColor: colors.borderLight }]}>
+            <Text style={[styles.customer, { color: colors.text }]}>{order.customerName}</Text>
             <StatusBadge label={order.status} tone={order.status === 'PENDING' ? 'warning' : order.status === 'DELIVERED' ? 'success' : 'info'} />
-            <Text style={styles.meta}>Total: {formatCurrency(order.total)}</Text>
-            <Text style={styles.meta}>Address: {order.address}</Text>
+            <Text style={[styles.meta, { color: colors.textMuted }]}>Total: {formatCurrency(order.total)}</Text>
+            <Text style={[styles.meta, { color: colors.textMuted }]}>Address: {order.address}</Text>
           </View>
 
-          <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Products</Text>
+          <View style={[styles.card, { backgroundColor: colors.backgroundAlt, borderColor: colors.borderLight }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Products</Text>
             {order.items.length === 0 ? (
-              <Text style={styles.meta}>No items — frontend-only placeholder.</Text>
+              <Text style={[styles.meta, { color: colors.textMuted }]}>No items — frontend-only placeholder.</Text>
             ) : (
               order.items.map((item) => (
                 <View key={item.id} style={styles.row}>
-                  <Text style={styles.itemName}>{item.productName}</Text>
-                  <Text style={styles.itemMeta}>{item.quantity} × {formatCurrency(item.unitPrice)}</Text>
+                  <Text style={[styles.itemName, { color: colors.text }]}>{item.productName}</Text>
+                  <Text style={[styles.itemMeta, { color: colors.textMuted }]}>{item.quantity} × {formatCurrency(item.unitPrice)}</Text>
                 </View>
               ))
             )}
           </View>
         </ScrollView>
 
-        <View style={styles.footer}>
-          {actionError ? <Text style={styles.actionError}>{actionError}</Text> : null}
+        <View style={[styles.footer, { borderTopColor: colors.borderLight, backgroundColor: colors.background }]}>
+          {actionError ? <Text style={[styles.actionError, { color: colors.danger }]}>{actionError}</Text> : null}
           <Button
             title="Confirm order"
-            onPress={() => {
-              // backend required — no-op frontend-only
-            }}
+            onPress={() => {}}
             disabled={order.status === "DELIVERED" || order.status === "CANCELLED" || order.status === "RETURNED"}
             fullWidth
           />
           <Button
             title="Cancel order"
             variant="secondary"
-            onPress={() => {
-              // backend required — no-op frontend-only
-            }}
+            onPress={() => {}}
             disabled={order.status === "DELIVERED" || order.status === "CANCELLED" || order.status === "RETURNED"}
             fullWidth
           />
@@ -107,22 +103,19 @@ export default function AdminOrderDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: colors.background },
+  safeArea: { flex: 1 },
   container: { padding: spacing.lg, gap: spacing.lg, paddingBottom: spacing.xxl },
-  errorWrap: { padding: spacing.lg },
-  card: { backgroundColor: colors.backgroundAlt, borderRadius: 16, borderWidth: 1, borderColor: colors.border, padding: spacing.lg },
-  customer: { color: colors.text, fontSize: typography.h3, fontWeight: '700', marginBottom: spacing.sm },
-  meta: { color: colors.textMuted, fontSize: typography.bodySmall, marginTop: spacing.sm },
-  sectionTitle: { color: colors.text, fontSize: typography.h3, fontWeight: '700', marginBottom: spacing.md },
+  card: { borderRadius: 16, borderWidth: 1, padding: spacing.lg },
+  customer: { fontSize: typography.h3, fontWeight: '700', marginBottom: spacing.sm },
+  meta: { fontSize: typography.bodySmall, marginTop: spacing.sm },
+  sectionTitle: { fontSize: typography.h3, fontWeight: '700', marginBottom: spacing.md },
   row: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: spacing.sm },
-  itemName: { color: colors.text, fontSize: typography.body, flex: 1 },
-  itemMeta: { color: colors.textMuted, fontSize: typography.bodySmall },
+  itemName: { fontSize: typography.body, flex: 1 },
+  itemMeta: { fontSize: typography.bodySmall },
   footer: {
     padding: spacing.lg,
     gap: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
-    backgroundColor: colors.background,
   },
-  actionError: { color: colors.danger, fontSize: typography.bodySmall, textAlign: "center" },
+  actionError: { fontSize: typography.bodySmall, textAlign: "center" },
 });

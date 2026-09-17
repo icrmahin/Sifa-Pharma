@@ -1,30 +1,21 @@
 import { router } from "expo-router";
-import { SymbolView, type SymbolViewProps } from "expo-symbols";
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
-import colors from "../../constants/colors";
+import Icon from "../common/Icon";
+import { useThemeColors } from "../../providers/ThemeProvider";
 import sizes from "../../constants/sizes";
 import spacing from "../../constants/spacing";
 import typography from "../../constants/typography";
+import type { IconName } from "../common/Icon";
 
-type IconName = SymbolViewProps["name"];
-
-const MENU_ITEMS: {
-  label: string;
-  path: string;
-  icon: IconName;
-}[] = [
-  { label: "Inventory", path: "/(admin)/inventory", icon: { ios: "archivebox.fill", android: "inventory", web: "inventory" } },
-  { label: "Customers", path: "/(admin)/customers", icon: { ios: "person.2.fill", android: "people", web: "people" } },
-  { label: "Reports", path: "/(admin)/reports", icon: { ios: "chart.bar.fill", android: "bar_chart", web: "bar_chart" } },
-  { label: "Returns", path: "/(admin)/returns", icon: { ios: "arrow.uturn.backward", android: "assignment_return", web: "assignment_return" } },
-  { label: "Audit log", path: "/(admin)/audit", icon: { ios: "doc.text.fill", android: "description", web: "description" } },
+const MENU_ITEMS: { label: string; path: string; icon: IconName }[] = [
+  { label: "Inventory", path: "/(admin)/inventory", icon: "inventory" },
+  { label: "Customers", path: "/(admin)/customers", icon: "people" },
+  { label: "Reports", path: "/(admin)/reports", icon: "bar-chart" },
+  { label: "Returns", path: "/(admin)/returns", icon: "assignment-return" },
+  { label: "Audit log", path: "/(admin)/audit", icon: "description" },
 ];
 
-const SHOP_ITEM = {
-  label: "Back to Shop",
-  path: "/(customer)/(tabs)" as const,
-  icon: { ios: "storefront.fill", android: "store", web: "store" } as IconName,
-};
+const SHOP_ITEM = { label: "Back to Shop", path: "/(customer)/(tabs)" as const, icon: "store" as IconName };
 
 export default function AdminDrawer({
   visible,
@@ -33,6 +24,8 @@ export default function AdminDrawer({
   visible: boolean;
   onClose: () => void;
 }) {
+  const colors = useThemeColors();
+
   const navigate = (path: string) => {
     onClose();
     router.push(path as never);
@@ -46,20 +39,17 @@ export default function AdminDrawer({
       onRequestClose={onClose}
     >
       <View style={styles.container}>
-        <View style={styles.drawer}>
-          <View style={styles.drawerHeader}>
-            <Text style={styles.drawerTitle}>Menu</Text>
+        <Pressable style={styles.backdrop} onPress={onClose} />
+        <View style={[styles.drawer, { backgroundColor: colors.backgroundAlt, borderTopColor: colors.borderLight }]}>
+          <View style={[styles.drawerHeader, { borderBottomColor: colors.borderLight }]}>
+            <Text style={[styles.drawerTitle, { color: colors.text }]}>Menu</Text>
             <Pressable
               onPress={onClose}
-              style={styles.closeButton}
+              style={[styles.closeButton, { backgroundColor: colors.background }]}
               accessibilityRole="button"
               accessibilityLabel="Close menu"
             >
-              <SymbolView
-                name={{ ios: "xmark", android: "close", web: "close" }}
-                tintColor={colors.textMuted}
-                size={18}
-              />
+              <Icon name="close" size={18} color={colors.textMuted} />
             </Pressable>
           </View>
 
@@ -67,43 +57,41 @@ export default function AdminDrawer({
             {MENU_ITEMS.map((item) => (
               <Pressable
                 key={item.label}
-                style={({ pressed }) => [styles.menuItem, pressed && styles.pressed]}
+                style={({ pressed }) => [
+                  styles.menuItem,
+                  pressed && { backgroundColor: colors.background },
+                ]}
                 onPress={() => navigate(item.path)}
                 android_ripple={{ color: colors.ripple.primary }}
                 accessibilityRole="button"
                 accessibilityLabel={`Open ${item.label}`}
               >
-                <View style={styles.iconTile}>
-                  <SymbolView name={item.icon} tintColor={colors.primary} size={18} />
+                <View style={[styles.iconTile, { backgroundColor: colors.primarySoft }]}>
+                  <Icon name={item.icon} size={18} color={colors.primary} />
                 </View>
-                <Text style={styles.menuLabel}>{item.label}</Text>
-                <SymbolView
-                  name={{ ios: "chevron.right", android: "chevron_right", web: "chevron_right" }}
-                  tintColor={colors.textMuted}
-                  size={14}
-                />
+                <Text style={[styles.menuLabel, { color: colors.text }]}>{item.label}</Text>
+                <Icon name="chevron-right" size={16} color={colors.textMuted} />
               </Pressable>
             ))}
           </View>
 
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: colors.borderLight }]} />
 
           <Pressable
-            style={({ pressed }) => [styles.menuItem, pressed && styles.pressed]}
+            style={({ pressed }) => [
+              styles.menuItem,
+              pressed && { backgroundColor: colors.background },
+            ]}
             onPress={() => navigate(SHOP_ITEM.path)}
             android_ripple={{ color: colors.ripple.primary }}
             accessibilityRole="button"
             accessibilityLabel="Back to shop"
           >
-            <View style={styles.iconTile}>
-              <SymbolView name={SHOP_ITEM.icon} tintColor={colors.success} size={18} />
+            <View style={[styles.iconTile, { backgroundColor: colors.successSoft }]}>
+              <Icon name={SHOP_ITEM.icon} size={18} color={colors.success} />
             </View>
             <Text style={[styles.menuLabel, { color: colors.success }]}>{SHOP_ITEM.label}</Text>
-            <SymbolView
-              name={{ ios: "chevron.right", android: "chevron_right", web: "chevron_right" }}
-              tintColor={colors.textMuted}
-              size={14}
-            />
+            <Icon name="chevron-right" size={16} color={colors.textMuted} />
           </Pressable>
         </View>
       </View>
@@ -116,14 +104,16 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "flex-end",
   },
+  backdrop: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: "rgba(0,0,0,0.4)",
+  },
   drawer: {
-    backgroundColor: colors.backgroundAlt,
     borderTopLeftRadius: sizes.borderRadius.xl,
     borderTopRightRadius: sizes.borderRadius.xl,
     paddingTop: spacing.lg,
     paddingBottom: spacing.xxl,
     borderTopWidth: 1,
-    borderTopColor: colors.borderLight,
   },
   drawerHeader: {
     flexDirection: "row",
@@ -132,10 +122,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: colors.borderLight,
   },
   drawerTitle: {
-    color: colors.text,
     fontSize: typography.title3,
     fontWeight: "700",
   },
@@ -143,7 +131,6 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: colors.background,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -164,21 +151,17 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: sizes.borderRadius.sm,
-    backgroundColor: colors.primarySoft,
     alignItems: "center",
     justifyContent: "center",
   },
   menuLabel: {
     flex: 1,
-    color: colors.text,
     fontSize: typography.subhead,
     fontWeight: "500",
   },
   divider: {
     height: 1,
-    backgroundColor: colors.borderLight,
     marginHorizontal: spacing.lg,
     marginVertical: spacing.md,
   },
-  pressed: { opacity: 0.7, backgroundColor: colors.background },
 });

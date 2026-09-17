@@ -1,7 +1,7 @@
 import { router, usePathname } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import colors from "../../constants/colors";
+import { useThemeColors } from "../../providers/ThemeProvider";
 import spacing from "../../constants/spacing";
 import { useCart } from "../../providers/CartProvider";
 import Icon from "./Icon";
@@ -58,39 +58,47 @@ function getActivePath(pathname: string) {
 export default function CustomerNavigation() {
   const pathname = usePathname();
   const insets = useSafeAreaInsets();
+  const colors = useThemeColors();
   const { itemCount } = useCart();
   const activePath = getActivePath(pathname);
 
   return (
     <View
-      style={[styles.container, { paddingBottom: Math.max(insets.bottom, spacing.sm) }]}
+      style={[
+        styles.container,
+        {
+          paddingBottom: Math.max(insets.bottom, spacing.sm),
+          backgroundColor: colors.backgroundAlt,
+          borderTopColor: colors.borderLight,
+        },
+      ]}
     >
       {navigationItems.map((item) => {
         const active = item.path === activePath;
         return (
           <Pressable
             key={item.label}
-            style={({ pressed }) => [
-              styles.item,
-              active && styles.activeItem,
-              pressed && styles.pressed,
-            ]}
+            style={({ pressed }) => [styles.item, pressed && styles.pressed]}
             onPress={() => router.replace(item.path as never)}
             android_ripple={{ color: colors.ripple.primary }}
             accessibilityRole="button"
             accessibilityLabel={`${item.label}${item.label === "Cart" && itemCount > 0 ? `, ${itemCount} items` : ""}`}
             accessibilityState={{ selected: active }}
           >
-            {active ? <View style={styles.activeIndicator} /> : null}
-            <View style={[styles.iconContainer, active && styles.activeIconContainer]}>
+            <View
+              style={[
+                styles.iconContainer,
+                active && { backgroundColor: colors.primarySoft },
+              ]}
+            >
               <Icon
                 name={active ? item.activeIcon : item.icon}
                 size={22}
                 color={active ? colors.primary : colors.textMuted}
               />
               {item.label === "Cart" && itemCount > 0 ? (
-                <View style={styles.badge} accessibilityLabel={`${itemCount} items in cart`}>
-                  <Text style={styles.badgeText}>
+                <View style={[styles.badge, { backgroundColor: colors.gold }]} accessibilityLabel={`${itemCount} items in cart`}>
+                  <Text style={[styles.badgeText, { color: colors.white }]}>
                     {itemCount > 99 ? "99+" : itemCount}
                   </Text>
                 </View>
@@ -106,9 +114,7 @@ export default function CustomerNavigation() {
 const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
-    backgroundColor: colors.backgroundAlt,
     borderTopWidth: 1,
-    borderTopColor: colors.borderLight,
     paddingTop: spacing.sm,
   },
   item: {
@@ -116,17 +122,7 @@ const styles = StyleSheet.create({
     minHeight: 44,
     alignItems: "center",
     justifyContent: "center",
-    position: "relative",
     paddingTop: spacing.xs,
-  },
-  activeItem: {},
-  activeIndicator: {
-    position: "absolute",
-    top: 0,
-    width: 24,
-    height: 2,
-    borderRadius: 1,
-    backgroundColor: colors.primary,
   },
   iconContainer: {
     width: 40,
@@ -136,9 +132,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     position: "relative",
   },
-  activeIconContainer: {
-    backgroundColor: colors.primarySoft,
-  },
   badge: {
     position: "absolute",
     top: -2,
@@ -147,12 +140,10 @@ const styles = StyleSheet.create({
     height: 16,
     paddingHorizontal: 3,
     borderRadius: 8,
-    backgroundColor: colors.gold,
     alignItems: "center",
     justifyContent: "center",
   },
   badgeText: {
-    color: colors.white,
     fontSize: 9,
     fontWeight: "700",
   },

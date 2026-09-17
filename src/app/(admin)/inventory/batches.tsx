@@ -4,26 +4,35 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import AdminHeader from '../../../components/admin/AdminHeader';
 import EmptyState from '../../../components/common/EmptyState';
 import StatusBadge from '../../../components/common/StatusBadge';
-import colors from '../../../constants/colors';
+import { useThemeColors } from '../../../providers/ThemeProvider';
 import spacing from '../../../constants/spacing';
 import type { InventoryItem } from '../../../types/inventory';
 
 export default function InventoryBatchesScreen() {
-  // frontend-only: empty typed array — no backend
+  const colors = useThemeColors();
   const batches: InventoryItem[] = [];
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
       <AdminHeader title="Batches" subtitle="Track each batch independently" />
       <ScrollView contentContainerStyle={styles.container}>
         {batches.length === 0 ? (
           <EmptyState title="No batches" message="Product batches will appear here." />
         ) : (
           batches.map((item) => (
-            <View key={item.id} style={styles.card}>
-              <Text style={styles.heading}>{item.batchNumber}</Text>
-              <Text style={styles.meta}>{item.productName}</Text>
-              <Text style={styles.meta}>Quantity: {item.quantity}</Text>
+            <View
+              key={item.id}
+              style={[
+                styles.card,
+                {
+                  backgroundColor: colors.backgroundAlt,
+                  borderColor: colors.borderLight,
+                },
+              ]}
+            >
+              <Text style={[styles.heading, { color: colors.text }]}>{item.batchNumber}</Text>
+              <Text style={[styles.meta, { color: colors.textMuted }]}>{item.productName}</Text>
+              <Text style={[styles.meta, { color: colors.textMuted }]}>Quantity: {item.quantity}</Text>
               <View style={styles.badgeRow}>
                 <StatusBadge
                   label={item.status}
@@ -39,16 +48,14 @@ export default function InventoryBatchesScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: colors.background },
+  safeArea: { flex: 1 },
   container: { padding: spacing.lg, gap: spacing.md, paddingBottom: spacing.xxl },
   card: {
-    backgroundColor: colors.backgroundAlt,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: colors.border,
     padding: spacing.lg,
   },
-  heading: { color: colors.text, fontWeight: '700' },
-  meta: { color: colors.textMuted, marginTop: spacing.xs },
+  heading: { fontWeight: '700' },
+  meta: { marginTop: spacing.xs },
   badgeRow: { marginTop: spacing.sm },
 });

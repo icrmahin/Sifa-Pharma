@@ -1,24 +1,20 @@
 import { router, usePathname } from "expo-router";
-import { SymbolView, type SymbolViewProps } from "expo-symbols";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import AdminDrawer from "./AdminDrawer";
-import colors from "../../constants/colors";
+import Icon from "../common/Icon";
+import { useThemeColors } from "../../providers/ThemeProvider";
 import sizes from "../../constants/sizes";
 import spacing from "../../constants/spacing";
 import typography from "../../constants/typography";
+import { layout } from "../../constants/sizes";
+import type { IconName } from "../common/Icon";
 
-type IconName = SymbolViewProps["name"];
-
-const MAIN_TABS: {
-  label: string;
-  path: string;
-  icon: IconName;
-}[] = [
-  { label: "Dashboard", path: "/(admin)", icon: { ios: "square.grid.2x2.fill", android: "grid_view", web: "grid_view" } },
-  { label: "Orders", path: "/(admin)/orders", icon: { ios: "shippingbox.fill", android: "inventory_2", web: "inventory_2" } },
-  { label: "Products", path: "/(admin)/products", icon: { ios: "pills.fill", android: "medication", web: "medication" } },
+const MAIN_TABS: { label: string; path: string; icon: IconName }[] = [
+  { label: "Dashboard", path: "/(admin)", icon: "dashboard" },
+  { label: "Orders", path: "/(admin)/orders", icon: "receipt-long" },
+  { label: "Products", path: "/(admin)/products", icon: "inventory-2" },
 ];
 
 function getActivePath(pathname: string): string {
@@ -30,6 +26,7 @@ function getActivePath(pathname: string): string {
 export default function AdminNavigation() {
   const pathname = usePathname();
   const insets = useSafeAreaInsets();
+  const colors = useThemeColors();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const activePath = getActivePath(pathname);
   const isMenuActive = !["/(admin)", "/(admin)/orders", "/(admin)/products"].some(
@@ -39,27 +36,48 @@ export default function AdminNavigation() {
   return (
     <>
       <View
-        style={[styles.container, { paddingBottom: Math.max(insets.bottom, spacing.sm) }]}
+        style={[
+          styles.container,
+          {
+            paddingBottom: Math.max(insets.bottom, spacing.sm),
+            backgroundColor: colors.backgroundAlt,
+            borderTopColor: colors.borderLight,
+          },
+        ]}
       >
         {MAIN_TABS.map((item) => {
           const active = item.path === activePath;
           return (
             <Pressable
               key={item.label}
-              style={({ pressed }) => [styles.item, pressed && styles.pressed]}
+              style={({ pressed }) => [
+                styles.item,
+                pressed && styles.pressed,
+              ]}
               onPress={() => router.replace(item.path as never)}
               android_ripple={{ color: colors.ripple.primary }}
               accessibilityRole="button"
               accessibilityLabel={`Open ${item.label}`}
               accessibilityState={{ selected: active }}
             >
-              {active ? <View style={styles.activeBar} /> : null}
-              <SymbolView
-                name={item.icon}
-                tintColor={active ? colors.primary : colors.textMuted}
-                size={20}
-              />
-              <Text style={[styles.label, active && styles.activeLabel]}>
+              <View
+                style={[
+                  styles.pill,
+                  active && { backgroundColor: colors.primarySoft },
+                ]}
+              >
+                <Icon
+                  name={item.icon}
+                  size={20}
+                  color={active ? colors.primary : colors.textMuted}
+                />
+              </View>
+              <Text
+                style={[
+                  styles.label,
+                  { color: active ? colors.primary : colors.textMuted },
+                ]}
+              >
                 {item.label}
               </Text>
             </Pressable>
@@ -74,13 +92,24 @@ export default function AdminNavigation() {
           accessibilityLabel="Open menu"
           accessibilityState={{ selected: isMenuActive }}
         >
-          {isMenuActive ? <View style={styles.activeBar} /> : null}
-          <SymbolView
-            name={{ ios: "line.3.horizontal", android: "menu", web: "menu" }}
-            tintColor={isMenuActive ? colors.primary : colors.textMuted}
-            size={20}
-          />
-          <Text style={[styles.label, isMenuActive && styles.activeLabel]}>
+          <View
+            style={[
+              styles.pill,
+              isMenuActive && { backgroundColor: colors.primarySoft },
+            ]}
+          >
+            <Icon
+              name="menu"
+              size={20}
+              color={isMenuActive ? colors.primary : colors.textMuted}
+            />
+          </View>
+          <Text
+            style={[
+              styles.label,
+              { color: isMenuActive ? colors.primary : colors.textMuted },
+            ]}
+          >
             Menu
           </Text>
         </Pressable>
@@ -94,35 +123,27 @@ export default function AdminNavigation() {
 const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
-    backgroundColor: colors.backgroundAlt,
     borderTopWidth: 1,
-    borderTopColor: colors.borderLight,
     paddingTop: spacing.sm,
   },
   item: {
     flex: 1,
-    minHeight: 44,
     alignItems: "center",
     justifyContent: "center",
     gap: spacing.xxs,
-    position: "relative",
-    paddingTop: spacing.sm,
+    minHeight: layout.controlHeight,
   },
-  activeBar: {
-    position: "absolute",
-    top: 0,
-    width: 20,
-    height: 2,
-    borderRadius: 1,
-    backgroundColor: colors.primary,
+  pill: {
+    width: 40,
+    height: 32,
+    borderRadius: sizes.borderRadius.pill,
+    alignItems: "center",
+    justifyContent: "center",
   },
   label: {
-    color: colors.textMuted,
     fontSize: typography.caption2,
-    fontWeight: "700",
-    letterSpacing: 0.4,
-    textTransform: "uppercase",
+    fontWeight: "600",
+    letterSpacing: 0.3,
   },
-  activeLabel: { color: colors.primary },
-  pressed: { opacity: 0.7 },
+  pressed: { opacity: 0.6 },
 });

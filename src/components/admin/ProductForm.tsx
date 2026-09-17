@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { ScrollView, StyleSheet, Switch, Text, View } from "react-native";
-import colors from "../../constants/colors";
+import { useThemeColors } from "../../providers/ThemeProvider";
 import sizes from "../../constants/sizes";
 import spacing from "../../constants/spacing";
 import typography from "../../constants/typography";
@@ -23,10 +23,6 @@ type ProductFormProps = {
   onSubmit: (input: ProductFormInput) => Promise<void>;
 };
 
-const SECTION = (label: string) => (
-  <Text style={styles.sectionLabel}>{label}</Text>
-);
-
 export default function ProductForm({
   product,
   categories,
@@ -34,6 +30,7 @@ export default function ProductForm({
   submitLabel,
   onSubmit,
 }: ProductFormProps) {
+  const colors = useThemeColors();
   const [name, setName] = useState(product?.name ?? "");
   const [brand, setBrand] = useState(product?.brand ?? "");
   const [genericName, setGenericName] = useState(product?.genericName ?? "");
@@ -91,7 +88,7 @@ export default function ProductForm({
     if (discountPercent) {
       if (Number.isNaN(discountNum)) next.discountPercent = "Enter a valid discount.";
       else if (discountNum < 0 || discountNum > 99)
-        next.discountPercent = "Discount must be 0–99%.";
+        next.discountPercent = "Discount must be 0-99%.";
     }
 
     const stockNum = Number(stock);
@@ -106,19 +103,8 @@ export default function ProductForm({
 
     return next;
   }, [
-    name,
-    brand,
-    genericName,
-    categoryId,
-    manufacturerId,
-    unit,
-    description,
-    price,
-    originalPrice,
-    discountPercent,
-    stock,
-    image,
-    expiryDate,
+    name, brand, genericName, categoryId, manufacturerId, unit, description,
+    price, originalPrice, discountPercent, stock, image, expiryDate,
   ]);
 
   const handleSubmit = async () => {
@@ -160,6 +146,10 @@ export default function ProductForm({
     }
   };
 
+  const SECTION = (label: string) => (
+    <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>{label}</Text>
+  );
+
   return (
     <>
       <ScrollView
@@ -167,7 +157,7 @@ export default function ProductForm({
         contentContainerStyle={styles.container}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={styles.form}>
+        <View style={[styles.form, { backgroundColor: colors.backgroundAlt, borderColor: colors.borderLight }]}>
           {SECTION("Basics")}
 
           <View style={styles.row}>
@@ -189,7 +179,7 @@ export default function ProductForm({
           </View>
 
           <View style={styles.group}>
-            <Text style={styles.groupLabel}>Category</Text>
+            <Text style={[styles.groupLabel, { color: colors.text }]}>Category</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
               {categories.map((category) => (
                 <FilterChip
@@ -200,11 +190,11 @@ export default function ProductForm({
                 />
               ))}
             </ScrollView>
-            {errors.categoryId ? <Text style={styles.error}>{errors.categoryId}</Text> : null}
+            {errors.categoryId ? <Text style={[styles.error, { color: colors.danger }]}>{errors.categoryId}</Text> : null}
           </View>
 
           <View style={styles.group}>
-            <Text style={styles.groupLabel}>Manufacturer</Text>
+            <Text style={[styles.groupLabel, { color: colors.text }]}>Manufacturer</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
               {manufacturers.map((manufacturer) => (
                 <FilterChip
@@ -215,7 +205,7 @@ export default function ProductForm({
                 />
               ))}
             </ScrollView>
-            {errors.manufacturerId ? <Text style={styles.error}>{errors.manufacturerId}</Text> : null}
+            {errors.manufacturerId ? <Text style={[styles.error, { color: colors.danger }]}>{errors.manufacturerId}</Text> : null}
           </View>
 
           {SECTION("Pricing & stock")}
@@ -276,22 +266,22 @@ export default function ProductForm({
                 />
               </View>
             </View>
-            {errors.image ? <Text style={styles.error}>{errors.image}</Text> : null}
+            {errors.image ? <Text style={[styles.error, { color: colors.danger }]}>{errors.image}</Text> : null}
           </View>
 
           <View style={styles.field}>
-            <Input label="Image URL (fallback)" value={image} onChangeText={setImage} error={errors.image} placeholder="https://…" autoCapitalize="none" autoCorrect={false} />
+            <Input label="Image URL (fallback)" value={image} onChangeText={setImage} error={errors.image} placeholder="https://..." autoCapitalize="none" autoCorrect={false} />
           </View>
 
           <View style={styles.field}>
             <Input label="Description" value={description} onChangeText={setDescription} multiline error={errors.description} placeholder="Product summary shown to customers" />
           </View>
 
-          <View style={styles.switches}>
+          <View style={[styles.switches, { borderTopColor: colors.borderLight }]}>
             <View style={styles.switchRow}>
               <View style={styles.switchText}>
-                <Text style={styles.switchLabel}>Active</Text>
-                <Text style={styles.switchHint}>Visible to customers and search</Text>
+                <Text style={[styles.switchLabel, { color: colors.text }]}>Active</Text>
+                <Text style={[styles.switchHint, { color: colors.textMuted }]}>Visible to customers and search</Text>
               </View>
               <Switch
                 value={isActive}
@@ -303,8 +293,8 @@ export default function ProductForm({
             </View>
             <View style={styles.switchRow}>
               <View style={styles.switchText}>
-                <Text style={styles.switchLabel}>Featured</Text>
-                <Text style={styles.switchHint}>Shown in trending sections</Text>
+                <Text style={[styles.switchLabel, { color: colors.text }]}>Featured</Text>
+                <Text style={[styles.switchHint, { color: colors.textMuted }]}>Shown in trending sections</Text>
               </View>
               <Switch
                 value={isFeatured}
@@ -318,10 +308,10 @@ export default function ProductForm({
         </View>
       </ScrollView>
 
-      <View style={styles.footer}>
-        {submitError ? <Text style={styles.submitError}>{submitError}</Text> : null}
+      <View style={[styles.footer, { borderTopColor: colors.borderLight, backgroundColor: colors.background }]}>
+        {submitError ? <Text style={[styles.submitError, { color: colors.danger }]}>{submitError}</Text> : null}
         <Button
-          title={saving ? "Saving…" : submitLabel}
+          title={saving ? "Saving..." : submitLabel}
           onPress={handleSubmit}
           loading={saving}
           fullWidth
@@ -329,7 +319,7 @@ export default function ProductForm({
       </View>
 
       {isEditing ? (
-        <Text style={styles.note}>
+        <Text style={[styles.note, { color: colors.textMuted }]}>
           Leave optional fields blank to keep current values.
         </Text>
       ) : null}
@@ -348,14 +338,11 @@ const styles = StyleSheet.create({
   },
   form: {
     gap: spacing.md,
-    backgroundColor: colors.backgroundAlt,
     borderWidth: 1,
-    borderColor: colors.hairline,
     borderRadius: sizes.cardRadius,
     padding: spacing.lg,
   },
   sectionLabel: {
-    color: colors.textMuted,
     fontSize: typography.label,
     fontWeight: "700",
     letterSpacing: 0.8,
@@ -373,7 +360,6 @@ const styles = StyleSheet.create({
   },
   group: { gap: spacing.sm },
   groupLabel: {
-    color: colors.text,
     fontSize: typography.bodySmall,
     fontWeight: "600",
   },
@@ -389,7 +375,6 @@ const styles = StyleSheet.create({
   switches: {
     gap: spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: colors.borderSoft,
     paddingTop: spacing.md,
   },
   switchRow: {
@@ -401,27 +386,22 @@ const styles = StyleSheet.create({
   },
   switchText: { flex: 1, gap: 2 },
   switchLabel: {
-    color: colors.text,
     fontSize: typography.bodySmall,
     fontWeight: "600",
   },
-  switchHint: { color: colors.textMuted, fontSize: typography.caption },
-  error: { color: colors.danger, fontSize: typography.caption },
+  switchHint: { fontSize: typography.caption },
+  error: { fontSize: typography.caption },
   footer: {
     padding: spacing.lg,
     paddingBottom: spacing.lg,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
-    backgroundColor: colors.background,
   },
   submitError: {
-    color: colors.danger,
     fontSize: typography.bodySmall,
     textAlign: "center",
     marginBottom: spacing.sm,
   },
   note: {
-    color: colors.textMuted,
     fontSize: typography.caption,
     textAlign: "center",
     paddingHorizontal: spacing.lg,

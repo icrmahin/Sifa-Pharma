@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { StyleSheet, Text, TextInput, View, type TextInputProps, type ViewStyle } from "react-native";
-import { colors, surface } from "../../constants/colors";
+import { useThemeColors } from "../../providers/ThemeProvider";
 import { radius, layout, opacity as opacityToken } from "../../constants/sizes";
 import { spacing } from "../../constants/spacing";
 import { fontFamily, fontSize, lineHeight } from "../../constants/typography";
@@ -8,11 +8,8 @@ import { fontFamily, fontSize, lineHeight } from "../../constants/typography";
 type InputProps = TextInputProps & {
   label?: string;
   error?: string;
-  /** Optional helper text shown below the input */
   hint?: string;
-  /** Prefix element (e.g. currency symbol) */
   prefix?: React.ReactNode;
-  /** Suffix element (e.g. unit label) */
   suffix?: React.ReactNode;
   containerStyle?: ViewStyle;
 };
@@ -26,14 +23,19 @@ export default function Input({
   containerStyle,
   ...props
 }: InputProps) {
+  const colors = useThemeColors();
   const [focused, setFocused] = useState(false);
 
   return (
     <View style={[styles.wrapper, containerStyle]}>
-      {label ? <Text style={styles.label}>{label}</Text> : null}
+      {label ? <Text style={[styles.label, { color: colors.text }]}>{label}</Text> : null}
       <View
         style={[
           styles.inputRow,
+          {
+            borderColor: focused ? colors.primary : error ? colors.danger : colors.border,
+            backgroundColor: colors.backgroundAlt,
+          },
           focused && styles.inputRowFocused,
           !!error && styles.inputRowError,
           props.editable === false && styles.inputRowDisabled,
@@ -52,6 +54,7 @@ export default function Input({
           }}
           style={[
             styles.input,
+            { color: colors.text },
             props.multiline && styles.textArea,
             !!prefix && styles.inputWithPrefix,
             !!suffix && styles.inputWithSuffix,
@@ -62,9 +65,9 @@ export default function Input({
         {suffix ? <View style={styles.adornment}>{suffix}</View> : null}
       </View>
       {error ? (
-        <Text style={styles.error}>{error}</Text>
+        <Text style={[styles.error, { color: colors.danger }]}>{error}</Text>
       ) : hint ? (
-        <Text style={styles.hint}>{hint}</Text>
+        <Text style={[styles.hint, { color: colors.textMuted }]}>{hint}</Text>
       ) : null}
     </View>
   );
@@ -76,26 +79,22 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.semiBold,
     fontSize: fontSize.bodySmall,
     lineHeight: fontSize.bodySmall * lineHeight.normal,
-    color: colors.text,
   },
   inputRow: {
     flexDirection: "row",
     alignItems: "center",
     minHeight: layout.inputHeight,
     borderWidth: 1,
-    borderColor: colors.border,
     borderRadius: radius.md,
-    backgroundColor: surface.DEFAULT,
   },
-  inputRowFocused: { borderColor: colors.primary, borderWidth: 2 },
-  inputRowError: { borderColor: colors.danger },
-  inputRowDisabled: { backgroundColor: surface.disabled, opacity: opacityToken.disabled },
+  inputRowFocused: { borderWidth: 2 },
+  inputRowError: {},
+  inputRowDisabled: { opacity: opacityToken.disabled },
   input: {
     flex: 1,
     fontFamily: fontFamily.regular,
     fontSize: fontSize.body,
     lineHeight: fontSize.body * lineHeight.normal,
-    color: colors.text,
     paddingHorizontal: spacing.lg,
     minHeight: layout.inputHeight,
   },
@@ -116,12 +115,10 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.regular,
     fontSize: fontSize.caption,
     lineHeight: fontSize.caption * lineHeight.normal,
-    color: colors.danger,
   },
   hint: {
     fontFamily: fontFamily.regular,
     fontSize: fontSize.caption,
     lineHeight: fontSize.caption * lineHeight.normal,
-    color: colors.textMuted,
   },
 });

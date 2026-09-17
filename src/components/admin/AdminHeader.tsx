@@ -1,6 +1,6 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
-import colors from "../../constants/colors";
+import { useThemeColors } from "../../providers/ThemeProvider";
 import spacing from "../../constants/spacing";
 import typography from "../../constants/typography";
 
@@ -11,14 +11,30 @@ type AdminHeaderProps = {
 };
 
 export default function AdminHeader({ title, subtitle, action }: AdminHeaderProps) {
+  const colors = useThemeColors();
+
   return (
-    <View style={styles.header}>
+    <View
+      style={[
+        styles.header,
+        {
+          backgroundColor: colors.backgroundAlt,
+          borderBottomColor: colors.borderLight,
+        },
+      ]}
+    >
       <View style={styles.titleArea}>
-        <Text style={styles.eyebrow}>Sifa-Pharma · Admin</Text>
-        <Text style={styles.title} numberOfLines={1}>
+        <Text style={[styles.eyebrow, { color: colors.textMuted }]}>
+          Sifa-Pharma · Admin
+        </Text>
+        <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
           {title}
         </Text>
-        {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+        {subtitle ? (
+          <Text style={[styles.subtitle, { color: colors.textMuted }]}>
+            {subtitle}
+          </Text>
+        ) : null}
       </View>
 
       {action ? <View>{action}</View> : null}
@@ -34,27 +50,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.lg,
     paddingBottom: spacing.md,
-    backgroundColor: colors.backgroundAlt,
     borderBottomWidth: 1,
-    borderBottomColor: colors.borderLight,
   },
   titleArea: { flex: 1 },
   eyebrow: {
-    color: colors.textMuted,
     fontSize: typography.caption2,
     fontWeight: "700",
     letterSpacing: 1.2,
     textTransform: "uppercase",
   },
   title: {
-    color: colors.text,
     fontSize: typography.title2,
     fontWeight: "700",
     letterSpacing: typography.letterSpacing.tight,
     marginTop: spacing.xxs,
   },
   subtitle: {
-    color: colors.textMuted,
     fontSize: typography.caption1,
     marginTop: spacing.xxs,
   },

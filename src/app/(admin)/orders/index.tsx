@@ -6,13 +6,13 @@ import AdminHeader from '../../../components/admin/AdminHeader';
 import EmptyState from '../../../components/common/EmptyState';
 import SearchBar from '../../../components/common/SearchBar';
 import StatusBadge from '../../../components/common/StatusBadge';
-import colors from '../../../constants/colors';
+import { useThemeColors } from '../../../providers/ThemeProvider';
 import spacing from '../../../constants/spacing';
 import typography from '../../../constants/typography';
 import type { Order } from '../../../types/order';
 
 export default function AdminOrdersScreen() {
-  // frontend-only: empty typed array — no backend
+  const colors = useThemeColors();
   const orders: Order[] = [];
   const [query, setQuery] = useState('');
 
@@ -23,7 +23,7 @@ export default function AdminOrdersScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
       <AdminHeader title="Orders" subtitle="Approve and process orders" />
       <ScrollView contentContainerStyle={styles.container}>
         <SearchBar value={query} onChangeText={setQuery} placeholder="Search order or customer" />
@@ -38,14 +38,23 @@ export default function AdminOrdersScreen() {
           />
         ) : (
           filtered.map((order) => (
-            <View key={order.id} style={styles.row}>
+            <View
+              key={order.id}
+              style={[
+                styles.row,
+                {
+                  backgroundColor: colors.backgroundAlt,
+                  borderColor: colors.borderLight,
+                },
+              ]}
+            >
               <View>
-                <Text style={styles.orderNumber}>{order.orderNumber}</Text>
-                <Text style={styles.customer}>{order.customerName}</Text>
+                <Text style={[styles.orderNumber, { color: colors.text }]}>{order.orderNumber}</Text>
+                <Text style={[styles.customer, { color: colors.textMuted }]}>{order.customerName}</Text>
               </View>
               <StatusBadge label={order.status} tone={order.status === 'PENDING' ? 'warning' : order.status === 'DELIVERED' ? 'success' : 'info'} />
               <Text
-                style={styles.link}
+                style={[styles.link, { color: colors.primary }]}
                 onPress={() => router.push({ pathname: '/(admin)/orders/[orderId]', params: { orderId: order.id } })}
               >
                 Review
@@ -59,19 +68,17 @@ export default function AdminOrdersScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: colors.background },
+  safeArea: { flex: 1 },
   container: { padding: spacing.lg, gap: spacing.md, paddingBottom: spacing.xxl },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: colors.backgroundAlt,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: colors.border,
     padding: spacing.md,
   },
-  orderNumber: { color: colors.text, fontSize: typography.body, fontWeight: '700' },
-  customer: { color: colors.textMuted, fontSize: typography.caption },
-  link: { color: colors.primary, fontWeight: '700' },
+  orderNumber: { fontSize: typography.body, fontWeight: '700' },
+  customer: { fontSize: typography.caption },
+  link: { fontWeight: '700' },
 });

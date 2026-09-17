@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/immutability -- Reanimated shared values are mutable by design */
 import { Pressable, StyleSheet, Text, View, type ViewStyle } from "react-native";
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, useReducedMotion } from "react-native-reanimated";
-import { colors, border as borderToken } from "../../constants/colors";
+import { useThemeColors } from "../../providers/ThemeProvider";
 import { layout } from "../../constants/sizes";
 import { spacing } from "../../constants/spacing";
 import { fontFamily, fontSize, lineHeight } from "../../constants/typography";
@@ -10,27 +10,16 @@ import Icon from "./Icon";
 import type { IconName } from "./Icon";
 
 type ListItemProps = {
-  /** Primary text */
   title: string;
-  /** Secondary text below the title */
   subtitle?: string;
-  /** Left element (icon, avatar, badge) */
   left?: React.ReactNode;
-  /** Right element (chevron, badge, action) */
   right?: React.ReactNode;
-  /** Press handler. If provided, renders as Pressable */
   onPress?: () => void;
-  /** Show divider line above this item */
   divider?: boolean;
-  /** Compact mode with less padding */
   compact?: boolean;
   style?: ViewStyle;
 };
 
-/**
- * Single row for lists, settings screens, and menu items.
- * Supports leading/trailing elements and optional animated press feedback.
- */
 export default function ListItem({
   title,
   subtitle,
@@ -41,6 +30,7 @@ export default function ListItem({
   compact = false,
   style,
 }: ListItemProps) {
+  const colors = useThemeColors();
   const reducedMotion = useReducedMotion();
 
   const padding = compact
@@ -64,12 +54,23 @@ export default function ListItem({
   };
 
   const content = (
-    <View style={[styles.row, padding, divider && styles.divider, style]}>
+    <View
+      style={[
+        styles.row,
+        padding,
+        divider && { borderTopWidth: 1, borderTopColor: colors.borderLight },
+        style,
+      ]}
+    >
       {left ? <View style={styles.left}>{left}</View> : null}
       <View style={styles.content}>
-        <Text style={styles.title} numberOfLines={1}>{title}</Text>
+        <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
+          {title}
+        </Text>
         {subtitle ? (
-          <Text style={styles.subtitle} numberOfLines={2}>{subtitle}</Text>
+          <Text style={[styles.subtitle, { color: colors.textMuted }]} numberOfLines={2}>
+            {subtitle}
+          </Text>
         ) : null}
       </View>
       {right ? (
@@ -88,9 +89,7 @@ export default function ListItem({
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
       >
-        <Animated.View style={animatedStyle}>
-          {content}
-        </Animated.View>
+        <Animated.View style={animatedStyle}>{content}</Animated.View>
       </Pressable>
     );
   }
@@ -105,10 +104,6 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     minHeight: layout.touch,
   },
-  divider: {
-    borderTopWidth: 1,
-    borderTopColor: borderToken.light,
-  },
   left: { flexShrink: 0 },
   content: { flex: 1, gap: 2 },
   right: { flexShrink: 0 },
@@ -116,12 +111,10 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.medium,
     fontSize: fontSize.body,
     lineHeight: fontSize.body * lineHeight.normal,
-    color: colors.text,
   },
   subtitle: {
     fontFamily: fontFamily.regular,
     fontSize: fontSize.footnote,
     lineHeight: fontSize.footnote * lineHeight.normal,
-    color: colors.textMuted,
   },
 });

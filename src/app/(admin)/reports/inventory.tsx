@@ -2,37 +2,37 @@ import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AdminHeader from '../../../components/admin/AdminHeader';
-import colors from '../../../constants/colors';
+import { useThemeColors } from '../../../providers/ThemeProvider';
 import spacing from '../../../constants/spacing';
 import typography from '../../../constants/typography';
 import { formatCurrency } from '../../../utils/currency';
 
 export default function AdminInventoryReportScreen() {
-  // frontend-only: placeholder values — no backend
+  const colors = useThemeColors();
   const lowStock: number | null = 0;
   const outOfStock: number | null = 0;
   const expired: number | null = 0;
   const value: number | null = 0;
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
       <AdminHeader title="Inventory report" subtitle="Stock movement summary" />
       <ScrollView contentContainerStyle={styles.container}>
-        <View style={styles.card}>
-          <Text style={styles.label}>Low-stock items</Text>
-          <Text style={styles.value}>{lowStock !== null ? `${lowStock} products` : "—"}</Text>
+        <View style={[styles.card, { backgroundColor: colors.backgroundAlt, borderColor: colors.borderLight }]}>
+          <Text style={[styles.label, { color: colors.textMuted }]}>Low-stock items</Text>
+          <Text style={[styles.value, { color: colors.text }]}>{lowStock !== null ? `${lowStock} products` : "—"}</Text>
         </View>
-        <View style={styles.card}>
-          <Text style={styles.label}>Out of stock</Text>
-          <Text style={styles.value}>{outOfStock !== null ? String(outOfStock) : "—"}</Text>
+        <View style={[styles.card, { backgroundColor: colors.backgroundAlt, borderColor: colors.borderLight }]}>
+          <Text style={[styles.label, { color: colors.textMuted }]}>Out of stock</Text>
+          <Text style={[styles.value, { color: colors.text }]}>{outOfStock !== null ? String(outOfStock) : "—"}</Text>
         </View>
-        <View style={styles.card}>
-          <Text style={styles.label}>Expired batches</Text>
-          <Text style={styles.value}>{expired !== null ? String(expired) : "—"}</Text>
+        <View style={[styles.card, { backgroundColor: colors.backgroundAlt, borderColor: colors.borderLight }]}>
+          <Text style={[styles.label, { color: colors.textMuted }]}>Expired batches</Text>
+          <Text style={[styles.value, { color: colors.text }]}>{expired !== null ? String(expired) : "—"}</Text>
         </View>
-        <View style={styles.card}>
-          <Text style={styles.label}>Inventory value</Text>
-          <Text style={styles.value}>{value !== null ? formatCurrency(value) : "—"}</Text>
+        <View style={[styles.card, { backgroundColor: colors.backgroundAlt, borderColor: colors.borderLight }]}>
+          <Text style={[styles.label, { color: colors.textMuted }]}>Inventory value</Text>
+          <Text style={[styles.value, { color: colors.text }]}>{value !== null ? formatCurrency(value) : "—"}</Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -40,15 +40,13 @@ export default function AdminInventoryReportScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: colors.background },
+  safeArea: { flex: 1 },
   container: { padding: spacing.lg, gap: spacing.md, paddingBottom: spacing.xxl },
   card: {
-    backgroundColor: colors.backgroundAlt,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: colors.border,
     padding: spacing.lg,
   },
-  label: { color: colors.textMuted, fontSize: typography.bodySmall },
-  value: { color: colors.text, fontWeight: '700', marginTop: spacing.xs, fontSize: typography.h2 },
+  label: { fontSize: typography.bodySmall },
+  value: { fontWeight: '700', marginTop: spacing.xs, fontSize: typography.h2 },
 });

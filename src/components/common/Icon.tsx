@@ -1,5 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { colors } from "../../constants/colors";
+import { useThemeColors } from "../../providers/ThemeProvider";
 import type { ComponentProps } from "react";
 import type { ColorValue } from "react-native";
 
@@ -11,10 +11,7 @@ type IconProps = {
   color?: ColorValue | string;
 };
 
-export default function Icon({
-  name,
-  size = 20,
-  color = colors.text,
-}: IconProps) {
-  return <MaterialIcons name={name} size={size} color={color as string} />;
+export default function Icon({ name, size = 20, color }: IconProps) {
+  const themeColors = useThemeColors();
+  return <MaterialIcons name={name} size={size} color={(color ?? themeColors.text) as string} />;
 }

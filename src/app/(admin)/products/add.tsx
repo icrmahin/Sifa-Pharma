@@ -3,24 +3,23 @@ import { StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AdminHeader from "../../../components/admin/AdminHeader";
 import ProductForm from "../../../components/admin/ProductForm";
-import colors from "../../../constants/colors";
+import { useThemeColors } from "../../../providers/ThemeProvider";
 import type { Category } from "../../../types/category";
 import type { Manufacturer } from "../../../types/manufacturer";
 
 export default function AdminAddProductScreen() {
-  // frontend-only: empty typed arrays — no backend
+  const colors = useThemeColors();
   const categories: Category[] = [];
   const manufacturers: Manufacturer[] = [];
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
       <AdminHeader title="Add product" subtitle="Create new catalog item" />
       <ProductForm
         categories={categories}
         manufacturers={manufacturers}
         submitLabel="Save product"
         onSubmit={async () => {
-          // backend required — no-op frontend-only
           router.back();
         }}
       />
@@ -29,5 +28,5 @@ export default function AdminAddProductScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: colors.background },
+  safeArea: { flex: 1 },
 });

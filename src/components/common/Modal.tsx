@@ -1,5 +1,5 @@
 import { Modal as RNModal, Pressable, StyleSheet, Text, View } from "react-native";
-import colors from "../../constants/colors";
+import { useThemeColors } from "../../providers/ThemeProvider";
 import sizes from "../../constants/sizes";
 import spacing from "../../constants/spacing";
 import typography from "../../constants/typography";
@@ -20,6 +20,8 @@ export default function Modal({
   actionLabel?: string;
   onAction?: () => void;
 }) {
+  const colors = useThemeColors();
+
   return (
     <RNModal
       visible={visible}
@@ -28,10 +30,17 @@ export default function Modal({
       onRequestClose={onClose}
       accessibilityViewIsModal
     >
-      <Pressable style={styles.backdrop} onPress={onClose}>
-        <View style={styles.card}>
-          <Text style={styles.title} accessibilityRole="header">{title}</Text>
-          {message ? <Text style={styles.message}>{message}</Text> : null}
+      <Pressable
+        style={[styles.backdrop, { backgroundColor: colors.overlay }]}
+        onPress={onClose}
+      >
+        <View style={[styles.card, { backgroundColor: colors.backgroundAlt }]}>
+          <Text style={[styles.title, { color: colors.text }]} accessibilityRole="header">
+            {title}
+          </Text>
+          {message ? (
+            <Text style={[styles.message, { color: colors.textSecondary }]}>{message}</Text>
+          ) : null}
           <View style={styles.actions}>
             {actionLabel && onAction ? (
               <Button title={actionLabel} onPress={onAction} fullWidth />
@@ -47,17 +56,15 @@ export default function Modal({
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: colors.overlay,
     justifyContent: "center",
     padding: spacing.xl,
   },
   card: {
-    backgroundColor: colors.backgroundAlt,
     borderRadius: sizes.borderRadius.xl,
     padding: spacing.xl,
     gap: spacing.md,
   },
-  title: { color: colors.text, fontSize: typography.title2, fontWeight: "600" },
-  message: { color: colors.textSecondary, fontSize: typography.body, lineHeight: 24 },
+  title: { fontSize: typography.title2, fontWeight: "600" },
+  message: { fontSize: typography.body, lineHeight: 24 },
   actions: { gap: spacing.sm, marginTop: spacing.sm },
 });

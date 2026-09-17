@@ -83,7 +83,7 @@
   * Define API boundaries
   * Define backend responsibilities
 
-* [ ] **08 — Backend from scratch**
+* [x] **08 — Backend from scratch**
 
   * Database schema
   * Relationships

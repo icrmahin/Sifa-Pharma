@@ -30,7 +30,7 @@ alter table public.profiles
 
 -- Ensure Kenyan phone format (+254...)
 alter table public.profiles
-  add constraint profiles_phone_format check (phone ~* '^\+?254[17][0-9]{8}$');
+  add constraint profiles_phone_format check (phone = '' or phone ~* '^\+?254[17][0-9]{8}$');
 
 -- Unique phone constraint
 create unique index idx_profiles_phone on public.profiles (phone);
@@ -638,7 +638,10 @@ create trigger trg_orders_generate_number
 -- Auto-create profile in public.profiles when a new user signs up via Supabase Auth
 -- This function is called by a database function or can be set up via Supabase Auth webhook
 create or replace function public.handle_new_user()
-returns trigger as $$
+returns trigger
+security definer
+set search_path = public
+as $$
 begin
   insert into public.profiles (id, name, email, phone, role)
   values (
@@ -655,6 +658,178 @@ $$ language plpgsql security definer;
 create trigger trg_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
+
+-- Auto-sync products.stock with inventory_items.quantity
+create or replace function public.sync_product_stock()
+returns trigger
+security invoker
+set search_path = public
+as $$
+begin
+  update public.products
+  set stock = (
+    select coalesce(sum(quantity), 0)
+    from public.inventory_items
+    where product_id = NEW.product_id
+  )
+  where id = NEW.product_id;
+  return NEW;
+end;
+$$ language plpgsql;
+
+create trigger trg_inventory_sync_stock
+  after insert or update or delete on public.inventory_items
+  for each row execute function public.sync_product_stock();
+
+-- ═══════════════════════════════════════════════════════════════════════
+-- 15B. BUSINESS LOGIC FUNCTIONS
+-- ═══════════════════════════════════════════════════════════════════════
+
+-- Prevent duplicate cart items (merge quantities on insert)
+create or replace function public.handle_cart_insert()
+returns trigger
+security invoker
+set search_path = public
+as $$
+begin
+  if exists (
+    select 1 from public.cart_items
+    where user_id = NEW.user_id and product_id = NEW.product_id
+    and id != NEW.id
+  ) then
+    update public.cart_items
+    set quantity = quantity + NEW.quantity,
+        updated_at = now()
+    where user_id = NEW.user_id and product_id = NEW.product_id;
+    return null;
+  end if;
+  return NEW;
+end;
+$$ language plpgsql;
+
+create trigger trg_cart_merge_duplicate
+  before insert on public.cart_items
+  for each row execute function public.handle_cart_insert();
+
+create or replace function public.create_order(p_customer_id uuid, p_address_id uuid)
+returns uuid
+security definer
+set search_path = public
+as $$
+declare
+  v_order_id uuid;
+  v_subtotal numeric := 0;
+  v_discount numeric := 0;
+  v_delivery_fee numeric := 150;
+  v_total numeric := 0;
+  v_customer_name text;
+  v_cart_item record;
+  v_product record;
+begin
+  select name into v_customer_name from public.profiles where id = p_customer_id;
+  if not found then
+    raise exception 'Customer not found';
+  end if;
+  if not exists (select 1 from public.cart_items where user_id = p_customer_id) then
+    raise exception 'Cart is empty';
+  end if;
+  for v_cart_item in select * from public.cart_items where user_id = p_customer_id loop
+    select * into v_product from public.products where id = v_cart_item.product_id and is_active = true;
+    if not found then
+      raise exception 'Product not available';
+    end if;
+    if v_product.stock < v_cart_item.quantity then
+      raise exception 'Insufficient stock for product %', v_product.name;
+    end if;
+    v_subtotal := v_subtotal + (v_product.price * v_cart_item.quantity);
+  end loop;
+  v_total := v_subtotal - v_discount + v_delivery_fee;
+  insert into public.orders (order_number, customer_id, customer_name, status, subtotal, discount, delivery_fee, total, payment_method, address)
+  values (null, p_customer_id, v_customer_name, 'PENDING', v_subtotal, v_discount, v_delivery_fee, v_total, 'CASH_ON_DELIVERY',
+    (select street || ', ' || city || coalesce(', ' || county, '') || coalesce(', ' || postal_code, '') from public.addresses where id = p_address_id))
+  returning id into v_order_id;
+  for v_cart_item in select * from public.cart_items where user_id = p_customer_id loop
+    select * into v_product from public.products where id = v_cart_item.product_id;
+    insert into public.order_items (order_id, product_id, product_name, quantity, unit_price, discount_percent, total)
+    values (v_order_id, v_cart_item.product_id, v_product.name, v_cart_item.quantity, v_product.price, 0, v_product.price * v_cart_item.quantity);
+    update public.products set stock = stock - v_cart_item.quantity where id = v_cart_item.product_id;
+  end loop;
+  delete from public.cart_items where user_id = p_customer_id;
+  return v_order_id;
+end;
+$$ language plpgsql;
+
+create or replace function public.transition_order_status(p_order_id uuid, p_new_status text, p_admin_id uuid)
+returns boolean
+security definer
+set search_path = public
+as $$
+declare
+  v_current_status text;
+  v_allowed boolean := false;
+begin
+  if not exists (select 1 from public.profiles where id = p_admin_id and role = 'admin') then
+    raise exception 'Only admins can change order status';
+  end if;
+  select status into v_current_status from public.orders where id = p_order_id;
+  if not found then
+    raise exception 'Order not found';
+  end if;
+  v_allowed := (
+    (v_current_status = 'PENDING' and p_new_status in ('CONFIRMED', 'CANCELLED')) or
+    (v_current_status = 'CONFIRMED' and p_new_status in ('PROCESSING', 'CANCELLED')) or
+    (v_current_status = 'PROCESSING' and p_new_status in ('OUT_FOR_DELIVERY', 'CANCELLED')) or
+    (v_current_status = 'OUT_FOR_DELIVERY' and p_new_status in ('DELIVERED')) or
+    (v_current_status = 'DELIVERED' and p_new_status in ('RETURNED'))
+  );
+  if not v_allowed then
+    raise exception 'Invalid status transition from % to %', v_current_status, p_new_status;
+  end if;
+  update public.orders set status = p_new_status, updated_at = now() where id = p_order_id;
+  return true;
+end;
+$$ language plpgsql;
+
+create or replace function public.validate_inventory(p_product_id uuid, p_quantity integer)
+returns boolean
+security invoker
+set search_path = public
+as $$
+declare
+  v_stock integer;
+begin
+  select stock into v_stock from public.products where id = p_product_id;
+  if not found then
+    raise exception 'Product not found';
+  end if;
+  if v_stock < p_quantity then
+    raise exception 'Insufficient stock';
+  end if;
+  return true;
+end;
+$$ language plpgsql;
+
+create or replace function public.validate_return(p_order_id uuid, p_customer_id uuid)
+returns boolean
+security definer
+set search_path = public
+as $$
+declare
+  v_order_status text;
+begin
+  select status into v_order_status from public.orders where id = p_order_id;
+  if not found then
+    raise exception 'Order not found';
+  end if;
+  if v_order_status != 'DELIVERED' then
+    raise exception 'Returns are only allowed for delivered orders';
+  end if;
+  if not exists (select 1 from public.orders where id = p_order_id and customer_id = p_customer_id) then
+    raise exception 'Order does not belong to customer';
+  end if;
+  return true;
+end;
+$$ language plpgsql;
 
 -- ═══════════════════════════════════════════════════════════════════════
 -- 16. PERMISSIONS

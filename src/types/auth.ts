@@ -8,7 +8,7 @@ export type AuthSession = {
   role: Role;
   email?: string;
   phone?: string;
-  isAdmin?: boolean;
+  isAdmin: boolean;
 };
 
 export type LoginForm = {

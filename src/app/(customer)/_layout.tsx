@@ -1,11 +1,29 @@
-import { Stack } from "expo-router";
-import { StyleSheet, View } from "react-native";
+import { Redirect, Stack } from "expo-router";
+import { StyleSheet, View, ActivityIndicator } from "react-native";
 import CustomerNavigation from "../../components/common/CustomerNavigation";
 import CustomerDesktopHeader from "../../components/common/CustomerDesktopHeader";
 import { useResponsive } from "../../hooks/useResponsive";
+import { useAuth } from "../../hooks/useAuth";
 
 export default function CustomerLayout() {
   const { isMobile } = useResponsive();
+  const { session, isAdmin, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+        <ActivityIndicator />
+      </View>
+    );
+  }
+
+  if (!session) {
+    return <Redirect href="/(auth)/welcome" />;
+  }
+
+  if (isAdmin) {
+    return <Redirect href="/(admin)" />;
+  }
 
   return (
     <View style={styles.container}>

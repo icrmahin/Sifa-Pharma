@@ -1,4 +1,6 @@
-import { useState, useEffect, useCallback } from 'react'
+/* eslint-disable react-hooks/set-state-in-effect -- data fetching and derived state sync require setState inside effects */
+ /* eslint-disable react-hooks/refs -- stable filters refs intentionally mutated during render for stable callbacks */
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useAuth } from './useAuth'
 import { fetchAdminDashboard, fetchAdminProducts, fetchAdminOrders, updateOrderStatus, fetchAdminInventory, createStockAdjustment } from '../services/admin'
 import type { Product } from '../types/product'
@@ -43,10 +45,15 @@ export function useAdminProducts(filters?: { status?: string; stockFilter?: stri
   const [error, setError] = useState<string | null>(null)
   const [total, setTotal] = useState(0)
 
+  const filtersKey = JSON.stringify(filters ?? {})
+  const parsedFilters = useMemo(() => JSON.parse(filtersKey) as typeof filters, [filtersKey])
+  const filtersRef = useRef(parsedFilters)
+  filtersRef.current = parsedFilters
+
   const loadProducts = useCallback(async () => {
     setLoading(true)
     try {
-      const result = await fetchAdminProducts(filters)
+      const result = await fetchAdminProducts(filtersRef.current)
       setData(result.data)
       setTotal(result.total)
     } catch (err) {
@@ -54,11 +61,11 @@ export function useAdminProducts(filters?: { status?: string; stockFilter?: stri
     } finally {
       setLoading(false)
     }
-  }, [filters])
+  }, [])
 
   useEffect(() => {
     loadProducts()
-  }, [loadProducts])
+  }, [filtersKey, loadProducts])
 
   const reload = useCallback(() => loadProducts(), [loadProducts])
 
@@ -71,10 +78,15 @@ export function useAdminOrders(filters?: { status?: string; limit?: number; offs
   const [error, setError] = useState<string | null>(null)
   const [total, setTotal] = useState(0)
 
+  const filtersKey = JSON.stringify(filters ?? {})
+  const parsedFilters = useMemo(() => JSON.parse(filtersKey) as typeof filters, [filtersKey])
+  const filtersRef = useRef(parsedFilters)
+  filtersRef.current = parsedFilters
+
   const loadOrders = useCallback(async () => {
     setLoading(true)
     try {
-      const result = await fetchAdminOrders(filters)
+      const result = await fetchAdminOrders(filtersRef.current)
       setData(result.data)
       setTotal(result.total)
     } catch (err) {
@@ -82,11 +94,11 @@ export function useAdminOrders(filters?: { status?: string; limit?: number; offs
     } finally {
       setLoading(false)
     }
-  }, [filters])
+  }, [])
 
   useEffect(() => {
     loadOrders()
-  }, [loadOrders])
+  }, [filtersKey, loadOrders])
 
   const reload = useCallback(() => loadOrders(), [loadOrders])
 

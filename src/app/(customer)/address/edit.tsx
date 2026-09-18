@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect -- data fetching and derived state sync require setState inside effects */
 import { useState, useEffect } from "react";
 import { router } from "expo-router";
 import { ScrollView, StyleSheet, Text, View, Alert } from "react-native";

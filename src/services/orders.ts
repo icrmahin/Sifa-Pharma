@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase'
+import { mapOrder } from '../lib/mappers'
 import type { Order, OrderItem } from '../types/order'
 
 export interface OrderWithItems extends Order {
@@ -8,11 +9,11 @@ export interface OrderWithItems extends Order {
 export async function fetchOrders(): Promise<Order[]> {
   const { data, error } = await supabase
     .from('orders')
-    .select('*')
+    .select('*, order_items(*)')
     .order('created_at', { ascending: false })
 
   if (error) throw error
-  return (data || []) as Order[]
+  return (data || []).map((row: any) => mapOrder(row))
 }
 
 export async function fetchOrderById(orderId: string): Promise<OrderWithItems | null> {
@@ -27,7 +28,7 @@ export async function fetchOrderById(orderId: string): Promise<OrderWithItems | 
     throw error
   }
 
-  return data as OrderWithItems
+  return mapOrder(data) as OrderWithItems
 }
 
 export async function createOrder(customerId: string, addressId: string): Promise<string> {

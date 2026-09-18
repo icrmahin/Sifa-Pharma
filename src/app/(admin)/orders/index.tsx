@@ -9,15 +9,34 @@ import SearchBar from '../../../components/common/SearchBar';
 import StatusBadge from '../../../components/common/StatusBadge';
 import { useThemeColors } from '../../../providers/ThemeProvider';
 import { useResponsive } from '../../../hooks/useResponsive';
+import { useAdminOrders } from '../../../hooks/useAdmin';
+import LoadingState from '../../../components/common/LoadingState';
+import ErrorState from '../../../components/common/ErrorState';
 import spacing from '../../../constants/spacing';
 import typography from '../../../constants/typography';
-import type { Order } from '../../../types/order';
 
 export default function AdminOrdersScreen() {
   const colors = useThemeColors();
   const { isMobile, isTablet, columns } = useResponsive();
-  const orders: Order[] = [];
+  const { data: orders, loading, error, reload } = useAdminOrders();
   const [query, setQuery] = useState('');
+
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+        <AdminHeader title="Orders" subtitle="Approve and process orders" />
+        <LoadingState label="Loading orders" />
+      </SafeAreaView>
+    );
+  }
+  if (error) {
+    return (
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+        <AdminHeader title="Orders" subtitle="Approve and process orders" />
+        <ErrorState message={error} onRetry={reload} />
+      </SafeAreaView>
+    );
+  }
 
   const filtered = orders.filter(
     (order) =>

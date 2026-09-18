@@ -653,7 +653,7 @@ begin
   );
   return new;
 end;
-$$ language plpgsql security definer;
+$$ language plpgsql;
 
 create trigger trg_auth_user_created
   after insert on auth.users

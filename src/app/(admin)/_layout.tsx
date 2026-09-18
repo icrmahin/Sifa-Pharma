@@ -1,11 +1,29 @@
-import { Stack } from "expo-router";
-import { StyleSheet, View } from "react-native";
+import { Redirect, Stack } from "expo-router";
+import { StyleSheet, View, ActivityIndicator } from "react-native";
 import AdminNavigation from "../../components/admin/AdminNavigation";
 import AdminSidebar from "../../components/admin/AdminSidebar";
 import { useResponsive } from "../../hooks/useResponsive";
+import { useAuth } from "../../hooks/useAuth";
 
 export default function AdminLayout() {
   const { isMobile } = useResponsive();
+  const { session, isAdmin, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+        <ActivityIndicator />
+      </View>
+    );
+  }
+
+  if (!session) {
+    return <Redirect href="/(auth)/welcome" />;
+  }
+
+  if (!isAdmin) {
+    return <Redirect href="/(customer)/(tabs)" />;
+  }
 
   return (
     <View style={[styles.container, !isMobile && styles.containerRow]}>

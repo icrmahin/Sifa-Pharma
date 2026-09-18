@@ -17,7 +17,7 @@ export default function ForgotPasswordScreen() {
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
       <Header title="Reset password" onBack={() => router.back()} />
       <ScrollView contentContainerStyle={styles.container}>
-        <Text style={[styles.subtitle, { color: colors.textMuted }]}>Enter the email address associated with your account and we'll send a reset link.</Text>
+        <Text style={[styles.subtitle, { color: colors.textMuted }]}>Enter the email address associated with your account and we&apos;ll send a reset link.</Text>
         <Input label="Email" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
         <Button title="Send reset link" onPress={() => router.push('/(auth)/reset-password')} fullWidth />
       </ScrollView>

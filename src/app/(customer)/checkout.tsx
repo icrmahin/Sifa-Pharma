@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect -- data fetching and derived state sync require setState inside effects */
 import React from "react";
 import { router } from "expo-router";
 import { useState, useEffect } from "react";

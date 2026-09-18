@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/immutability -- Reanimated shared values are mutable by design */
-import { useEffect, useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Pressable, StyleSheet, Text, View, type ViewToken } from "react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -30,11 +30,21 @@ export default function ProductHeroSlider({
   onProductPress,
 }: ProductHeroSliderProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const viewabilityConfig = useRef({ viewAreaCoveragePercentThreshold: 50 }).current;
   const flatListRef = useRef<any>(null);
   const reducedMotion = useReducedMotion();
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const colors = useThemeColors();
+
+  const viewabilityConfig = useMemo(() => ({ viewAreaCoveragePercentThreshold: 50 }), []);
+
+  const onViewableItemsChanged = useCallback(
+    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
+      if (viewableItems.length > 0 && viewableItems[0].index != null) {
+        setCurrentIndex(viewableItems[0].index);
+      }
+    },
+    []
+  );
 
   useEffect(() => {
     if (products.length <= 1 || reducedMotion) return;
@@ -67,11 +77,7 @@ export default function ProductHeroSlider({
         contentContainerStyle={styles.listContent}
         keyExtractor={(item) => item.id}
         viewabilityConfig={viewabilityConfig}
-        onViewableItemsChanged={({ viewableItems }) => {
-          if (viewableItems.length > 0 && viewableItems[0].index != null) {
-            setCurrentIndex(viewableItems[0].index);
-          }
-        }}
+        onViewableItemsChanged={onViewableItemsChanged}
         renderItem={({ item, index }) => (
           <HeroSlide
             product={item}

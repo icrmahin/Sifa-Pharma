@@ -1,8 +1,10 @@
-import { useState, useEffect, useCallback } from 'react'
+/* eslint-disable react-hooks/set-state-in-effect -- data fetching and derived state sync require setState inside effects */
+ /* eslint-disable react-hooks/refs -- stable filters/dataLength refs intentionally mutated during render for stable callbacks */
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import type { Product } from '../types/product'
 import type { Category } from '../types/category'
 import type { Manufacturer } from '../types/manufacturer'
-import { fetchProducts, fetchCategories, fetchManufacturers, searchProducts } from '../services/products'
+import { fetchProducts } from '../services/products'
 
 export interface ProductFilters {
   categoryId?: string
@@ -19,12 +21,22 @@ export function useProducts(filters: ProductFilters = {}) {
   const [hasMore, setHasMore] = useState(false)
   const [total, setTotal] = useState(0)
 
+  // Stabilize filters object — callers often pass inline literals which create a new
+  // reference every render and would cause infinite refetch loops.
+  const filtersKey = JSON.stringify(filters)
+  const parsedFilters = useMemo<ProductFilters>(() => JSON.parse(filtersKey), [filtersKey])
+
+  const filtersRef = useRef<ProductFilters>(parsedFilters)
+  filtersRef.current = parsedFilters
+  const dataLengthRef = useRef(0)
+  dataLengthRef.current = data.length
+
   const loadProducts = useCallback(async (reset = false) => {
     setLoading(true)
     setError(null)
     try {
-      const offset = reset ? 0 : data.length
-      const result = await fetchProducts({ ...filters, offset })
+      const offset = reset ? 0 : dataLengthRef.current
+      const result = await fetchProducts({ ...filtersRef.current, offset })
       if (reset) {
         setData(result.data)
       } else {
@@ -37,11 +49,11 @@ export function useProducts(filters: ProductFilters = {}) {
     } finally {
       setLoading(false)
     }
-  }, [filters, data.length])
+  }, [])
 
   useEffect(() => {
     loadProducts(true)
-  }, [filters])
+  }, [filtersKey, loadProducts])
 
   const reload = useCallback(() => loadProducts(true), [loadProducts])
 
@@ -172,7 +184,7 @@ export function useManufacturers() {
 }
 
 export function useProductSearch(query: string) {
-  const [data, setData] = useState<any[]>([])
+  const [data, setData] = useState<Product[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 

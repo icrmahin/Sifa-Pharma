@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect -- data fetching and derived state sync require setState inside effects */
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from './useAuth'
 import type { DeliveryCycle } from '../types/deliveryCycle'

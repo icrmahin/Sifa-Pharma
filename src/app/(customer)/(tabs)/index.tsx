@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/immutability -- Reanimated shared values are mutable by design */
 import { router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import {

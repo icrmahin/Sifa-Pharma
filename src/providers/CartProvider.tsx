@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect -- data fetching and derived state sync require setState inside effects */
 import { createContext, useContext, useEffect, useState, useCallback, useMemo, type ReactNode } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
@@ -46,11 +47,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     loadCart()
 
+    if (!user?.id) return
+
     const channel = supabase
-      .channel('cart-changes')
+      .channel(`cart-changes-${user.id}`)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'cart_items', filter: `user_id=eq.${user?.id}` },
+        { event: '*', schema: 'public', table: 'cart_items', filter: `user_id=eq.${user.id}` },
         () => loadCart()
       )
       .subscribe()
@@ -58,7 +61,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [user, loadCart])
+  }, [user?.id, loadCart])
 
   const addItem = useCallback(async (productId: string, quantity = 1) => {
     if (!user) throw new Error('User not authenticated')

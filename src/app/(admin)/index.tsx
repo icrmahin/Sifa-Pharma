@@ -18,6 +18,10 @@ import StatusBadge from "../../components/common/StatusBadge";
 import Icon from "../../components/common/Icon";
 import { useThemeColors } from "../../providers/ThemeProvider";
 import { useResponsive } from "../../hooks/useResponsive";
+import { useAdmin } from "../../hooks/useAdmin";
+import { useAuth } from "../../hooks/useAuth";
+import LoadingState from "../../components/common/LoadingState";
+import ErrorState from "../../components/common/ErrorState";
 import config from "../../constants/config";
 import sizes from "../../constants/sizes";
 import spacing from "../../constants/spacing";
@@ -100,36 +104,40 @@ function ActionChip({ label, colors }: { label: string; colors: ReturnType<typeo
 
 export default function AdminDashboardScreen() {
   const colors = useThemeColors();
-  const user = { name: "Admin" } as { name: string };
+  const { user } = useAuth();
+  const { dashboard, loading, error, reload } = useAdmin();
   const { isMobile, isTablet, isWide } = useResponsive();
   const isCompact = isMobile;
 
-  // frontend-only placeholder dashboard — empty typed data keeps UI intact
-  const dashboard = {
-    pendingOrders: 0,
-    processingOrders: 0,
-    activeProducts: 0,
-    lowStockProducts: 0,
-    attentionOrders: [] as Array<{ id: string; orderNumber: string; customerName: string; total: number }>,
-    pendingReturns: [] as Array<{ id: string; productName: string; customerName: string; quantity: number }>,
-    lowStockBatches: [] as Array<{ id: string; productName: string; batchNumber: string; quantity: number; status: "healthy" | "low" | "out_of_stock"; expiryDate?: string }>,
-    expiringBatches: [] as Array<{ id: string; productName: string; batchNumber: string; quantity: number; status: "healthy" | "low" | "out_of_stock"; expiryDate?: string }>,
-    recentOrders: [] as Array<{ id: string; orderNumber: string; customerName: string; total: number; status: string; createdAt: string }>,
-    recentActivity: [] as Array<{ id: string; action: string; actor: string; recordType: string; timestamp: string }>,
-  };
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+        <AdminHeader title="Dashboard" subtitle={`Welcome, ${user?.name ?? "Admin"}`} />
+        <LoadingState label="Loading dashboard" />
+      </SafeAreaView>
+    );
+  }
+  if (error) {
+    return (
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+        <AdminHeader title="Dashboard" subtitle={`Welcome, ${user?.name ?? "Admin"}`} />
+        <ErrorState message={error} onRetry={reload} />
+      </SafeAreaView>
+    );
+  }
 
   const {
-    pendingOrders,
-    processingOrders,
-    activeProducts,
-    lowStockProducts,
-    attentionOrders,
-    pendingReturns,
-    lowStockBatches,
-    expiringBatches,
-    recentOrders,
-    recentActivity,
-  } = dashboard;
+    pendingOrders = 0,
+    processingOrders = 0,
+    activeProducts = 0,
+    lowStockProducts = 0,
+    attentionOrders = [],
+    pendingReturns = [],
+    lowStockBatches = [],
+    expiringBatches = [],
+    recentOrders = [],
+    recentActivity = [],
+  } = dashboard ?? {};
 
   const openRow = (href: string) => router.push(href as never);
   const openOrder = (orderId: string) =>
@@ -141,7 +149,7 @@ export default function AdminDashboardScreen() {
     });
 
   const attention: AttentionRowData[] = [
-    ...attentionOrders.map((order) => ({
+    ...attentionOrders.map((order: any) => ({
       key: order.id,
       icon: "pending-actions" as IconName,
       title: `Order ${order.orderNumber} pending`,
@@ -150,7 +158,7 @@ export default function AdminDashboardScreen() {
       actionLabel: "Review",
       onPress: () => openOrder(order.id),
     })),
-    ...lowStockBatches.map((item) => ({
+    ...lowStockBatches.map((item: any) => ({
       key: item.id,
       icon: "warning" as IconName,
       title: item.productName,
@@ -159,7 +167,7 @@ export default function AdminDashboardScreen() {
       actionLabel: "Restock",
       onPress: () => openRow("/(admin)/inventory"),
     })),
-    ...pendingReturns.map((entry) => ({
+    ...pendingReturns.map((entry: any) => ({
       key: entry.id,
       icon: "assignment-return" as IconName,
       title: entry.productName,
@@ -173,7 +181,7 @@ export default function AdminDashboardScreen() {
   const snapshot = [
     ...lowStockBatches,
     ...expiringBatches.filter(
-      (entry) => !lowStockBatches.some((item) => item.id === entry.id),
+      (entry: any) => !lowStockBatches.some((item: any) => item.id === entry.id),
     ),
   ].slice(0, 5);
 
@@ -362,7 +370,7 @@ export default function AdminDashboardScreen() {
                     message="New customer orders will appear here."
                   />
                 ) : (
-                  recentOrders.map((order, index) => (
+                  recentOrders.map((order: any, index: number) => (
                     <View key={order.id}>
                       <Pressable
                         style={({ pressed }) => [
@@ -421,9 +429,9 @@ export default function AdminDashboardScreen() {
                     </Text>
                   </View>
                 ) : (
-                  snapshot.map((item, index) => {
+                  snapshot.map((item: any, index: number) => {
                     const isExpiring = expiringBatches.some(
-                      (entry) => entry.id === item.id,
+                      (entry: any) => entry.id === item.id,
                     );
                     return (
                       <View key={item.id}>
@@ -481,7 +489,7 @@ export default function AdminDashboardScreen() {
                     message="Admin actions will be recorded here."
                   />
                 ) : (
-                  recentActivity.map((entry, index) => (
+                  recentActivity.map((entry: any, index: number) => (
                     <View key={entry.id}>
                       <View style={styles.listRow}>
                         <View style={styles.listMain}>

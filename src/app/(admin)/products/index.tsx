@@ -11,11 +11,13 @@ import ResponsiveContainer from "../../../components/common/ResponsiveContainer"
 import SearchBar from "../../../components/common/SearchBar";
 import { useThemeColors } from "../../../providers/ThemeProvider";
 import { useResponsive } from "../../../hooks/useResponsive";
+import { useCategories } from "../../../hooks/useProducts";
+import { useAdminProducts } from "../../../hooks/useAdmin";
+import LoadingState from "../../../components/common/LoadingState";
+import ErrorState from "../../../components/common/ErrorState";
 import config from "../../../constants/config";
 import spacing from "../../../constants/spacing";
 import typography from "../../../constants/typography";
-import type { Category } from "../../../types/category";
-import type { Product } from "../../../types/product";
 
 type StatusFilter = "all" | "active" | "inactive";
 type StockFilter = "all" | "in_stock" | "low" | "out";
@@ -38,12 +40,21 @@ export default function AdminProductsScreen() {
   const { isDesktop } = useResponsive();
   const twoColumns = isDesktop;
 
-  const [products] = useState<Product[]>([]);
-  const [categories] = useState<Category[]>([]);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<StatusFilter>("all");
   const [stockFilter, setStockFilter] = useState<StockFilter>("all");
   const [categoryId, setCategoryId] = useState("all");
+
+  const adminStatus = status === "all" ? undefined : status;
+  const adminStock = stockFilter === "all" ? undefined : stockFilter === "in_stock" ? "in_stock" : stockFilter;
+  const { data: products, loading, error, reload } = useAdminProducts({
+    status: adminStatus,
+    stockFilter: adminStock,
+    categoryId: categoryId === "all" ? undefined : categoryId,
+    query: query || undefined,
+    limit: 100,
+  });
+  const { data: categories } = useCategories();
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -71,6 +82,23 @@ export default function AdminProductsScreen() {
       return true;
     });
   }, [products, query, status, stockFilter, categoryId]);
+
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+        <AdminHeader title="Products" subtitle="Manage catalog and stock" />
+        <LoadingState label="Loading products" />
+      </SafeAreaView>
+    );
+  }
+  if (error) {
+    return (
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+        <AdminHeader title="Products" subtitle="Manage catalog and stock" />
+        <ErrorState message={error} onRetry={reload} />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>

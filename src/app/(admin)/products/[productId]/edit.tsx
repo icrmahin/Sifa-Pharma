@@ -4,34 +4,38 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import AdminHeader from "../../../../components/admin/AdminHeader";
 import ProductForm from "../../../../components/admin/ProductForm";
 import EmptyState from "../../../../components/common/EmptyState";
+import LoadingState from "../../../../components/common/LoadingState";
+import ErrorState from "../../../../components/common/ErrorState";
 import { useThemeColors } from "../../../../providers/ThemeProvider";
-import type { Category } from "../../../../types/category";
-import type { Manufacturer } from "../../../../types/manufacturer";
-import type { Product } from "../../../../types/product";
+import { useCategories, useManufacturers, useProduct } from "../../../../hooks/useProducts";
+import { updateProduct } from "../../../../services/products";
 
 export default function AdminEditProductScreen() {
   const colors = useThemeColors();
   const params = useLocalSearchParams<{ productId: string }>();
-  const productId = params.productId;
+  const productId = params.productId as string;
 
-  const categories: Category[] = [];
-  const manufacturers: Manufacturer[] = [];
-  const product: Product | null = productId
-    ? {
-        id: String(productId),
-        name: "Placeholder Product",
-        brand: "Demo Brand",
-        genericName: "Demo Generic",
-        categoryId: "",
-        manufacturerId: "",
-        description: "Frontend-only placeholder — backend required for real data.",
-        price: 0,
-        stock: 0,
-        unit: "pack",
-        isActive: true,
-        createdAt: new Date().toISOString(),
-      }
-    : null;
+  const { product, loading, error, reload } = useProduct(productId);
+  const { data: categories, loading: catLoading } = useCategories();
+  const { data: manufacturers, loading: manLoading } = useManufacturers();
+
+  if (loading || catLoading || manLoading) {
+    return (
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+        <AdminHeader title="Edit product" subtitle="Update catalog item" />
+        <LoadingState label="Loading product" />
+      </SafeAreaView>
+    );
+  }
+
+  if (error) {
+    return (
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+        <AdminHeader title="Edit product" subtitle="Update catalog item" />
+        <ErrorState message={error} onRetry={reload} />
+      </SafeAreaView>
+    );
+  }
 
   if (!product) {
     return (
@@ -55,7 +59,8 @@ export default function AdminEditProductScreen() {
         categories={categories}
         manufacturers={manufacturers}
         submitLabel="Save changes"
-        onSubmit={async () => {
+        onSubmit={async (input) => {
+          await updateProduct(productId, input);
           router.back();
         }}
       />

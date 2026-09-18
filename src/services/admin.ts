@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase'
+import { mapOrder, mapProduct } from '../lib/mappers'
 import type { Product } from '../types/product'
 import type { Order } from '../types/order'
 
@@ -183,13 +184,13 @@ export async function fetchAdminProducts(filters?: { status?: string; stockFilte
   const { data, error, count } = await query
   if (error) throw error
 
-  return { data: (data || []) as Product[], total: count || 0 }
+  return { data: (data || []).map(mapProduct), total: count || 0 }
 }
 
-export async function fetchAdminOrders(filters?: { status?: string; limit?: number; offset?: number }): Promise<{ data: any[]; total: number }> {
+export async function fetchAdminOrders(filters?: { status?: string; limit?: number; offset?: number }): Promise<{ data: Order[]; total: number }> {
   let query = supabase
     .from('orders')
-    .select('*, order_items(*), profiles(name, phone)', { count: 'exact' })
+    .select('*, order_items(*)', { count: 'exact' })
     .order('created_at', { ascending: false })
 
   if (filters?.status) query = query.eq('status', filters.status)
@@ -199,7 +200,16 @@ export async function fetchAdminOrders(filters?: { status?: string; limit?: numb
   const { data, error, count } = await query
   if (error) throw error
 
-  return { data: data || [], total: count || 0 }
+  return { data: (data || []).map((row: any) => mapOrder(row)), total: count || 0 }
+}
+
+export async function fetchAdminOrderById(orderId: string): Promise<Order | null> {
+  const { data, error } = await supabase.from('orders').select('*, order_items(*)').eq('id', orderId).single()
+  if (error) {
+    if (error.code === 'PGRST116') return null
+    throw error
+  }
+  return mapOrder(data)
 }
 
 export async function updateOrderStatus(orderId: string, status: string): Promise<void> {

@@ -2,6 +2,7 @@ import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
+import { goBack } from '@/utils/navigation';
 import { useThemeColors } from '../../../providers/ThemeProvider';
 import Header from '../../../components/common/Header';
 import StatusBadge from '../../../components/common/StatusBadge';
@@ -22,7 +23,7 @@ export default function CustomerOrderDetailScreen() {
   if (loading) {
     return (
       <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-        <Header title="Order" onBack={() => router.back()} />
+        <Header title="Order" onBack={() => goBack()} />
         <LoadingState label="Loading order" />
       </SafeAreaView>
     );
@@ -30,7 +31,7 @@ export default function CustomerOrderDetailScreen() {
   if (error) {
     return (
       <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-        <Header title="Order" onBack={() => router.back()} />
+        <Header title="Order" onBack={() => goBack()} />
         <ErrorState message={error} onRetry={reload} />
       </SafeAreaView>
     );
@@ -38,8 +39,8 @@ export default function CustomerOrderDetailScreen() {
   if (!order) {
     return (
       <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-        <Header title="Order" onBack={() => router.back()} />
-        <EmptyState title="Order not found" message="This order may have been removed." actionLabel="Back to orders" onAction={() => router.back()} />
+        <Header title="Order" onBack={() => goBack()} />
+        <EmptyState title="Order not found" message="This order may have been removed." actionLabel="Back to orders" onAction={() => goBack()} />
       </SafeAreaView>
     );
   }
@@ -48,7 +49,7 @@ export default function CustomerOrderDetailScreen() {
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-      <Header title={order.orderNumber} onBack={() => router.back()} />
+      <Header title={order.orderNumber} onBack={() => goBack()} />
       <ScrollView contentContainerStyle={styles.container}>
         <View style={[styles.card, { backgroundColor: colors.backgroundAlt, borderColor: colors.border }]}>
           <Text style={[styles.title, { color: colors.text }]}>Order summary</Text>

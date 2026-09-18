@@ -1,4 +1,5 @@
 /* eslint-disable react-hooks/set-state-in-effect -- data fetching and derived state sync require setState inside effects */
+import { goBack } from '@/utils/navigation';
 import React from "react";
 import { router } from "expo-router";
 import { useState, useEffect } from "react";
@@ -46,6 +47,16 @@ export default function CheckoutScreen() {
 
   const handleSubmit = async () => {
     if (!items.length || submitting || !selectedAddressId) return;
+    // Real e-com: user must have phone + address before order; admin path not used here (checkout is customer-only)
+    const phone = (user as any)?.phone || ''
+    if (!phone || !/^\+?8801[0-9]{9}$/.test(phone)) {
+      setError('Please add your Bangladeshi phone (+8801XXXXXXXXX, e.g. +8801865858544) in Account → Profile before ordering. Admin accounts do not place orders.');
+      return;
+    }
+    if (!selectedAddressId) {
+      setError('Please select or add a delivery address. User info is required to place order.');
+      return;
+    }
     setSubmitting(true);
     setError(null);
     try {
@@ -74,7 +85,7 @@ export default function CheckoutScreen() {
   if (!items.length) {
     return (
       <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-        <Header title="Checkout" onBack={() => router.back()} />
+        <Header title="Checkout" onBack={() => goBack()} />
         <EmptyState title="Your cart is empty" message="Add a medicine before checking out." actionLabel="Browse products" onAction={() => router.replace("/(customer)/(tabs)/products")} />
       </SafeAreaView>
     );
@@ -82,7 +93,7 @@ export default function CheckoutScreen() {
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-      <Header title="Checkout" onBack={() => router.back()} />
+      <Header title="Checkout" onBack={() => goBack()} />
       <ScrollView contentContainerStyle={styles.container}>
         <ResponsiveContainer maxWidth={isDesktop ? 960 : 1320}>
           {isDesktop ? (

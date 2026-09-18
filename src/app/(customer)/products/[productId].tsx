@@ -1,4 +1,5 @@
 import { router, useLocalSearchParams } from "expo-router";
+import { goBack } from '@/utils/navigation';
 import { useState, useEffect } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -43,7 +44,7 @@ export default function ProductDetailScreen() {
   if (loading) {
     return (
       <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-        <Header title="Product details" onBack={() => router.back()} />
+        <Header title="Product details" onBack={() => goBack()} />
         <LoadingState label="Loading product" />
       </SafeAreaView>
     );
@@ -52,7 +53,7 @@ export default function ProductDetailScreen() {
   if (error) {
     return (
       <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-        <Header title="Product details" onBack={() => router.back()} />
+        <Header title="Product details" onBack={() => goBack()} />
         <ErrorState message={error} onRetry={reload} />
       </SafeAreaView>
     );
@@ -61,7 +62,7 @@ export default function ProductDetailScreen() {
   if (!product) {
     return (
       <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-        <Header title="Product details" onBack={() => router.back()} />
+        <Header title="Product details" onBack={() => goBack()} />
         <EmptyState title="Product not found" message="This medicine is no longer available." actionLabel="Browse products" onAction={() => router.replace("/(customer)/(tabs)/products")} />
       </SafeAreaView>
     );
@@ -120,7 +121,7 @@ export default function ProductDetailScreen() {
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-      <Header title="Product details" onBack={() => router.back()} />
+      <Header title="Product details" onBack={() => goBack()} />
       <ScrollView contentContainerStyle={styles.container}>
         <ResponsiveContainer maxWidth={isDesktop ? 960 : 1320}>
           {isDesktop ? (

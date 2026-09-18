@@ -2,6 +2,7 @@ import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
+import { goBack } from '@/utils/navigation';
 import AdminHeader from '../../../components/admin/AdminHeader';
 import EmptyState from '../../../components/common/EmptyState';
 import { useThemeColors } from '../../../providers/ThemeProvider';
@@ -40,7 +41,7 @@ export default function AdminCustomerDetailScreen() {
           title="Customer not found"
           message="This account may have been removed."
           actionLabel="Back to customers"
-          onAction={() => router.back()}
+          onAction={() => goBack()}
         />
       </SafeAreaView>
     );

@@ -187,39 +187,39 @@ begin
     return;
   end if;
 
-  -- Admin user
+  -- Admin user (Bangladeshi format)
   insert into auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at, confirmation_token, email_change, email_change_token_new, recovery_token)
   values (
     inst_id, admin_id, 'authenticated', 'authenticated', 'admin@sifa.local',
     crypt('Admin123!', gen_salt('bf')),
     now(),
     '{"provider":"email","providers":["email"]}',
-    '{"name":"Sifa Admin","phone":"+254712345678","role":"admin"}',
+    '{"name":"Sifa Admin","phone":"+8801712345678","role":"admin"}',
     now(), now(), '', '', '', ''
   );
 
   insert into auth.identities (provider_id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
   values (
     'admin@sifa.local', admin_id,
-    jsonb_build_object('sub', admin_id::text, 'email','admin@sifa.local','phone','+254712345678'),
+    jsonb_build_object('sub', admin_id::text, 'email','admin@sifa.local','phone','+8801712345678'),
     'email', now(), now(), now()
   );
 
-  -- Customer 1
+  -- Customer 1 (Amina) - use your typical BD number +8801865858544
   insert into auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at, confirmation_token, email_change, email_change_token_new, recovery_token)
   values (
     inst_id, cust_id, 'authenticated', 'authenticated', 'customer@sifa.local',
     crypt('Customer123!', gen_salt('bf')),
     now(),
     '{"provider":"email","providers":["email"]}',
-    '{"name":"Amina Otieno","phone":"+254701234567","role":"customer"}',
+    '{"name":"Amina Otieno","phone":"+8801865858544","role":"customer"}',
     now(), now(), '', '', '', ''
   );
 
   insert into auth.identities (provider_id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
   values (
     'customer@sifa.local', cust_id,
-    jsonb_build_object('sub', cust_id::text, 'email','customer@sifa.local','phone','+254701234567'),
+    jsonb_build_object('sub', cust_id::text, 'email','customer@sifa.local','phone','+8801865858544'),
     'email', now(), now(), now()
   );
 
@@ -230,22 +230,22 @@ begin
     crypt('Customer123!', gen_salt('bf')),
     now(),
     '{"provider":"email","providers":["email"]}',
-    '{"name":"James Kimani","phone":"+254722345678","role":"customer"}',
+    '{"name":"James Kimani","phone":"+8801923456789","role":"customer"}',
     now(), now(), '', '', '', ''
   );
 
   insert into auth.identities (provider_id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
   values (
     'james.kimani@sifa.local', cust2_id,
-    jsonb_build_object('sub', cust2_id::text, 'email','james.kimani@sifa.local','phone','+254722345678'),
+    jsonb_build_object('sub', cust2_id::text, 'email','james.kimani@sifa.local','phone','+8801923456789'),
     'email', now(), now(), now()
   );
 
   -- Profiles trigger should have created them; ensure role correctness (allowlist already sets admin)
   -- But force exact values for determinism: update names/phones if trigger used defaults
-  update public.profiles set name='Sifa Admin', phone='+254712345678', role='admin', email='admin@sifa.local' where id=admin_id;
-  update public.profiles set name='Amina Otieno', phone='+254701234567', role='customer', email='customer@sifa.local' where id=cust_id;
-  update public.profiles set name='James Kimani', phone='+254722345678', role='customer', email='james.kimani@sifa.local' where id=cust2_id;
+  update public.profiles set name='Sifa Admin', phone='+8801712345678', role='admin', email='admin@sifa.local' where id=admin_id;
+  update public.profiles set name='Amina Otieno', phone='+8801865858544', role='customer', email='customer@sifa.local' where id=cust_id;
+  update public.profiles set name='James Kimani', phone='+8801923456789', role='customer', email='james.kimani@sifa.local' where id=cust2_id;
 end $$;
 
 -- 6. ADDRESSES (for customers, deterministic)

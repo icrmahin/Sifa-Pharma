@@ -1,4 +1,5 @@
 import { router } from "expo-router";
+import { goBack } from '@/utils/navigation';
 import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AdminHeader from "../../../components/admin/AdminHeader";
@@ -22,7 +23,7 @@ export default function InventoryAdjustmentScreen() {
         </View>
         <Button
           title="Save adjustment"
-          onPress={() => router.back()}
+          onPress={() => goBack()}
           fullWidth
         />
       </ScrollView>

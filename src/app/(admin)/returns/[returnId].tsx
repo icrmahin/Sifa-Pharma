@@ -2,6 +2,7 @@ import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
+import { goBack } from '@/utils/navigation';
 import AdminHeader from '../../../components/admin/AdminHeader';
 import EmptyState from '../../../components/common/EmptyState';
 import StatusBadge from '../../../components/common/StatusBadge';
@@ -37,7 +38,7 @@ export default function AdminReturnDetailScreen() {
           title="Return not found"
           message="This request may have been removed."
           actionLabel="Back to returns"
-          onAction={() => router.back()}
+          onAction={() => goBack()}
         />
       </SafeAreaView>
     );

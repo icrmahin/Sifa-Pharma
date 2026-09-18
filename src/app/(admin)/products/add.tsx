@@ -1,4 +1,5 @@
 import { router } from "expo-router";
+import { goBack } from '@/utils/navigation';
 import { StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AdminHeader from "../../../components/admin/AdminHeader";
@@ -31,7 +32,7 @@ export default function AdminAddProductScreen() {
         submitLabel="Save product"
         onSubmit={async (input) => {
           await createProduct(input);
-          router.back();
+          goBack();
         }}
       />
     </SafeAreaView>

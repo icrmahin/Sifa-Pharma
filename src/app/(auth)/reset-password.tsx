@@ -8,6 +8,7 @@ import Input from '../../components/common/Input';
 import Header from '../../components/common/Header';
 import spacing from '../../constants/spacing';
 import { supabase } from '../../lib/supabase';
+import { goBack } from '@/utils/navigation';
 
 export default function ResetPasswordScreen() {
   const colors = useThemeColors();
@@ -55,7 +56,7 @@ export default function ResetPasswordScreen() {
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-      <Header title="New password" onBack={() => router.back()} />
+      <Header title="New password" onBack={() => goBack()} />
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={[styles.subtitle, { color: colors.textMuted }]}>Choose a new secure password to complete the reset.{!hasSession ? ' No valid recovery session detected — open the email link on this device (sifapharma://).' : ''}</Text>
         <View style={styles.form}>

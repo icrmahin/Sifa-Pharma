@@ -2,6 +2,7 @@ import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import { goBack } from '@/utils/navigation';
 import { useThemeColors } from '../../providers/ThemeProvider';
 import Header from '../../components/common/Header';
 import StatusBadge from '../../components/common/StatusBadge';
@@ -26,7 +27,7 @@ export default function DeliveryCycleScreen() {
   const colors = useThemeColors();
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-      <Header title="Delivery cycle" onBack={() => router.back()} />
+      <Header title="Delivery cycle" onBack={() => goBack()} />
       <ScrollView contentContainerStyle={styles.container}>
         <View style={[styles.card, { backgroundColor: colors.backgroundAlt, borderColor: colors.border }]}>
           <Text style={[styles.title, { color: colors.text }]}>Active order cycle</Text>

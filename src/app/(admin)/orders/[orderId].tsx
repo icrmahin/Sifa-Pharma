@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
+import { goBack } from '@/utils/navigation';
 import AdminHeader from '../../../components/admin/AdminHeader';
 import Button from '../../../components/common/Button';
 import EmptyState from '../../../components/common/EmptyState';
@@ -98,7 +99,7 @@ export default function AdminOrderDetailScreen() {
     return (
       <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
         <AdminHeader title="Order" subtitle="Review order details" />
-        <EmptyState title="Order not found" message="This order may have been removed." actionLabel="Back to orders" onAction={() => router.back()} />
+        <EmptyState title="Order not found" message="This order may have been removed." actionLabel="Back to orders" onAction={() => goBack()} />
       </SafeAreaView>
     );
   }

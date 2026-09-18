@@ -2,6 +2,7 @@ import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import { goBack } from '@/utils/navigation';
 import { useThemeColors } from '../../../providers/ThemeProvider';
 import Button from '../../../components/common/Button';
 import Header from '../../../components/common/Header';
@@ -15,7 +16,7 @@ export default function CustomerAddressesScreen() {
   const colors = useThemeColors();
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-      <Header title="Addresses" onBack={() => router.back()} />
+      <Header title="Addresses" onBack={() => goBack()} />
       <ScrollView contentContainerStyle={styles.container}>
         {mockAddresses.map((address) => (
           <View key={address.id} style={[styles.card, { backgroundColor: colors.backgroundAlt, borderColor: colors.border }]}>

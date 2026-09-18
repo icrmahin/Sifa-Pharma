@@ -1,4 +1,5 @@
 /* eslint-disable react-hooks/set-state-in-effect -- data fetching and derived state sync require setState inside effects */
+import { goBack } from '@/utils/navigation';
 import { useState, useEffect } from "react";
 import { router } from "expo-router";
 import { ScrollView, StyleSheet, Text, View, Alert } from "react-native";
@@ -57,7 +58,7 @@ export default function EditAddressScreen({ route }: { route: { params: RoutePar
       } else {
         await create({ street: address, city, county, postalCode, label, isDefault });
       }
-      router.back();
+      goBack();
     } catch (err) {
       Alert.alert("Error", err instanceof Error ? err.message : "Failed to save address");
     } finally {
@@ -68,7 +69,7 @@ export default function EditAddressScreen({ route }: { route: { params: RoutePar
   if (isEditing) {
     return (
       <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-        <Header title="Edit Address" onBack={() => router.back()} />
+        <Header title="Edit Address" onBack={() => goBack()} />
         <ScrollView contentContainerStyle={styles.container}>
           <Input label="Street Address" value={address} onChangeText={setAddress} placeholder="Enter your street address" />
           <Input label="City" value={city} onChangeText={setCity} placeholder="Enter city" />
@@ -95,7 +96,7 @@ export default function EditAddressScreen({ route }: { route: { params: RoutePar
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-      <Header title="Add Address" onBack={() => router.back()} />
+      <Header title="Add Address" onBack={() => goBack()} />
       <ScrollView contentContainerStyle={styles.container}>
         <Input label="Street Address" value={address} onChangeText={setAddress} placeholder="Enter your street address" />
         <Input label="City" value={city} onChangeText={setCity} placeholder="Enter city" />

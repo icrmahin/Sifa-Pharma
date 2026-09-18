@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import { goBack } from '@/utils/navigation';
 import { useThemeColors } from '../../../providers/ThemeProvider';
 import Header from '../../../components/common/Header';
 import Input from '../../../components/common/Input';
@@ -23,14 +24,14 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-      <Header title="Profile" onBack={() => router.back()} />
+      <Header title="Profile" onBack={() => goBack()} />
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.card}>
           <Input label="Full name" value={name} onChangeText={setName} />
           <Input label="Email" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
           <Input label="Phone" value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
         </View>
-        <Button title="Save changes" variant="secondary" onPress={() => router.back()} fullWidth />
+        <Button title="Save changes" variant="secondary" onPress={() => goBack()} fullWidth />
       </ScrollView>
     </SafeAreaView>
   );

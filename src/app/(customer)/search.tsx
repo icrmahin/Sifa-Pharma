@@ -1,4 +1,5 @@
 import { router } from "expo-router";
+import { goBack } from '@/utils/navigation';
 import { useMemo, useState } from "react";
 import { FlatList, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -23,7 +24,7 @@ export default function CustomerSearchScreen() {
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-      <Header title="Search" onBack={() => router.back()} />
+      <Header title="Search" onBack={() => goBack()} />
       <FlatList
         data={results}
         contentContainerStyle={styles.container}

@@ -1,4 +1,5 @@
 import { router, useLocalSearchParams } from "expo-router";
+import { goBack } from '@/utils/navigation';
 import { StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AdminHeader from "../../../../components/admin/AdminHeader";
@@ -45,7 +46,7 @@ export default function AdminEditProductScreen() {
           title="Product not found"
           message="This product may have been removed."
           actionLabel="Back to products"
-          onAction={() => router.back()}
+          onAction={() => goBack()}
         />
       </SafeAreaView>
     );
@@ -61,7 +62,7 @@ export default function AdminEditProductScreen() {
         submitLabel="Save changes"
         onSubmit={async (input) => {
           await updateProduct(productId, input);
-          router.back();
+          goBack();
         }}
       />
     </SafeAreaView>

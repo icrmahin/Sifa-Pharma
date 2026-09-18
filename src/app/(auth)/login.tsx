@@ -8,6 +8,7 @@ import Input from '../../components/common/Input';
 import Header from '../../components/common/Header';
 import spacing from '../../constants/spacing';
 import { useAuth } from '../../hooks/useAuth';
+import { goBack } from '@/utils/navigation';
 
 export default function LoginScreen() {
   const colors = useThemeColors();
@@ -36,7 +37,7 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-      <Header title="Sign in" onBack={() => router.back()} />
+      <Header title="Sign in" onBack={() => goBack()} />
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={[styles.subtitle, { color: colors.textMuted }]}>Use your email and password to sign in. Google sign-in is not configured in production.</Text>
         <Input label="Email" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />

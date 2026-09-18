@@ -1,4 +1,5 @@
 import { router } from "expo-router";
+import { goBack } from '@/utils/navigation';
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useThemeColors } from "../../../providers/ThemeProvider";
@@ -14,7 +15,7 @@ export default function CustomerNotificationsScreen() {
   const colors = useThemeColors();
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-      <Header title="Notifications" onBack={() => router.back()} />
+      <Header title="Notifications" onBack={() => goBack()} />
       <ScrollView contentContainerStyle={styles.container}>
         {mockNotifications.map((notification) => (
           <View key={notification.id} style={[styles.card, { backgroundColor: colors.backgroundAlt, borderColor: colors.border }]}>

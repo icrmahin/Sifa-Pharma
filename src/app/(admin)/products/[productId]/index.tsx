@@ -1,4 +1,5 @@
 import { router, useLocalSearchParams } from "expo-router";
+import { goBack } from '@/utils/navigation';
 import { useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -64,7 +65,7 @@ export default function AdminProductDetailScreen() {
           title="Product not found"
           message="This product may have been removed."
           actionLabel="Back to products"
-          onAction={() => router.back()}
+          onAction={() => goBack()}
         />
       </SafeAreaView>
     );

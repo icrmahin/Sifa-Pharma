@@ -2,6 +2,7 @@ import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import { goBack } from '@/utils/navigation';
 import { useThemeColors } from '../../../providers/ThemeProvider';
 import Header from '../../../components/common/Header';
 import spacing from '../../../constants/spacing';
@@ -14,7 +15,7 @@ export default function CustomerCategoriesScreen() {
   const colors = useThemeColors();
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-      <Header title="Categories" onBack={() => router.back()} />
+      <Header title="Categories" onBack={() => goBack()} />
       <ScrollView contentContainerStyle={styles.container}>
         {mockCategories.map((category) => (
           <Text key={category.id} style={[styles.card, { backgroundColor: colors.backgroundAlt, borderColor: colors.border, color: colors.text }]} onPress={() => router.push({ pathname: '/(customer)/products/category/[categoryId]', params: { categoryId: category.id } })}>

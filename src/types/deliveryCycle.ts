@@ -15,4 +15,9 @@ export type DeliveryCycle = {
   closesAt: string;
   estimatedTotal: number;
   products: Product[];
+  createdAt: string;
+};
+
+export type DeliveryCycleWithProducts = DeliveryCycle & {
+  products: any[];
 };

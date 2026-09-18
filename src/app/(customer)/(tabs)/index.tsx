@@ -28,10 +28,7 @@ import type { Product } from "../../../types/product";
 import type { Category } from "../../../types/category";
 import type { Manufacturer } from "../../../types/manufacturer";
 import { useCart } from "../../../providers/CartProvider";
-
-const mockProducts: Product[] = [];
-const mockCategories: Category[] = [];
-const mockManufacturers: Manufacturer[] = [];
+import { useProducts, useCategories, useManufacturers } from "../../../hooks/useProducts";
 
 type DiscoveryTab = "all" | "trending" | "discount" | "new";
 
@@ -46,31 +43,35 @@ export default function CustomerHomeScreen() {
   const { itemCount } = useCart();
   const { isMobile, isTablet, columns } = useResponsive();
 
+  const { data: products, loading: productsLoading, error: productsError, reload: reloadProducts } = useProducts();
+  const { data: categories, loading: categoriesLoading } = useCategories();
+  const { data: manufacturers, loading: manufacturersLoading } = useManufacturers();
+
   useEffect(() => {
     const timer = setTimeout(() => { setLoading(false); }, 350);
     return () => clearTimeout(timer);
   }, []);
 
-  const featured = useMemo(() => mockProducts.filter((p) => p.isFeatured), []);
-  const newProducts = useMemo(() => [...mockProducts].slice(0, 3), []);
-  const discounted = useMemo(() => mockProducts.filter((p) => p.discountPercent), []);
+  const featured = useMemo(() => products.filter((p) => p.isFeatured), [products]);
+  const newProducts = useMemo(() => [...products].slice(0, 3), [products]);
+  const discounted = useMemo(() => products.filter((p) => p.discountPercent && p.discountPercent > 0), [products]);
   const searchResults = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
-    if (!normalizedQuery) return mockProducts.slice(0, 4);
-    return mockProducts.filter((p) =>
+    if (!normalizedQuery) return products.slice(0, 4);
+    return products.filter((p) =>
       [p.name, p.brand, p.genericName, p.description].join(" ").toLowerCase().includes(normalizedQuery)
     ).slice(0, 5);
-  }, [query]);
+  }, [query, products]);
 
   const activeProducts = useMemo(() => {
-    if (activeTab === "all") return mockProducts;
+    if (activeTab === "all") return products;
     switch (activeTab) {
       case "trending": return featured;
       case "discount": return discounted;
       case "new": return newProducts;
-      default: return mockProducts;
+      default: return products;
     }
-  }, [activeTab, featured, discounted, newProducts]);
+  }, [activeTab, featured, discounted, newProducts, products]);
 
   const openProduct = (product: Product) => {
     setSearchFocused(false);
@@ -117,7 +118,7 @@ export default function CustomerHomeScreen() {
           </View>
 
           <View style={styles.heroSection}>
-            <ProductHeroSlider products={mockProducts.length > 0 ? mockProducts.slice(0, 4) : []} onProductPress={openProduct} />
+            <ProductHeroSlider products={products.length > 0 ? products.slice(0, 4) : []} onProductPress={openProduct} />
           </View>
 
           <View style={styles.discoverySection}>
@@ -133,13 +134,13 @@ export default function CustomerHomeScreen() {
               <View style={[styles.filterPanel, { backgroundColor: colors.backgroundAlt, borderColor: colors.border }]}>
                 <Text style={[styles.filterTitle, { color: colors.text }]}>Categories</Text>
                 <View style={styles.categoryGrid}>
-                  {mockCategories.map((category) => (
+                  {categories.map((category) => (
                     <Pressable key={category.id} style={[styles.categoryItem, { backgroundColor: colors.primarySoft, borderColor: colors.border }]} onPress={() => { setShowFilter(false); router.push({ pathname: "/(customer)/products/category/[categoryId]", params: { categoryId: category.id } }); }}>
                       <Icon name="category" size={18} color={colors.primary} />
                       <Text style={[styles.categoryName, { color: colors.text }]}>{category.name}</Text>
                     </Pressable>
                   ))}
-                  {mockCategories.length === 0 ? <Text style={[styles.noResults, { color: colors.textMuted }]}>No categories available</Text> : null}
+                  {categories.length === 0 ? <Text style={[styles.noResults, { color: colors.textMuted }]}>No categories available</Text> : null}
                 </View>
               </View>
             ) : null}

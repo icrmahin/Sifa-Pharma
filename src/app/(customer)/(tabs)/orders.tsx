@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useThemeColors } from "../../../providers/ThemeProvider";
@@ -12,21 +12,19 @@ import OrderCard from "../../../components/orders/OrderCard";
 import spacing from "../../../constants/spacing";
 import { useResponsive } from "../../../hooks/useResponsive";
 import type { Order } from "../../../types/order";
-
-const mockOrders: Order[] = [];
-const getOrders = async (): Promise<Order[]> => { return mockOrders; };
+import { useOrders } from "../../../hooks/useOrders";
 
 export default function CustomerOrdersScreen() {
   const colors = useThemeColors();
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { orders, loading, error, reload } = useOrders();
   const { isMobile, isTablet, columns } = useResponsive();
 
-  useEffect(() => { getOrders().then(setOrders).catch(() => setError("Please try again.")).finally(() => setLoading(false)); }, []);
+  useEffect(() => {
+    reload();
+  }, [reload]);
 
   if (loading) return <LoadingState label="Loading your orders" />;
-  if (error) return <ErrorState message={error} onRetry={() => { setLoading(true); setError(null); getOrders().then(setOrders).catch(() => setError("Please try again.")).finally(() => setLoading(false)); }} />;
+  if (error) return <ErrorState message={error} onRetry={reload} />;
 
   const gridColumns = isMobile ? 1 : isTablet ? 2 : Math.min(columns, 3);
 

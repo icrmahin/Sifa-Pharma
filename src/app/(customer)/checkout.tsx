@@ -1,7 +1,7 @@
 import React from "react";
 import { router } from "expo-router";
-import { useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { useState, useEffect } from "react";
+import { ScrollView, StyleSheet, Text, View, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useThemeColors } from "../../providers/ThemeProvider";
 import Button from "../../components/common/Button";
@@ -14,30 +14,62 @@ import spacing from "../../constants/spacing";
 import typography from "../../constants/typography";
 import { useResponsive } from "../../hooks/useResponsive";
 import { useAuth } from "../../hooks/useAuth";
-import { useCart } from "../../hooks/useCart";
+import { useCart } from "../../providers/CartProvider";
+import { useAddresses } from "../../hooks/useAddresses";
+import { useCreateOrder } from "../../hooks/useOrders";
 import { formatCurrency } from "../../utils/currency";
 import { normalizeError } from "../../utils/errorHandling";
-
-const submitOrder = async (_payload: { customerId: string; customerName: string; address: string }): Promise<void> => { return; };
+import Icon from "../../components/common/Icon";
 
 export default function CheckoutScreen() {
   const colors = useThemeColors();
-  const { items, summary, loading } = useCart();
+  const { items, summary, loading: cartLoading } = useCart();
   const { user } = useAuth();
-  const [address, setAddress] = useState("Nairobi West, Mfangano Street");
+  const { data: addresses, loading: addressesLoading, create: createAddress, setDefault: setDefaultAddress } = useAddresses();
+  const { create: createOrder, loading: orderLoading, error: orderError } = useCreateOrder();
+  const { isDesktop } = useResponsive();
+
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+  const [address, setAddress] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const { isDesktop } = useResponsive();
+
+  useEffect(() => {
+    if (addresses.length > 0 && !selectedAddressId) {
+      const defaultAddress = addresses.find(a => a.isDefault) || addresses[0];
+      setSelectedAddressId(defaultAddress.id);
+      setAddress(`${defaultAddress.street}, ${defaultAddress.city}${defaultAddress.county ? `, ${defaultAddress.county}` : ''}${defaultAddress.postalCode ? `, ${defaultAddress.postalCode}` : ''}`);
+    }
+  }, [addresses, selectedAddressId]);
 
   const handleSubmit = async () => {
-    if (!items.length || submitting) return;
+    if (!items.length || submitting || !selectedAddressId) return;
     setSubmitting(true);
     setError(null);
-    try { await submitOrder({ customerId: user?.id ?? "user-001", customerName: user?.name ?? "Demo customer", address: address.trim() }); setSuccess(true); } catch (nextError) { setError(normalizeError(nextError).message); } finally { setSubmitting(false); }
+    try {
+      await createOrder(selectedAddressId);
+      setSuccess(true);
+    } catch (nextError) {
+      setError(normalizeError(nextError).message);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  if (loading) return <LoadingState label="Loading checkout" />;
+  const handleAddAddress = async () => {
+    const newAddress = await createAddress({
+      label: "Home",
+      street: address,
+      city: "Nairobi",
+      county: "Nairobi",
+      postalCode: "00100",
+      isDefault: true,
+    });
+    setSelectedAddressId(newAddress.id);
+  };
+
+  if (cartLoading || addressesLoading) return <LoadingState label="Loading checkout" />;
   if (!items.length) {
     return (
       <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
@@ -56,7 +88,22 @@ export default function CheckoutScreen() {
             <View style={styles.desktopLayout}>
               <View style={styles.formColumn}>
                 <Input label="Customer name" value={user?.name ?? "Demo customer"} editable={false} />
-                <Input label="Delivery address" value={address} onChangeText={setAddress} />
+                <View style={styles.addressSection}>
+                  <Text style={[styles.sectionTitle, { color: colors.text }]}>Delivery Address</Text>
+                  {addresses.map((addr) => (
+                    <Pressable key={addr.id} style={[styles.addressOption, selectedAddressId === addr.id && styles.addressOptionSelected, { backgroundColor: selectedAddressId === addr.id ? colors.primarySoft : colors.backgroundAlt, borderColor: selectedAddressId === addr.id ? colors.primary : colors.border }]} onPress={() => { setSelectedAddressId(addr.id); setAddress(`${addr.street}, ${addr.city}${addr.county ? `, ${addr.county}` : ''}${addr.postalCode ? `, ${addr.postalCode}` : ''}`); }}>
+                      <View style={styles.addressOptionContent}>
+                        <Text style={[styles.addressLabel, { color: colors.text }]}>{addr.label}</Text>
+                        <Text style={[styles.addressDetail, { color: colors.textMuted }]}>{addr.street}, ${addr.city}${addr.county ? `, ${addr.county}` : ''}</Text>
+                      </View>
+{selectedAddressId === addr.id && <Icon name="check-circle-outline" size={20} color={colors.primary} />}
+                    </Pressable>
+                  ))}
+                  <Pressable style={[styles.addressOption, styles.addAddressButton, { backgroundColor: colors.backgroundAlt, borderColor: colors.border, borderStyle: 'dashed' }]} onPress={() => router.push("/(customer)/address/edit")}>
+<Icon name="add" size={20} color={colors.primary} />
+                    <Text style={[styles.addAddressText, { color: colors.primary }]}>Add new address</Text>
+                  </Pressable>
+                </View>
               </View>
               <View style={styles.summaryColumn}>
                 <View style={[styles.summaryBox, { backgroundColor: colors.backgroundAlt, borderColor: colors.border }]}>
@@ -75,13 +122,27 @@ export default function CheckoutScreen() {
                 </View>
                 {error ? <Text style={[styles.error, { color: colors.danger }]}>{error}</Text> : null}
                 {success ? <Text style={[styles.success, { color: colors.success }]}>Order submitted and added to your delivery cycle.</Text> : null}
-                <Button title={success ? "View delivery cycle" : "Submit order"} onPress={success ? () => router.replace("/(customer)/delivery-cycle") : handleSubmit} loading={submitting} disabled={success || !address.trim()} fullWidth />
+                <Button title={success ? "View delivery cycle" : "Submit order"} onPress={success ? () => router.replace("/(customer)/delivery-cycle") : handleSubmit} loading={submitting} disabled={success || !selectedAddressId || submitting} fullWidth />
               </View>
             </View>
           ) : (
             <>
-              <Input label="Customer name" value={user?.name ?? "Demo customer"} editable={false} />
-              <Input label="Delivery address" value={address} onChangeText={setAddress} />
+              <View style={styles.addressSection}>
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>Delivery Address</Text>
+                {addresses.map((addr) => (
+                  <Pressable key={addr.id} style={[styles.addressOption, selectedAddressId === addr.id && styles.addressOptionSelected, { backgroundColor: selectedAddressId === addr.id ? colors.primarySoft : colors.backgroundAlt, borderColor: selectedAddressId === addr.id ? colors.primary : colors.border }]} onPress={() => { setSelectedAddressId(addr.id); setAddress(`${addr.street}, ${addr.city}${addr.county ? `, ${addr.county}` : ''}${addr.postalCode ? `, ${addr.postalCode}` : ''}`); }}>
+                    <View style={styles.addressOptionContent}>
+                      <Text style={[styles.addressLabel, { color: colors.text }]}>{addr.label}</Text>
+                      <Text style={[styles.addressDetail, { color: colors.textMuted }]}>{addr.street}, ${addr.city}${addr.county ? `, ${addr.county}` : ''}</Text>
+                    </View>
+                    {selectedAddressId === addr.id && <Icon name="check-circle-outline" size={20} color={colors.primary} />}
+                  </Pressable>
+                ))}
+                <Pressable style={[styles.addressOption, styles.addAddressButton, { backgroundColor: colors.backgroundAlt, borderColor: colors.border, borderStyle: 'dashed' }]} onPress={() => router.push("/(customer)/address/edit")}>
+                  <Icon name="add" size={20} color={colors.primary} />
+                  <Text style={[styles.addAddressText, { color: colors.primary }]}>Add new address</Text>
+                </Pressable>
+              </View>
               <View style={[styles.summaryBox, { backgroundColor: colors.backgroundAlt, borderColor: colors.border }]}>
                 <Text style={[styles.sectionTitle, { color: colors.text }]}>Order summary</Text>
                 {items.map((item) => (
@@ -98,7 +159,7 @@ export default function CheckoutScreen() {
               </View>
               {error ? <Text style={[styles.error, { color: colors.danger }]}>{error}</Text> : null}
               {success ? <Text style={[styles.success, { color: colors.success }]}>Order submitted and added to your delivery cycle.</Text> : null}
-              <Button title={success ? "View delivery cycle" : "Submit order"} onPress={success ? () => router.replace("/(customer)/delivery-cycle") : handleSubmit} loading={submitting} disabled={success || !address.trim()} fullWidth />
+              <Button title={success ? "View delivery cycle" : "Submit order"} onPress={success ? () => router.replace("/(customer)/delivery-cycle") : handleSubmit} loading={submitting} disabled={success || !selectedAddressId || submitting} fullWidth />
             </>
           )}
         </ResponsiveContainer>
@@ -113,6 +174,27 @@ const styles = StyleSheet.create({
   desktopLayout: { flexDirection: "row", gap: spacing.xl },
   formColumn: { flex: 1, gap: spacing.lg },
   summaryColumn: { flex: 1, gap: spacing.lg },
+  addressSection: { gap: spacing.sm },
+  addressOption: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: spacing.md,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  addressOptionSelected: {
+    borderWidth: 2,
+  },
+  addressOptionContent: { flex: 1 },
+  addressLabel: { fontWeight: "600", fontSize: 14 },
+  addressDetail: { fontSize: 12, marginTop: 2 },
+  addAddressButton: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: spacing.lg,
+  },
+  addAddressText: { fontWeight: "600" },
   summaryBox: { borderRadius: 16, borderWidth: 1, padding: spacing.lg },
   sectionTitle: { fontWeight: "700", fontSize: 14, marginBottom: spacing.md },
   row: { flexDirection: "row", justifyContent: "space-between", marginBottom: spacing.sm },

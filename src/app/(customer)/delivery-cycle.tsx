@@ -19,6 +19,7 @@ const mockDeliveryCycle: DeliveryCycle = {
   closesAt: new Date().toISOString(),
   estimatedTotal: 0,
   products: [],
+  createdAt: new Date().toISOString(),
 };
 
 export default function DeliveryCycleScreen() {

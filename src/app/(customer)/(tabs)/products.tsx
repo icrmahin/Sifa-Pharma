@@ -13,10 +13,7 @@ import { useResponsive } from "../../../hooks/useResponsive";
 import type { Product } from "../../../types/product";
 import type { Category } from "../../../types/category";
 import type { Manufacturer } from "../../../types/manufacturer";
-
-const mockProducts: Product[] = [];
-const mockCategories: Category[] = [];
-const mockManufacturers: Manufacturer[] = [];
+import { useProducts, useCategories, useManufacturers } from "../../../hooks/useProducts";
 
 export default function CustomerProductsScreen() {
   const colors = useThemeColors();
@@ -25,14 +22,9 @@ export default function CustomerProductsScreen() {
   const [manufacturerId, setManufacturerId] = useState<string | null>(null);
   const { isMobile, isTablet, columns } = useResponsive();
 
-  const filteredProducts = useMemo(() => {
-    return mockProducts.filter((product) => {
-      const matchesQuery = !query || [product.name, product.brand, product.genericName].join(" ").toLowerCase().includes(query.toLowerCase());
-      const matchesCategory = !categoryId || product.categoryId === categoryId;
-      const matchesManufacturer = !manufacturerId || product.manufacturerId === manufacturerId;
-      return matchesQuery && matchesCategory && matchesManufacturer;
-    });
-  }, [categoryId, manufacturerId, query]);
+  const { data: products, loading, error, reload } = useProducts({ categoryId: categoryId || undefined, manufacturerId: manufacturerId || undefined, query });
+  const { data: categories, loading: categoriesLoading } = useCategories();
+  const { data: manufacturers, loading: manufacturersLoading } = useManufacturers();
 
   const gridColumns = isMobile ? 1 : isTablet ? 2 : columns;
 
@@ -40,7 +32,7 @@ export default function CustomerProductsScreen() {
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
       <Header title="Products" subtitle="Browse by category and manufacturer" />
       <FlatList
-        data={filteredProducts}
+        data={products}
         contentContainerStyle={styles.container}
         keyExtractor={(item) => item.id}
         numColumns={gridColumns}
@@ -58,7 +50,7 @@ export default function CustomerProductsScreen() {
               <Pressable style={[styles.chip, !categoryId && styles.chipSelected, { backgroundColor: !categoryId ? colors.backgroundAlt : colors.primarySoft, borderColor: !categoryId ? colors.border : colors.primary }]} onPress={() => setCategoryId(null)}>
                 <Text style={[styles.chipText, !categoryId && styles.chipSelectedText, { color: !categoryId ? colors.text : colors.primary }]}>All</Text>
               </Pressable>
-              {mockCategories.map((category) => (
+              {categories.map((category) => (
                 <Pressable key={category.id} style={[styles.chip, categoryId === category.id && styles.chipSelected, { backgroundColor: categoryId === category.id ? colors.primarySoft : colors.backgroundAlt, borderColor: categoryId === category.id ? colors.primary : colors.border }]} onPress={() => setCategoryId(category.id)}>
                   <Text style={[styles.chipText, categoryId === category.id && styles.chipSelectedText, { color: categoryId === category.id ? colors.primary : colors.text }]}>{category.name}</Text>
                 </Pressable>
@@ -69,13 +61,13 @@ export default function CustomerProductsScreen() {
               <Pressable style={[styles.chip, !manufacturerId && styles.chipSelected, { backgroundColor: !manufacturerId ? colors.backgroundAlt : colors.primarySoft, borderColor: !manufacturerId ? colors.border : colors.primary }]} onPress={() => setManufacturerId(null)}>
                 <Text style={[styles.chipText, !manufacturerId && styles.chipSelectedText, { color: !manufacturerId ? colors.text : colors.primary }]}>All</Text>
               </Pressable>
-              {mockManufacturers.map((manufacturer) => (
+              {manufacturers.map((manufacturer) => (
                 <Pressable key={manufacturer.id} style={[styles.chip, manufacturerId === manufacturer.id && styles.chipSelected, { backgroundColor: manufacturerId === manufacturer.id ? colors.primarySoft : colors.backgroundAlt, borderColor: manufacturerId === manufacturer.id ? colors.primary : colors.border }]} onPress={() => setManufacturerId(manufacturer.id)}>
                   <Text style={[styles.chipText, manufacturerId === manufacturer.id && styles.chipSelectedText, { color: manufacturerId === manufacturer.id ? colors.primary : colors.text }]}>{manufacturer.name}</Text>
                 </Pressable>
               ))}
             </ScrollView>
-            <Text style={[styles.resultText, { color: colors.textMuted }]}>{filteredProducts.length} products</Text>
+            <Text style={[styles.resultText, { color: colors.textMuted }]}>{products.length} products</Text>
           </ResponsiveContainer>
         }
         ListEmptyComponent={<Text style={[styles.resultText, { color: colors.textMuted }]}>No products found</Text>}
@@ -83,6 +75,8 @@ export default function CustomerProductsScreen() {
         maxToRenderPerBatch={6}
         windowSize={5}
         removeClippedSubviews
+        refreshing={false}
+        onRefresh={() => {}}
       />
     </SafeAreaView>
   );

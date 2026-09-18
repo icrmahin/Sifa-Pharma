@@ -158,15 +158,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email: form.email,
       password: form.password,
     })
-    if (error) {
-      // Surface email-not-confirmed clearly
-      if (error.message.toLowerCase().includes('not confirmed') || error.message.toLowerCase().includes('email not confirmed')) {
-        throw new Error('Email not confirmed. Please check your inbox and confirm via the link (sifapharma://).')
-      }
-      throw new Error(error.message)
-    }
+    if (error) throw new Error(error.message)
     if (!data.session || !data.user) {
-      // With enable_confirmations=true, signUp returns no session until confirmed; signIn should always have session if confirmed
       throw new Error('No session returned. If you just signed up, check your email for confirmation.')
     }
     const email = data.user.email
@@ -203,16 +196,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         emailRedirectTo,
       },
     })
-    if (error) throw new Error(error.message)
-    // With confirmations enabled, data.session will be null and user must confirm email
-    if (!data.session || !data.user) {
-      // Supabase returns user with confirmation_sent_at when email confirmation required
-      // Surface as informational error so UI can show "check email"
-      throw new Error('Account created. Please check your email to confirm before signing in.')
+     if (error) throw new Error(error.message)
+    if (!data.user) throw new Error('No user returned')
+    // Simple flow: no email confirmation required. If session exists, return it; if not (hosted still has confirmations enabled), fallback to user without session so caller can sign in directly.
+    if (data.session) {
+      return {
+        id: (data.session as any).id || '',
+        userId: data.user.id || '',
+        role: 'customer',
+        email: data.user.email,
+        phone: form.phone,
+        isAdmin: isEmailAllowlisted(data.user.email),
+      }
     }
-    // Seed confirmed immediately (local dev with Mailpit or hosted with auto-confirm disabled? still confirm)
     return {
-      id: (data.session as any).id || '',
+      id: '',
       userId: data.user.id || '',
       role: 'customer',
       email: data.user.email,

@@ -5,6 +5,7 @@ import { useShadows } from "../../constants/shadows";
 import spacing from "../../constants/spacing";
 import { fontFamily, fontSize } from "../../constants/typography";
 import { useCart } from "../../providers/CartProvider";
+import { useAuth } from "../../hooks/useAuth";
 import Icon from "./Icon";
 import AppLogo from "./AppLogo";
 import type { IconName } from "./Icon";
@@ -33,6 +34,7 @@ export default function CustomerDesktopHeader() {
   const colors = useThemeColors();
   const shadows = useShadows();
   const { itemCount } = useCart();
+  const { isAdmin } = useAuth();
   const activePath = getActivePath(pathname);
 
   return (
@@ -89,6 +91,21 @@ export default function CustomerDesktopHeader() {
               </Pressable>
             );
           })}
+          {isAdmin ? (
+            <Pressable
+              style={({ pressed }) => [
+                styles.navItem,
+                { backgroundColor: colors.gold + "20" },
+                pressed && { opacity: 0.7 },
+              ]}
+              onPress={() => router.replace("/(admin)" as never)}
+              accessibilityRole="button"
+              accessibilityLabel="Admin Dashboard"
+            >
+              <Icon name="dashboard" size={16} color={colors.gold} />
+              <Text style={[styles.navLabel, { color: colors.gold }]}>Admin</Text>
+            </Pressable>
+          ) : null}
         </View>
 
         {/* Right side: Search + Cart */}

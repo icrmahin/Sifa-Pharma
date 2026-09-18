@@ -3,7 +3,7 @@ import { useAuth } from "../hooks/useAuth";
 import { ActivityIndicator, View } from "react-native";
 
 export default function AppIndex() {
-  const { session, isAdmin, loading } = useAuth();
+  const { session, loading } = useAuth();
 
   if (loading) {
     return (
@@ -17,9 +17,7 @@ export default function AppIndex() {
     return <Redirect href="/(auth)/welcome" />;
   }
 
-  if (isAdmin) {
-    return <Redirect href="/(admin)" />;
-  }
-
+  // Admin can use both shop and admin with no restriction — default to shop.
+  // Admin can navigate to /(admin) via Shop→Admin button; customer restricted to shop by AdminLayout guard.
   return <Redirect href="/(customer)/(tabs)" />;
 }

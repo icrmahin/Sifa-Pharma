@@ -7,7 +7,7 @@ import { useAuth } from "../../hooks/useAuth";
 
 export default function CustomerLayout() {
   const { isMobile } = useResponsive();
-  const { session, isAdmin, loading } = useAuth();
+  const { session, loading } = useAuth();
 
   if (loading) {
     return (
@@ -21,9 +21,8 @@ export default function CustomerLayout() {
     return <Redirect href="/(auth)/welcome" />;
   }
 
-  if (isAdmin) {
-    return <Redirect href="/(admin)" />;
-  }
+  // Admin can use shop with no restriction — do not redirect isAdmin to /(admin).
+  // Customer is restricted to shop; AdminLayout will block non-admin from /(admin).
 
   return (
     <View style={styles.container}>

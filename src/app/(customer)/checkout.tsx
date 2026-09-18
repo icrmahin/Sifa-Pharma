@@ -26,7 +26,7 @@ import Icon from "../../components/common/Icon";
 export default function CheckoutScreen() {
   const colors = useThemeColors();
   const { items, summary, loading: cartLoading } = useCart();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const { data: addresses, loading: addressesLoading, create: createAddress, setDefault: setDefaultAddress } = useAddresses();
   const { create: createOrder, loading: orderLoading, error: orderError } = useCreateOrder();
   const { isDesktop } = useResponsive();
@@ -47,11 +47,13 @@ export default function CheckoutScreen() {
 
   const handleSubmit = async () => {
     if (!items.length || submitting || !selectedAddressId) return;
-    // Real e-com: user must have phone + address before order; admin path not used here (checkout is customer-only)
-    const phone = (user as any)?.phone || ''
-    if (!phone || !/^\+?8801[0-9]{9}$/.test(phone)) {
-      setError('Please add your Bangladeshi phone (+8801XXXXXXXXX, e.g. +8801865858544) in Account → Profile before ordering. Admin accounts do not place orders.');
-      return;
+    // Admin has no restriction: can shop without phone. User must have phone + address.
+    if (!isAdmin) {
+      const phone = (user as any)?.phone || ''
+      if (!phone || !/^\+?8801[0-9]{9}$/.test(phone)) {
+        setError('Please add your Bangladeshi phone (+8801XXXXXXXXX, e.g. +8801865858544) in Account → Profile before ordering.');
+        return;
+      }
     }
     if (!selectedAddressId) {
       setError('Please select or add a delivery address. User info is required to place order.');

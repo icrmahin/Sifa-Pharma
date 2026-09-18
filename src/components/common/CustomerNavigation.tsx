@@ -5,6 +5,7 @@ import { useThemeColors } from "../../providers/ThemeProvider";
 import { useShadows } from "../../constants/shadows";
 import spacing from "../../constants/spacing";
 import { useCart } from "../../providers/CartProvider";
+import { useAuth } from "../../hooks/useAuth";
 import Icon from "./Icon";
 import type { IconName } from "./Icon";
 
@@ -62,6 +63,7 @@ export default function CustomerNavigation() {
   const colors = useThemeColors();
   const shadows = useShadows();
   const { itemCount } = useCart();
+  const { isAdmin } = useAuth();
   const activePath = getActivePath(pathname);
 
   return (
@@ -118,6 +120,20 @@ export default function CustomerNavigation() {
           </Pressable>
         );
       })}
+      {isAdmin ? (
+        <Pressable
+          style={({ pressed }) => [styles.item, pressed && styles.pressed]}
+          onPress={() => router.replace("/(admin)" as never)}
+          android_ripple={{ color: colors.ripple.primary }}
+          accessibilityRole="button"
+          accessibilityLabel="Open Admin"
+        >
+          <View style={styles.iconContainer}>
+            <Icon name="dashboard" size={20} color={colors.textMuted} />
+          </View>
+          <Text style={[styles.label, { color: colors.textMuted }]}>Admin</Text>
+        </Pressable>
+      ) : null}
     </View>
   );
 }

@@ -192,7 +192,7 @@ export async function updateProduct(productId: string, input: Partial<Omit<Produ
   return mapProduct(data)
 }
 
-export async function fetchProductInventory(productId: string): Promise<Array<{ id: string; batchNumber: string; quantity: number; status: string; expiryDate?: string }>> {
+export async function fetchProductInventory(productId: string): Promise<{ id: string; batchNumber: string; quantity: number; status: string; expiryDate?: string }[]> {
   const { data, error } = await supabase.from('inventory_items').select('id, batch_number, quantity, status, expiry_date').eq('product_id', productId).order('expiry_date', { ascending: true })
   if (error) throw error
   return (data || []).map((row: any) => ({

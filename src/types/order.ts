@@ -31,5 +31,5 @@ export type Order = {
   paymentMethod: "CASH_ON_DELIVERY";
   address: string;
   items: OrderItem[];
-  timeline: Array<{ label: string; time: string; note?: string }>;
+  timeline: { label: string; time: string; note?: string }[];
 };

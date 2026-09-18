@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
@@ -6,16 +5,9 @@ import { useThemeColors } from "../../providers/ThemeProvider";
 import Button from "../../components/common/Button";
 import AppLogo from "../../components/common/AppLogo";
 import spacing from "../../constants/spacing";
-import typography from "../../constants/typography";
 
 export default function WelcomeScreen() {
   const colors = useThemeColors();
-  const [loading, setLoading] = useState(false);
-
-  const handleGoogleLogin = async () => {
-    setLoading(true);
-    try { router.replace("/"); } finally { setLoading(false); }
-  };
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
@@ -34,7 +26,9 @@ export default function WelcomeScreen() {
           <Text style={[styles.feature, { color: colors.text }]}>• Clear order tracking</Text>
         </View>
         <View style={styles.actions}>
-          <Button title={loading ? "Connecting..." : "Login with Google"} onPress={handleGoogleLogin} disabled={loading} fullWidth />
+          <Button title="Sign in with Email" onPress={() => router.push('/(auth)/login')} fullWidth />
+          <Button title="Create account" variant="secondary" onPress={() => router.push('/(auth)/register')} fullWidth />
+          <Text style={[styles.note, { color: colors.textMuted }]}>Google sign-in is not configured in this build. Use email and password.</Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -52,4 +46,5 @@ const styles = StyleSheet.create({
   featureList: { gap: spacing.sm },
   feature: { fontSize: 12 },
   actions: { gap: spacing.md },
+  note: { fontSize: 11, textAlign: 'center', lineHeight: 16 },
 });

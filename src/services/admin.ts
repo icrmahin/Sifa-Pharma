@@ -48,12 +48,12 @@ export interface AdminDashboardData {
   processingOrders: number
   activeProducts: number
   lowStockProducts: number
-  attentionOrders: Array<{ id: string; orderNumber: string; customerName: string; total: number }>
-  pendingReturns: Array<{ id: string; productName: string; customerName: string; quantity: number }>
-  lowStockBatches: Array<{ id: string; productName: string; batchNumber: string; quantity: number; status: 'healthy' | 'low' | 'out_of_stock'; expiryDate?: string }>
-  expiringBatches: Array<{ id: string; productName: string; batchNumber: string; quantity: number; status: 'healthy' | 'low' | 'out_of_stock'; expiryDate?: string }>
-  recentOrders: Array<{ id: string; orderNumber: string; customerName: string; total: number; status: string; createdAt: string }>
-  recentActivity: Array<{ id: string; action: string; actor: string; recordType: string; timestamp: string }>
+  attentionOrders: { id: string; orderNumber: string; customerName: string; total: number }[]
+  pendingReturns: { id: string; productName: string; customerName: string; quantity: number }[]
+  lowStockBatches: { id: string; productName: string; batchNumber: string; quantity: number; status: 'healthy' | 'low' | 'out_of_stock'; expiryDate?: string }[]
+  expiringBatches: { id: string; productName: string; batchNumber: string; quantity: number; status: 'healthy' | 'low' | 'out_of_stock'; expiryDate?: string }[]
+  recentOrders: { id: string; orderNumber: string; customerName: string; total: number; status: string; createdAt: string }[]
+  recentActivity: { id: string; action: string; actor: string; recordType: string; timestamp: string }[]
 }
 
 export async function fetchAdminDashboard(): Promise<AdminDashboardData> {

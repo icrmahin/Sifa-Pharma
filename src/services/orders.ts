@@ -6,11 +6,16 @@ export interface OrderWithItems extends Order {
   items: OrderItem[]
 }
 
-export async function fetchOrders(): Promise<Order[]> {
-  const { data, error } = await supabase
+export async function fetchOrders(options?: { limit?: number; offset?: number }): Promise<Order[]> {
+  let query = supabase
     .from('orders')
-    .select('*, order_items(*)')
+    .select('*, order_items(*)', { count: 'exact' })
     .order('created_at', { ascending: false })
+
+  if (options?.limit) query = query.limit(options.limit)
+  if (options?.offset !== undefined && options?.limit) query = query.range(options.offset, options.offset + options.limit - 1)
+
+  const { data, error } = await query
 
   if (error) throw error
   return (data || []).map((row: any) => mapOrder(row))
@@ -41,7 +46,7 @@ export async function createOrder(customerId: string, addressId: string): Promis
   return data as string
 }
 
-export async function fetchOrderTimeline(orderId: string): Promise<Array<{ label: string; time: string; note?: string }>> {
+export async function fetchOrderTimeline(orderId: string): Promise<{ label: string; time: string; note?: string }[]> {
   const { data, error } = await supabase
     .from('orders')
     .select('timeline')
@@ -49,5 +54,5 @@ export async function fetchOrderTimeline(orderId: string): Promise<Array<{ label
     .single()
 
   if (error) throw error
-  return (data?.timeline as Array<{ label: string; time: string; note?: string }>) || []
+  return (data?.timeline as { label: string; time: string; note?: string }[]) || []
 }

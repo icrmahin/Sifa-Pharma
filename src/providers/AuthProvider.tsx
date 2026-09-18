@@ -20,21 +20,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState<boolean>(true)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      handleSessionChange(session)
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      await handleSessionChange(session)
       setLoading(false)
     })
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      handleSessionChange(session)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      await handleSessionChange(session)
     })
 
     return () => { subscription.unsubscribe() }
   }, [])
 
-  function handleSessionChange(session: any) {
+  async function fetchProfileRole(userId: string): Promise<'customer' | 'admin' | null> {
+    try {
+      const { data, error } = await supabase.from('profiles').select('role').eq('id', userId).single()
+      if (error || !data) return null
+      return data.role as 'customer' | 'admin'
+    } catch {
+      return null
+    }
+  }
+
+  async function handleSessionChange(session: any) {
     if (session?.user) {
-      const userRole = (session.user.user_metadata?.role as 'customer' | 'admin') || 'customer'
+      // Authoritative role is from profiles table, NOT user_metadata
+      const profileRole = await fetchProfileRole(session.user.id)
+      const userRole: 'customer' | 'admin' = profileRole ?? 'customer'
       const authSession: AuthSession = {
         id: session.id || '',
         userId: session.user.id || '',
@@ -70,14 +82,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
     if (error) throw new Error(error.message)
     if (!data.session || !data.user) throw new Error('No session returned')
-    const userRole = (data.user.user_metadata?.role as 'customer' | 'admin') || 'customer'
+    // Fetch authoritative role from profiles after login
+    let authoritativeRole: 'customer' | 'admin' = 'customer'
+    try {
+      const { data: profile } = await supabase.from('profiles').select('role').eq('id', data.user.id).single()
+      if (profile?.role === 'admin' || profile?.role === 'customer') authoritativeRole = profile.role
+    } catch {
+      // fallback to customer if profile not yet available
+    }
     return {
       id: (data.session as any).id || '',
       userId: data.user.id || '',
-      role: userRole,
+      role: authoritativeRole,
       email: data.user.email,
       phone: data.user.phone,
-      isAdmin: userRole === 'admin',
+      isAdmin: authoritativeRole === 'admin',
     }
   }, [])
 
@@ -116,7 +135,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshUser = useCallback(async () => {
     const { data: { user: currentUser } } = await supabase.auth.getUser()
     if (currentUser) {
-      handleSessionChange({ user: currentUser, session: null })
+      await handleSessionChange({ user: currentUser, session: null })
     }
   }, [])
 

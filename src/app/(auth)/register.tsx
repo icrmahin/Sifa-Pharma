@@ -30,7 +30,13 @@ export default function RegisterScreen() {
       await register({ name: name.trim(), phone: phone.trim(), email: email.trim(), password, confirmPassword: password });
       router.replace('/');
     } catch (e: any) {
-      setError(e.message || 'Registration failed.');
+      const msg = e.message || 'Registration failed.';
+      // Production: email confirmation required produces throw with "Account created..."
+      if (msg.toLowerCase().includes('account created') || msg.toLowerCase().includes('check your email')) {
+        setError(msg + ' After confirming via sifapharma:// link, sign in.');
+      } else {
+        setError(msg);
+      }
     } finally {
       setLoading(false);
     }
@@ -40,7 +46,7 @@ export default function RegisterScreen() {
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
       <Header title="Create account" onBack={() => router.back()} />
       <ScrollView contentContainerStyle={styles.container}>
-        <Text style={[styles.subtitle, { color: colors.textMuted }]}>Create a customer account. You will be signed in automatically.</Text>
+        <Text style={[styles.subtitle, { color: colors.textMuted }]}>Create a customer account. You will receive a confirmation email; open the sifapharma:// link on this device to confirm, then sign in.</Text>
         <Input label="Full name" value={name} onChangeText={setName} />
         <Input label="Phone (+254...)" value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
         <Input label="Email" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />

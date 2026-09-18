@@ -7,9 +7,18 @@ import {
   useMemo,
   type ReactNode,
 } from 'react'
+import * as Linking from 'expo-linking'
 import { supabase } from '../lib/supabase'
 import type { User } from '../types/user'
 import type { AuthSession, AuthContextType, LoginForm, RegisterForm } from '../types/auth'
+
+// Production allowlist — must match DB is_admin() allowlist exactly
+const ADMIN_EMAILS = new Set(['icrmahin@gmail.com', 'hibbullah82026@gmail.com'])
+
+function isEmailAllowlisted(email?: string | null): boolean {
+  if (!email) return false
+  return ADMIN_EMAILS.has(email.trim().toLowerCase())
+}
 
 const AuthContext = createContext<AuthContextType | null>(null)
 
@@ -29,7 +38,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await handleSessionChange(session)
     })
 
-    return () => { subscription.unsubscribe() }
+    // Deep-link handling for email confirmation and password recovery (standalone Android via sifapharma://)
+    const handleUrl = async (url: string | null) => {
+      if (!url) return
+      try {
+        const parsed = Linking.parse(url)
+        const query = parsed.queryParams as Record<string, string> | null
+        // PKCE code flow (Supabase emails with ?code=...)
+        const code = query?.code as string | undefined
+        const token_hash = query?.token_hash as string | undefined
+        const type = query?.type as string | undefined
+        const error_code = query?.error_code as string | undefined
+        if (error_code) {
+          // let UI surface via onAuthStateChange error handling
+          return
+        }
+        if (code) {
+          const { error } = await supabase.auth.exchangeCodeForSession(url)
+          if (error) console.warn('[AuthProvider] exchangeCodeForSession error', error.message)
+        } else if (token_hash && type) {
+          // legacy token_hash flow (recovery, signup, email_change)
+          const { error } = await supabase.auth.verifyOtp({ token_hash, type: type as any })
+          if (error) console.warn('[AuthProvider] verifyOtp error', error.message)
+        } else {
+          // Handle case where url contains access_token in hash (implicit flow fallback)
+          const hash = url.split('#')[1]
+          if (hash) {
+            const params = new URLSearchParams(hash)
+            const access_token = params.get('access_token')
+            const refresh_token = params.get('refresh_token')
+            if (access_token && refresh_token) {
+              await supabase.auth.setSession({ access_token, refresh_token })
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('[AuthProvider] handleUrl error', e)
+      }
+    }
+
+    Linking.getInitialURL().then(handleUrl)
+    const sub = Linking.addEventListener('url', ({ url }) => handleUrl(url))
+
+    return () => {
+      subscription.unsubscribe()
+      sub.remove()
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   async function fetchProfileRole(userId: string): Promise<'customer' | 'admin' | null> {
@@ -42,28 +97,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  async function checkIsAdminRpc(): Promise<boolean | null> {
+    try {
+      const { data, error } = await supabase.rpc('is_admin')
+      if (error) return null
+      return data === true
+    } catch {
+      return null
+    }
+  }
+
   async function handleSessionChange(session: any) {
     if (session?.user) {
-      // Authoritative role is from profiles table, NOT user_metadata
+      const email = session.user.email as string | undefined
+      // Display role from profiles (derived), but authorization truth is email allowlist + DB is_admin()
       const profileRole = await fetchProfileRole(session.user.id)
-      const userRole: 'customer' | 'admin' = profileRole ?? 'customer'
+      // DB truth via RPC (when available) otherwise fallback to email allowlist
+      const rpcAdmin = await checkIsAdminRpc()
+      const emailAdmin = isEmailAllowlisted(email)
+
+      // If RPC available, trust it; else use email allowlist (same as DB). Profiles role is NOT trusted for admin.
+      const hardenedIsAdmin = rpcAdmin !== null ? rpcAdmin : emailAdmin
+      // Keep role for display but ensure isAdmin follows hardened truth
+      const displayRole: 'customer' | 'admin' = hardenedIsAdmin ? 'admin' : 'customer'
+      // Log mismatch for observability (customer with profiles.role admin should not be admin)
+      if (profileRole === 'admin' && !hardenedIsAdmin) {
+        console.warn('[AuthProvider] blocked admin impersonation: profiles.role=admin but email not allowlisted', email)
+      }
+
       const authSession: AuthSession = {
-        id: session.id || '',
+        id: (session as any).id || session.access_token?.slice(0, 8) || '',
         userId: session.user.id || '',
-        role: userRole,
-        email: session.user.email || undefined,
+        role: displayRole,
+        email: email || undefined,
         phone: session.user.phone || undefined,
-        isAdmin: userRole === 'admin',
+        isAdmin: hardenedIsAdmin,
       }
       setSession(authSession)
-      setIsAdmin(authSession.isAdmin)
+      setIsAdmin(hardenedIsAdmin)
 
       const appUser: User = {
         id: session.user.id || '',
         name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User',
         email: session.user.email,
         phone: session.user.phone,
-        role: authSession.role,
+        role: displayRole,
         avatar: session.user.user_metadata?.avatar_url,
         createdAt: session.user.created_at || new Date().toISOString(),
       }
@@ -80,27 +158,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email: form.email,
       password: form.password,
     })
-    if (error) throw new Error(error.message)
-    if (!data.session || !data.user) throw new Error('No session returned')
-    // Fetch authoritative role from profiles after login
-    let authoritativeRole: 'customer' | 'admin' = 'customer'
-    try {
-      const { data: profile } = await supabase.from('profiles').select('role').eq('id', data.user.id).single()
-      if (profile?.role === 'admin' || profile?.role === 'customer') authoritativeRole = profile.role
-    } catch {
-      // fallback to customer if profile not yet available
+    if (error) {
+      // Surface email-not-confirmed clearly
+      if (error.message.toLowerCase().includes('not confirmed') || error.message.toLowerCase().includes('email not confirmed')) {
+        throw new Error('Email not confirmed. Please check your inbox and confirm via the link (sifapharma://).')
+      }
+      throw new Error(error.message)
     }
+    if (!data.session || !data.user) {
+      // With enable_confirmations=true, signUp returns no session until confirmed; signIn should always have session if confirmed
+      throw new Error('No session returned. If you just signed up, check your email for confirmation.')
+    }
+    const email = data.user.email
+    const hardenedIsAdmin = isEmailAllowlisted(email)
+    // Also verify via RPC after session established (best effort)
+    let rpcAdmin: boolean | null = null
+    try {
+      const r = await supabase.rpc('is_admin')
+      if (!r.error) rpcAdmin = r.data === true
+    } catch {}
+    const finalIsAdmin = rpcAdmin !== null ? rpcAdmin : hardenedIsAdmin
+    const role: 'customer' | 'admin' = finalIsAdmin ? 'admin' : 'customer'
     return {
       id: (data.session as any).id || '',
       userId: data.user.id || '',
-      role: authoritativeRole,
+      role,
       email: data.user.email,
       phone: data.user.phone,
-      isAdmin: authoritativeRole === 'admin',
+      isAdmin: finalIsAdmin,
     }
   }, [])
 
   const register = useCallback(async (form: RegisterForm): Promise<AuthSession> => {
+    const emailRedirectTo = Linking.createURL('auth-callback')
     const { data, error } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
@@ -110,17 +200,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           phone: form.phone,
           role: 'customer',
         },
+        emailRedirectTo,
       },
     })
     if (error) throw new Error(error.message)
-    if (!data.session || !data.user) throw new Error('No session returned')
+    // With confirmations enabled, data.session will be null and user must confirm email
+    if (!data.session || !data.user) {
+      // Supabase returns user with confirmation_sent_at when email confirmation required
+      // Surface as informational error so UI can show "check email"
+      throw new Error('Account created. Please check your email to confirm before signing in.')
+    }
+    // Seed confirmed immediately (local dev with Mailpit or hosted with auto-confirm disabled? still confirm)
     return {
       id: (data.session as any).id || '',
       userId: data.user.id || '',
       role: 'customer',
       email: data.user.email,
       phone: form.phone,
-      isAdmin: false,
+      isAdmin: isEmailAllowlisted(data.user.email),
     }
   }, [])
 
@@ -135,7 +232,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshUser = useCallback(async () => {
     const { data: { user: currentUser } } = await supabase.auth.getUser()
     if (currentUser) {
-      await handleSessionChange({ user: currentUser, session: null })
+      // Build minimal session-shaped object for handleSessionChange
+      await handleSessionChange({ user: currentUser, access_token: '' })
     }
   }, [])
 

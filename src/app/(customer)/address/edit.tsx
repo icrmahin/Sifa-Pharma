@@ -1,8 +1,8 @@
-/* eslint-disable react-hooks/set-state-in-effect -- data fetching and derived state sync require setState inside effects */
+/* eslint-disable react-hooks/set-state-in-effect -- data fetching requires setState inside effects */
 import { goBack } from '@/utils/navigation';
 import { useState, useEffect } from "react";
-import { router } from "expo-router";
-import { ScrollView, StyleSheet, Text, View, Alert } from "react-native";
+import { useLocalSearchParams } from "expo-router";
+import { ScrollView, StyleSheet, Text, View, Switch, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useThemeColors } from "../../../providers/ThemeProvider";
 import Header from "../../../components/common/Header";
@@ -10,19 +10,15 @@ import Input from "../../../components/common/Input";
 import Button from "../../../components/common/Button";
 import LoadingState from "../../../components/common/LoadingState";
 import spacing from "../../../constants/spacing";
-import typography from "../../../constants/typography";
+
 import { useAddresses } from "../../../hooks/useAddresses";
-import type { Address } from "../../../types/address";
 
-interface RouteParams {
-  addressId?: string;
-}
-
-export default function EditAddressScreen({ route }: { route: { params: RouteParams } }) {
+export default function EditAddressScreen() {
   const colors = useThemeColors();
-  const { addressId } = route.params;
+  const params = useLocalSearchParams<{ addressId?: string }>();
+  const addressId = typeof params.addressId === 'string' ? params.addressId : undefined;
   const { data: addresses, loading, create, update } = useAddresses();
-  const [address, setAddress] = useState("");
+  const [street, setStreet] = useState("");
   const [city, setCity] = useState("");
   const [county, setCounty] = useState("");
   const [postalCode, setPostalCode] = useState("");
@@ -33,30 +29,30 @@ export default function EditAddressScreen({ route }: { route: { params: RoutePar
 
   useEffect(() => {
     if (isEditing) {
-      const address = addresses.find(a => a.id === addressId);
-      if (address) {
-        setAddress(address.street);
-        setCity(address.city);
-        setCounty(address.county || "");
-        setPostalCode(address.postalCode || "");
-        setLabel(address.label);
-        setIsDefault(Boolean(address.isDefault));
+      const found = addresses.find(a => a.id === addressId);
+      if (found) {
+        setStreet(found.street);
+        setCity(found.city);
+        setCounty(found.county || "");
+        setPostalCode(found.postalCode || "");
+        setLabel(found.label);
+        setIsDefault(Boolean(found.isDefault));
       }
     }
   }, [addresses, addressId, isEditing]);
 
   const handleSave = async () => {
-    if (!address.trim() || !city.trim()) {
+    if (!street.trim() || !city.trim()) {
       Alert.alert("Missing fields", "Please enter street address and city");
       return;
     }
 
     setSaving(true);
     try {
-      if (isEditing) {
-        await update(addressId!, { street: address, city, county, postalCode, label, isDefault });
+      if (isEditing && addressId) {
+        await update(addressId, { street: street.trim(), city: city.trim(), county: county.trim(), postalCode: postalCode.trim(), label: label.trim() || 'Home', isDefault });
       } else {
-        await create({ street: address, city, county, postalCode, label, isDefault });
+        await create({ street: street.trim(), city: city.trim(), county: county.trim(), postalCode: postalCode.trim(), label: label.trim() || 'Home', isDefault });
       }
       goBack();
     } catch (err) {
@@ -66,56 +62,29 @@ export default function EditAddressScreen({ route }: { route: { params: RoutePar
     }
   };
 
-  if (isEditing) {
+  if (loading && isEditing) {
     return (
       <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
         <Header title="Edit Address" onBack={() => goBack()} />
-        <ScrollView contentContainerStyle={styles.container}>
-          <Input label="Street Address" value={address} onChangeText={setAddress} placeholder="Enter your street address" />
-          <Input label="City" value={city} onChangeText={setCity} placeholder="Enter city" />
-          <Input label="County" value={county} onChangeText={setCounty} placeholder="Enter county" />
-          <Input label="Postal Code" value={postalCode} onChangeText={setPostalCode} placeholder="Enter postal code" />
-          <Input label="Label" value={label} onChangeText={setLabel} placeholder="e.g. Home, Office" />
-          <View style={[styles.checkboxRow, { gap: spacing.sm }]}>
-            <Text style={[styles.checkboxLabel, { color: colors.text }]}>Set as default</Text>
-            <input
-              type="checkbox"
-              checked={isDefault}
-              onChange={(e) => setIsDefault(e.target.checked)}
-              style={styles.checkbox}
-            />
-          </View>
-          <View style={[styles.box, { backgroundColor: colors.backgroundAlt, borderColor: colors.border }]}>
-            <Text style={[styles.info, { color: colors.textMuted }]}>Changes will be saved on submit</Text>
-          </View>
-          <Button title={saving ? "Saving..." : "Save Address"} onPress={handleSave} fullWidth disabled={saving} />
-        </ScrollView>
+        <LoadingState label="Loading address" />
       </SafeAreaView>
     );
   }
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-      <Header title="Add Address" onBack={() => goBack()} />
+      <Header title={isEditing ? "Edit Address" : "Add Address"} onBack={() => goBack()} />
       <ScrollView contentContainerStyle={styles.container}>
-        <Input label="Street Address" value={address} onChangeText={setAddress} placeholder="Enter your street address" />
-        <Input label="City" value={city} onChangeText={setCity} placeholder="Enter city" />
-        <Input label="County" value={county} onChangeText={setCounty} placeholder="Enter county" />
-        <Input label="Postal Code" value={postalCode} onChangeText={setPostalCode} placeholder="Enter postal code" />
+        <Input label="Street Address" value={street} onChangeText={setStreet} placeholder="House, road, area" />
+        <Input label="City" value={city} onChangeText={setCity} placeholder="e.g. Dhaka" />
+        <Input label="District" value={county} onChangeText={setCounty} placeholder="e.g. Dhaka" />
+        <Input label="Postal Code" value={postalCode} onChangeText={setPostalCode} placeholder="e.g. 1205" keyboardType="numeric" />
         <Input label="Label" value={label} onChangeText={setLabel} placeholder="e.g. Home, Office" />
-        <View style={[styles.checkboxRow, { gap: spacing.sm }]}>
-          <Text style={[styles.checkboxLabel, { color: colors.text }]}>Set as default</Text>
-          <input
-            type="checkbox"
-            checked={isDefault}
-            onChange={(e) => setIsDefault(e.target.checked)}
-            style={styles.checkbox}
-          />
+        <View style={[styles.switchRow, { gap: spacing.sm }]}>
+          <Text style={[styles.switchLabel, { color: colors.text }]}>Set as default</Text>
+          <Switch value={isDefault} onValueChange={setIsDefault} />
         </View>
-        <View style={[styles.box, { backgroundColor: colors.backgroundAlt, borderColor: colors.border }]}>
-          <Text style={[styles.info, { color: colors.textMuted }]}>Address details will appear here</Text>
-        </View>
-        <Button title={saving ? "Saving..." : "Save Address"} onPress={handleSave} fullWidth disabled={saving} />
+        <Button title={saving ? "Saving..." : "Save Address"} onPress={handleSave} fullWidth disabled={saving} loading={saving} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -124,9 +93,6 @@ export default function EditAddressScreen({ route }: { route: { params: RoutePar
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
   container: { padding: spacing.lg, gap: spacing.md, paddingBottom: spacing.xxl },
-  checkboxRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  checkboxLabel: { fontSize: 14, fontWeight: "500" },
-  checkbox: { width: 20, height: 20 },
-  box: { borderRadius: 16, borderWidth: 1, padding: spacing.lg },
-  info: { fontSize: 12 },
+  switchRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  switchLabel: { fontSize: 14, fontWeight: "500" },
 });

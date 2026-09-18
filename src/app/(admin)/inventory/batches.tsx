@@ -3,14 +3,42 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AdminHeader from '../../../components/admin/AdminHeader';
 import EmptyState from '../../../components/common/EmptyState';
+import LoadingState from '../../../components/common/LoadingState';
+import ErrorState from '../../../components/common/ErrorState';
 import StatusBadge from '../../../components/common/StatusBadge';
 import { useThemeColors } from '../../../providers/ThemeProvider';
+import { useAdminInventory } from '../../../hooks/useAdmin';
 import spacing from '../../../constants/spacing';
-import type { InventoryItem } from '../../../types/inventory';
 
 export default function InventoryBatchesScreen() {
   const colors = useThemeColors();
-  const batches: InventoryItem[] = [];
+  const { data, loading, error, reload } = useAdminInventory();
+
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+        <AdminHeader title="Batches" subtitle="Track each batch independently" />
+        <LoadingState label="Loading batches" />
+      </SafeAreaView>
+    );
+  }
+
+  if (error) {
+    return (
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+        <AdminHeader title="Batches" subtitle="Track each batch independently" />
+        <ErrorState message={error} onRetry={reload} />
+      </SafeAreaView>
+    );
+  }
+
+  const batches = (data || []).map((row: any) => ({
+    id: row.id,
+    productName: row.products?.name ?? 'Unknown',
+    batchNumber: row.batch_number,
+    quantity: row.quantity,
+    status: row.status,
+  }));
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>

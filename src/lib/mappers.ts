@@ -1,5 +1,10 @@
 import type { Product } from '../types/product'
 import type { Order, OrderItem } from '../types/order'
+import type { Address } from '../types/address'
+import type { NotificationItem } from '../types/notification'
+import type { DeliveryCycle } from '../types/deliveryCycle'
+import type { ReturnRequest } from '../types/return'
+import type { AuditEntry } from '../types/audit'
 
 export function mapProduct(db: any): Product {
   if (!db) return db
@@ -58,5 +63,72 @@ export function mapOrder(db: any): Order {
     address: db.address ?? '',
     items,
     timeline: db.timeline ?? [],
+  }
+}
+
+export function mapAddress(db: any): Address {
+  if (!db) return db
+  return {
+    id: db.id,
+    label: db.label,
+    street: db.street,
+    city: db.city,
+    county: db.county ?? undefined,
+    postalCode: db.postal_code ?? db.postalCode ?? undefined,
+    isDefault: db.is_default ?? db.isDefault ?? false,
+  }
+}
+
+export function mapNotification(db: any): NotificationItem {
+  if (!db) return db
+  return {
+    id: db.id,
+    title: db.title,
+    body: db.body,
+    createdAt: db.created_at ?? db.createdAt,
+    read: db.read ?? false,
+    type: db.type ?? 'info',
+  }
+}
+
+export function mapDeliveryCycle(db: any): DeliveryCycle {
+  if (!db) return db
+  return {
+    id: db.id,
+    customerId: db.customer_id ?? db.customerId,
+    status: db.status,
+    startedAt: db.started_at ?? db.startedAt,
+    closesAt: db.closes_at ?? db.closesAt,
+    estimatedTotal: Number(db.estimated_total ?? db.estimatedTotal ?? 0),
+    products: db.products ?? [],
+    createdAt: db.created_at ?? db.createdAt,
+  }
+}
+
+export function mapReturnRequest(db: any): ReturnRequest {
+  if (!db) return db
+  return {
+    id: db.id,
+    orderId: db.order_id ?? db.orderId,
+    customerId: db.customer_id ?? db.customerId,
+    customerName: db.customer_name ?? db.customerName,
+    productName: db.product_name ?? db.productName,
+    quantity: db.quantity,
+    reason: db.reason,
+    status: db.status,
+    createdAt: db.created_at ?? db.createdAt,
+  }
+}
+
+export function mapAuditEntry(db: any): AuditEntry {
+  if (!db) return db
+  return {
+    id: db.id,
+    actor: db.actor_id ?? db.actor ?? '',
+    action: db.action,
+    timestamp: db.timestamp ?? db.created_at ?? new Date().toISOString(),
+    recordType: db.record_type ?? db.recordType ?? '',
+    oldValue: typeof db.old_value === 'string' ? db.old_value : db.old_value ? JSON.stringify(db.old_value) : undefined,
+    newValue: typeof db.new_value === 'string' ? db.new_value : db.new_value ? JSON.stringify(db.new_value) : undefined,
   }
 }

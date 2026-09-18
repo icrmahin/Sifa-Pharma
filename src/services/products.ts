@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase'
 import { mapProduct } from '../lib/mappers'
+import { resolveProductImageUri } from './storage'
 import type { Product } from '../types/product'
 import type { Category } from '../types/category'
 import type { Manufacturer } from '../types/manufacturer'
@@ -109,6 +110,8 @@ export async function searchProducts(query: string, limit = 10): Promise<Product
 }
 
 export async function createProduct(input: Omit<Product, 'id' | 'createdAt'> & { batchNumber?: string; expiryDate?: string }): Promise<Product> {
+  const primaryUrl = await resolveProductImageUri(input.primaryImage ?? input.image ?? null);
+  const secondaryUrl = await resolveProductImageUri(input.secondaryImage ?? null);
   const { data, error } = await supabase
     .from('products')
     .insert({
@@ -123,8 +126,8 @@ export async function createProduct(input: Omit<Product, 'id' | 'createdAt'> & {
       discount_percent: input.discountPercent ?? 0,
       stock: 0,
       unit: input.unit,
-      image_url: input.primaryImage ?? input.image ?? null,
-      secondary_image_url: input.secondaryImage ?? null,
+      image_url: primaryUrl,
+      secondary_image_url: secondaryUrl,
       is_active: input.isActive,
       is_featured: input.isFeatured ?? false,
     })
@@ -158,8 +161,8 @@ export async function updateProduct(productId: string, input: Partial<Omit<Produ
   if (input.originalPrice !== undefined) payload.original_price = input.originalPrice ?? null
   if (input.discountPercent !== undefined) payload.discount_percent = input.discountPercent ?? 0
   if (input.unit !== undefined) payload.unit = input.unit
-  if (input.primaryImage !== undefined || input.image !== undefined) payload.image_url = input.primaryImage ?? input.image ?? null
-  if (input.secondaryImage !== undefined) payload.secondary_image_url = input.secondaryImage ?? null
+  if (input.primaryImage !== undefined || input.image !== undefined) payload.image_url = await resolveProductImageUri(input.primaryImage ?? input.image ?? null, productId)
+  if (input.secondaryImage !== undefined) payload.secondary_image_url = await resolveProductImageUri(input.secondaryImage ?? null, productId)
   if (input.isActive !== undefined) payload.is_active = input.isActive
   if (input.isFeatured !== undefined) payload.is_featured = input.isFeatured
   if (Object.keys(payload).length > 0) {
@@ -190,6 +193,13 @@ export async function updateProduct(productId: string, input: Partial<Omit<Produ
   const { data, error } = await supabase.from('products').select('*, categories(name, slug), manufacturers(name)').eq('id', productId).single()
   if (error) throw error
   return mapProduct(data)
+}
+
+export async function deleteProduct(productId: string): Promise<void> {
+  const { error: invError } = await supabase.from('inventory_items').delete().eq('product_id', productId)
+  if (invError) throw invError
+  const { error } = await supabase.from('products').delete().eq('id', productId)
+  if (error) throw error
 }
 
 export async function fetchProductInventory(productId: string): Promise<{ id: string; batchNumber: string; quantity: number; status: string; expiryDate?: string }[]> {

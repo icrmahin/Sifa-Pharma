@@ -13,7 +13,8 @@ import type { User } from '../types/user'
 import type { AuthSession, AuthContextType, LoginForm, RegisterForm } from '../types/auth'
 
 // Production allowlist — must match DB is_admin() allowlist exactly
-const ADMIN_EMAILS = new Set(['icrmahin@gmail.com', 'hibbullah82026@gmail.com'])
+// admin@sifa.local included for local seed parity (non-routable, dev only)
+const ADMIN_EMAILS = new Set(['icrmahin@gmail.com', 'hibbullah82026@gmail.com', 'admin@sifa.local'])
 
 function isEmailAllowlisted(email?: string | null): boolean {
   if (!email) return false

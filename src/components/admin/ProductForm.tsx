@@ -98,7 +98,7 @@ export default function ProductForm({
     else if (Number.isNaN(stockNum) || stockNum < 0 || !Number.isInteger(stockNum))
       next.stock = "Enter a valid whole number.";
 
-    if (image && !/^https?:\/\/.+/.test(image)) next.image = "Enter a valid image URL.";
+    if (image && !/^(https?:\/\/|file:\/\/|content:\/\/|blob:|data:|ph:\/\/).+/.test(image)) next.image = "Enter a valid image URL or pick an image.";
 
     if (expiryDate && Number.isNaN(Date.parse(expiryDate)))
       next.expiryDate = "Enter a valid date (e.g. 2027-05-12).";

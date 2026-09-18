@@ -1,5 +1,18 @@
 import { supabase } from '../lib/supabase'
+import { mapAddress } from '../lib/mappers'
 import type { Address } from '../types/address'
+
+function toDbAddress(userId: string, address: Partial<Address>) {
+  const db: any = {}
+  if (address.label !== undefined) db.label = address.label
+  if (address.street !== undefined) db.street = address.street
+  if (address.city !== undefined) db.city = address.city
+  if (address.county !== undefined) db.county = address.county
+  if (address.postalCode !== undefined) db.postal_code = address.postalCode
+  if (address.isDefault !== undefined) db.is_default = address.isDefault
+  if (userId) db.user_id = userId
+  return db
+}
 
 export async function fetchAddresses(userId: string): Promise<Address[]> {
   const { data, error } = await supabase
@@ -10,7 +23,7 @@ export async function fetchAddresses(userId: string): Promise<Address[]> {
     .order('created_at', { ascending: false })
 
   if (error) throw error
-  return (data || []) as Address[]
+  return (data || []).map(mapAddress)
 }
 
 export async function fetchAddressById(addressId: string): Promise<Address | null> {
@@ -24,31 +37,31 @@ export async function fetchAddressById(addressId: string): Promise<Address | nul
     if (error.code === 'PGRST116') return null
     throw error
   }
-  return data as Address
+  return mapAddress(data)
 }
 
 export async function createAddress(userId: string, address: Omit<Address, 'id' | 'user_id' | 'created_at' | 'updated_at'>): Promise<Address> {
   const { data, error } = await supabase
     .from('addresses')
-    .insert({ ...address, user_id: userId })
+    .insert(toDbAddress(userId, address))
     .select()
     .single()
 
   if (error) throw error
-  return data as Address
+  return mapAddress(data)
 }
 
 export async function updateAddress(addressId: string, userId: string, updates: Partial<Omit<Address, 'id' | 'user_id' | 'created_at' | 'updated_at'>>): Promise<Address> {
   const { data, error } = await supabase
     .from('addresses')
-    .update({ ...updates, updated_at: new Date().toISOString() })
+    .update({ ...toDbAddress(userId, updates), updated_at: new Date().toISOString() })
     .eq('id', addressId)
     .eq('user_id', userId)
     .select()
     .single()
 
   if (error) throw error
-  return data as Address
+  return mapAddress(data)
 }
 
 export async function deleteAddress(addressId: string, userId: string): Promise<void> {

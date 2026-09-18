@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -9,8 +9,12 @@ import StatusBadge from '../../../components/common/StatusBadge';
 import LoadingState from '../../../components/common/LoadingState';
 import ErrorState from '../../../components/common/ErrorState';
 import EmptyState from '../../../components/common/EmptyState';
+import Button from '../../../components/common/Button';
+import Input from '../../../components/common/Input';
 import spacing from '../../../constants/spacing';
 import { useOrder } from '../../../hooks/useOrders';
+import { useAuth } from '../../../hooks/useAuth';
+import { createReturnRequest } from '../../../services/returns';
 import { formatCurrency } from '../../../utils/currency';
 import { formatDateTime } from '../../../utils/date';
 
@@ -19,6 +23,12 @@ export default function CustomerOrderDetailScreen() {
   const params = useLocalSearchParams<{ orderId: string }>();
   const orderId = params.orderId as string;
   const { order, loading, error, reload } = useOrder(orderId);
+  const { user } = useAuth();
+  const [showReturn, setShowReturn] = useState(false);
+  const [returnReason, setReturnReason] = useState("");
+  const [returnSubmitting, setReturnSubmitting] = useState(false);
+  const [returnError, setReturnError] = useState<string | null>(null);
+  const [returnSuccess, setReturnSuccess] = useState(false);
 
   if (loading) {
     return (
@@ -45,7 +55,42 @@ export default function CustomerOrderDetailScreen() {
     );
   }
 
-  const tone = order.status === 'DELIVERED' ? 'success' : order.status === 'CANCELLED' ? 'danger' : order.status === 'PENDING' ? 'warning' : 'info';
+  const tone = order?.status === 'DELIVERED' ? 'success' : order?.status === 'CANCELLED' ? 'danger' : order?.status === 'PENDING' ? 'warning' : 'info';
+
+  const handleReturn = async () => {
+    setReturnError(null);
+    if (!returnReason.trim()) {
+      setReturnError('Please enter a reason for the return.');
+      return;
+    }
+    if (!user || !order) {
+      setReturnError('Not signed in.');
+      return;
+    }
+    const firstItem = order.items[0];
+    if (!firstItem) {
+      setReturnError('No items to return.');
+      return;
+    }
+    setReturnSubmitting(true);
+    try {
+      await createReturnRequest({
+        orderId: order.id,
+        customerId: user.id,
+        customerName: user.name || user.email || 'Customer',
+        productName: firstItem.productName,
+        quantity: firstItem.quantity,
+        reason: returnReason.trim(),
+      });
+      setReturnSuccess(true);
+      setShowReturn(false);
+      setReturnReason("");
+    } catch (e: any) {
+      setReturnError(e.message || 'Failed to request return. Only delivered orders can be returned.');
+    } finally {
+      setReturnSubmitting(false);
+    }
+  };
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
@@ -91,6 +136,26 @@ export default function CustomerOrderDetailScreen() {
           ))}
           {(!order.timeline || order.timeline.length === 0) ? <Text style={[styles.meta, { color: colors.textMuted }]}>No timeline events yet.</Text> : null}
         </View>
+        {order.status === 'DELIVERED' ? (
+          <View style={[styles.card, { backgroundColor: colors.backgroundAlt, borderColor: colors.border }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Return</Text>
+            {returnSuccess ? (
+              <Text style={[styles.meta, { color: colors.success }]}>Return requested. Admin will review.</Text>
+            ) : showReturn ? (
+              <View style={{ gap: spacing.md }}>
+                <Input label="Reason" value={returnReason} onChangeText={setReturnReason} placeholder="e.g. Damaged, wrong item" multiline />
+                {returnError ? <Text style={[styles.meta, { color: colors.danger }]}>{returnError}</Text> : null}
+                <Button title={returnSubmitting ? "Submitting..." : "Submit return"} onPress={handleReturn} loading={returnSubmitting} disabled={returnSubmitting} fullWidth />
+                <Button title="Cancel" variant="secondary" onPress={() => setShowReturn(false)} fullWidth />
+              </View>
+            ) : (
+              <View style={{ gap: spacing.md }}>
+                {returnError ? <Text style={[styles.meta, { color: colors.danger }]}>{returnError}</Text> : null}
+                <Button title="Request return" variant="secondary" onPress={() => setShowReturn(true)} fullWidth />
+              </View>
+            )}
+          </View>
+        ) : null}
       </ScrollView>
     </SafeAreaView>
   );

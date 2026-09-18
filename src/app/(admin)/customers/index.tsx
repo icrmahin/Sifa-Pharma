@@ -1,35 +1,64 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import AdminHeader from '../../../components/admin/AdminHeader';
 import EmptyState from '../../../components/common/EmptyState';
+import LoadingState from '../../../components/common/LoadingState';
+import ErrorState from '../../../components/common/ErrorState';
 import ResponsiveContainer from '../../../components/common/ResponsiveContainer';
 import SearchBar from '../../../components/common/SearchBar';
 import { useThemeColors } from '../../../providers/ThemeProvider';
 import { useResponsive } from '../../../hooks/useResponsive';
 import spacing from '../../../constants/spacing';
 import typography from '../../../constants/typography';
-
-type CustomerRecord = {
-  id: string;
-  name: string;
-  phone: string;
-  email?: string;
-  orderCount?: number;
-  totalSpent?: number;
-};
+import { fetchCustomers, type CustomerRecord } from '../../../services/customers';
 
 export default function AdminCustomersScreen() {
   const colors = useThemeColors();
   const { isMobile, isTablet, columns } = useResponsive();
-  const customers: CustomerRecord[] = [];
+  const [customers, setCustomers] = useState<CustomerRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState('');
 
-  const filtered = customers.filter((customer) =>
-    customer.name.toLowerCase().includes(query.toLowerCase()),
-  );
+  const load = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await fetchCustomers(query || undefined);
+      setCustomers(data);
+    } catch (e: any) {
+      setError(e.message || 'Failed to load customers');
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
+    const t = setTimeout(load, query ? 300 : 0);
+    return () => clearTimeout(t);
+  }, [query]);
+
+  if (loading && customers.length === 0) {
+    return (
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+        <AdminHeader title="Customers" subtitle="Manage customer records" />
+        <LoadingState label="Loading customers" />
+      </SafeAreaView>
+    );
+  }
+
+  if (error && customers.length === 0) {
+    return (
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+        <AdminHeader title="Customers" subtitle="Manage customer records" />
+        <ErrorState message={error} onRetry={load} />
+      </SafeAreaView>
+    );
+  }
+
+  const filtered = customers;
   const gridColumns = isMobile ? 1 : isTablet ? 2 : Math.min(columns, 3);
 
   return (
@@ -54,7 +83,7 @@ export default function AdminCustomersScreen() {
                   >
                     <View style={styles.rowContent}>
                       <Text style={[styles.name, { color: colors.text }]}>{customer.name}</Text>
-                      <Text style={[styles.info, { color: colors.textMuted }]}>{customer.phone}</Text>
+                      <Text style={[styles.info, { color: colors.textMuted }]}>{customer.phone || customer.email || ''} · {customer.orderCount} orders</Text>
                     </View>
                     <Text
                       style={[styles.link, { color: colors.primary }]}
@@ -79,7 +108,7 @@ export default function AdminCustomersScreen() {
               >
                 <View style={styles.rowContent}>
                   <Text style={[styles.name, { color: colors.text }]}>{customer.name}</Text>
-                  <Text style={[styles.info, { color: colors.textMuted }]}>{customer.phone}</Text>
+                  <Text style={[styles.info, { color: colors.textMuted }]}>{customer.phone || customer.email || ''} · {customer.orderCount} orders</Text>
                 </View>
                 <Text
                   style={[styles.link, { color: colors.primary }]}

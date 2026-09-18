@@ -101,7 +101,7 @@ export default function CheckoutScreen() {
           {isDesktop ? (
             <View style={styles.desktopLayout}>
               <View style={styles.formColumn}>
-                <Input label="Customer name" value={user?.name ?? "Demo customer"} editable={false} />
+                <Input label="Customer name" value={user?.name ?? user?.email ?? "Customer"} editable={false} />
                 <View style={styles.addressSection}>
                   <Text style={[styles.sectionTitle, { color: colors.text }]}>Delivery Address</Text>
                   {addresses.map((addr) => (

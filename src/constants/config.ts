@@ -1,7 +1,7 @@
 export const config = {
   appName: "Sifa-Pharma",
-  currency: "KES",
-  currencySymbol: "KSh ",
+  currency: "BDT",
+  currencySymbol: "৳ ",
   orderCycleHours: 24,
   defaultPageSize: 20,
   supportEmail: "support@sifa-pharma.com",

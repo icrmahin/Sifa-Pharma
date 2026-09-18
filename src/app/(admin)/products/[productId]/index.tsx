@@ -6,17 +6,21 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import AdminHeader from "../../../../components/admin/AdminHeader";
 import Button from "../../../../components/common/Button";
 import EmptyState from "../../../../components/common/EmptyState";
+import LoadingState from "../../../../components/common/LoadingState";
+import ErrorState from "../../../../components/common/ErrorState";
 import Modal from "../../../../components/common/Modal";
 import ResponsiveContainer from "../../../../components/common/ResponsiveContainer";
 import StatusBadge from "../../../../components/common/StatusBadge";
 import ProductImage from "../../../../components/products/ProductImage";
 import { useThemeColors } from "../../../../providers/ThemeProvider";
 import { useResponsive } from "../../../../hooks/useResponsive";
+import { useProduct, useCategories, useManufacturers } from "../../../../hooks/useProducts";
+import { updateProduct, deleteProduct } from "../../../../services/products";
 import config from "../../../../constants/config";
 import spacing from "../../../../constants/spacing";
 import typography from "../../../../constants/typography";
-import type { Product } from "../../../../types/product";
 import { formatCurrency } from "../../../../utils/currency";
+import { normalizeError } from "../../../../utils/errorHandling";
 
 function InfoRow({ label, value, colors }: { label: string; value: string; colors: ReturnType<typeof useThemeColors> }) {
   if (!value) return null;
@@ -32,30 +36,32 @@ export default function AdminProductDetailScreen() {
   const colors = useThemeColors();
   const { isDesktop } = useResponsive();
   const params = useLocalSearchParams<{ productId: string }>();
-  const productId = params.productId;
-
-  const placeholderProduct: Product | null = productId
-    ? {
-        id: String(productId),
-        name: "Placeholder Product",
-        brand: "Demo Brand",
-        genericName: "Demo Generic",
-        categoryId: "",
-        manufacturerId: "",
-        description: "Frontend-only placeholder — backend required for real data.",
-        price: 0,
-        stock: 0,
-        unit: "pack",
-        isActive: true,
-        isFeatured: false,
-        createdAt: new Date().toISOString(),
-      }
-    : null;
-
-  const product = placeholderProduct;
-  const categoryName = "";
-  const manufacturerName = "";
+  const productId = params.productId as string;
+  const { product, loading, error, reload } = useProduct(productId);
+  const { data: categories } = useCategories();
+  const { data: manufacturers } = useManufacturers();
   const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [updating, setUpdating] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+        <AdminHeader title="Product" subtitle="Product overview" />
+        <LoadingState label="Loading product" />
+      </SafeAreaView>
+    );
+  }
+
+  if (error) {
+    return (
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+        <AdminHeader title="Product" subtitle="Product overview" />
+        <ErrorState message={error} onRetry={reload} />
+      </SafeAreaView>
+    );
+  }
 
   if (!product) {
     return (
@@ -70,6 +76,37 @@ export default function AdminProductDetailScreen() {
       </SafeAreaView>
     );
   }
+
+  const categoryName = categories.find((c) => c.id === product.categoryId)?.name ?? "";
+  const manufacturerName = manufacturers.find((m) => m.id === product.manufacturerId)?.name ?? "";
+
+  const handleToggleActive = async () => {
+    setUpdating(true);
+    setActionError(null);
+    try {
+      await updateProduct(product.id, { isActive: !product.isActive });
+      await reload();
+    } catch (e) {
+      setActionError(normalizeError(e).message);
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    setActionError(null);
+    try {
+      await deleteProduct(product.id);
+      setDeleteConfirm(false);
+      router.replace("/(admin)/products");
+    } catch (e) {
+      setActionError(normalizeError(e).message);
+      setDeleteConfirm(false);
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
@@ -139,6 +176,8 @@ export default function AdminProductDetailScreen() {
           <Text style={[styles.description, { color: colors.textMuted }]}>{product.description}</Text>
         </View>
 
+        {actionError ? <Text style={{ color: colors.danger, fontSize: 12, textAlign: 'center' }}>{actionError}</Text> : null}
+
         <View style={styles.actions}>
           <Button
             title="Edit product"
@@ -153,13 +192,16 @@ export default function AdminProductDetailScreen() {
           <Button
             title={product.isActive ? "Deactivate" : "Activate"}
             variant={product.isActive ? "secondary" : "primary"}
-            onPress={() => {}}
+            onPress={handleToggleActive}
+            loading={updating}
+            disabled={updating || deleting}
             fullWidth
           />
           <Button
             title="Delete product"
             variant="danger"
             onPress={() => setDeleteConfirm(true)}
+            disabled={updating || deleting}
             fullWidth
           />
         </View>
@@ -170,11 +212,8 @@ export default function AdminProductDetailScreen() {
         visible={deleteConfirm}
         title="Delete product?"
         message={`"${product?.name ?? "This product"}" will be permanently removed from the catalog.`}
-        actionLabel="Delete product"
-        onAction={() => {
-          setDeleteConfirm(false);
-          router.replace("/(admin)/products");
-        }}
+        actionLabel={deleting ? "Deleting..." : "Delete product"}
+        onAction={handleDelete}
         onClose={() => setDeleteConfirm(false)}
       />
     </SafeAreaView>

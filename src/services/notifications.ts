@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase'
+import { mapNotification } from '../lib/mappers'
 import type { NotificationItem } from '../types/notification'
 
 export async function fetchNotifications(userId: string): Promise<NotificationItem[]> {
@@ -9,7 +10,7 @@ export async function fetchNotifications(userId: string): Promise<NotificationIt
     .order('created_at', { ascending: false })
 
   if (error) throw error
-  return (data || []) as NotificationItem[]
+  return (data || []).map(mapNotification)
 }
 
 export async function markNotificationAsRead(notificationId: string, userId: string): Promise<void> {

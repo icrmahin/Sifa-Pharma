@@ -3,14 +3,47 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AdminHeader from '../../../components/admin/AdminHeader';
 import EmptyState from '../../../components/common/EmptyState';
+import LoadingState from '../../../components/common/LoadingState';
+import ErrorState from '../../../components/common/ErrorState';
 import { useThemeColors } from '../../../providers/ThemeProvider';
+import { useAdminInventory } from '../../../hooks/useAdmin';
 import spacing from '../../../constants/spacing';
-import type { InventoryItem } from '../../../types/inventory';
 import { formatDate } from '../../../utils/date';
 
 export default function ExpiryManagementScreen() {
   const colors = useThemeColors();
-  const batches: InventoryItem[] = [];
+  const { data, loading, error, reload } = useAdminInventory();
+
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+        <AdminHeader title="Expiry" subtitle="Monitor expiring batches" />
+        <LoadingState label="Loading expiry" />
+      </SafeAreaView>
+    );
+  }
+
+  if (error) {
+    return (
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+        <AdminHeader title="Expiry" subtitle="Monitor expiring batches" />
+        <ErrorState message={error} onRetry={reload} />
+      </SafeAreaView>
+    );
+  }
+
+  const now = new Date();
+  const in90 = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000);
+  const batches = (data || [])
+    .map((row: any) => ({
+      id: row.id,
+      productName: row.products?.name ?? 'Unknown',
+      batchNumber: row.batch_number,
+      quantity: row.quantity,
+      expiryDate: row.expiry_date,
+    }))
+    .filter((b) => b.expiryDate && new Date(b.expiryDate) <= in90)
+    .sort((a, b) => new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime());
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>

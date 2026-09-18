@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase'
-import type { DeliveryCycle, DeliveryCycleWithProducts } from '../types/deliveryCycle'
+import { mapDeliveryCycle } from '../lib/mappers'
+import type { DeliveryCycleWithProducts } from '../types/deliveryCycle'
 
 export async function fetchActiveDeliveryCycle(userId: string): Promise<DeliveryCycleWithProducts | null> {
   const { data, error } = await supabase
@@ -15,7 +16,19 @@ export async function fetchActiveDeliveryCycle(userId: string): Promise<Delivery
     if (error.code === 'PGRST116') return null
     throw error
   }
-  return data as DeliveryCycleWithProducts
+  return mapDeliveryCycle(data) as DeliveryCycleWithProducts
+}
+
+export async function fetchDeliveryCycles(userId: string): Promise<DeliveryCycleWithProducts[]> {
+  const { data, error } = await supabase
+    .from('delivery_cycles')
+    .select('*')
+    .eq('customer_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(20)
+
+  if (error) throw error
+  return (data || []).map((row: any) => mapDeliveryCycle(row) as DeliveryCycleWithProducts)
 }
 
 export async function fetchDeliveryCycleById(cycleId: string): Promise<DeliveryCycleWithProducts | null> {
@@ -29,7 +42,7 @@ export async function fetchDeliveryCycleById(cycleId: string): Promise<DeliveryC
     if (error.code === 'PGRST116') return null
     throw error
   }
-  return data as DeliveryCycleWithProducts
+  return mapDeliveryCycle(data) as DeliveryCycleWithProducts
 }
 
 export async function createDeliveryCycle(userId: string): Promise<DeliveryCycleWithProducts> {
@@ -49,7 +62,7 @@ export async function createDeliveryCycle(userId: string): Promise<DeliveryCycle
     .single()
 
   if (error) throw error
-  return data as DeliveryCycleWithProducts
+  return mapDeliveryCycle(data) as DeliveryCycleWithProducts
 }
 
 export async function updateDeliveryCycleStatus(cycleId: string, status: string): Promise<void> {

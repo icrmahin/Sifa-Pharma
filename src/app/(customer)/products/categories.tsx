@@ -5,23 +5,47 @@ import { router } from 'expo-router';
 import { goBack } from '@/utils/navigation';
 import { useThemeColors } from '../../../providers/ThemeProvider';
 import Header from '../../../components/common/Header';
+import LoadingState from '../../../components/common/LoadingState';
+import ErrorState from '../../../components/common/ErrorState';
+import EmptyState from '../../../components/common/EmptyState';
 import spacing from '../../../constants/spacing';
-import typography from '../../../constants/typography';
-import type { Category } from '../../../types/category';
-
-const mockCategories: Category[] = [];
+import { useCategories } from '../../../hooks/useProducts';
 
 export default function CustomerCategoriesScreen() {
   const colors = useThemeColors();
+  const { data: categories, loading, error, reload } = useCategories();
+
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+        <Header title="Categories" onBack={() => goBack()} />
+        <LoadingState label="Loading categories" />
+      </SafeAreaView>
+    );
+  }
+
+  if (error) {
+    return (
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+        <Header title="Categories" onBack={() => goBack()} />
+        <ErrorState message={error} onRetry={reload} />
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
       <Header title="Categories" onBack={() => goBack()} />
       <ScrollView contentContainerStyle={styles.container}>
-        {mockCategories.map((category) => (
-          <Text key={category.id} style={[styles.card, { backgroundColor: colors.backgroundAlt, borderColor: colors.border, color: colors.text }]} onPress={() => router.push({ pathname: '/(customer)/products/category/[categoryId]', params: { categoryId: category.id } })}>
-            {category.name}
-          </Text>
-        ))}
+        {categories.length === 0 ? (
+          <EmptyState title="No categories" message="Categories will appear here once added." />
+        ) : (
+          categories.map((category) => (
+            <Text key={category.id} style={[styles.card, { backgroundColor: colors.backgroundAlt, borderColor: colors.border, color: colors.text }]} onPress={() => router.push({ pathname: '/(customer)/products/category/[categoryId]', params: { categoryId: category.id } })}>
+              {category.name}
+            </Text>
+          ))
+        )}
       </ScrollView>
     </SafeAreaView>
   );

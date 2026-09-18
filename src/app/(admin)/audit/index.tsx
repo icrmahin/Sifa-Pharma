@@ -1,17 +1,58 @@
-import React from 'react';
+/* eslint-disable react-hooks/set-state-in-effect -- data fetching requires setState inside effects */
+import React, { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AdminHeader from '../../../components/admin/AdminHeader';
 import EmptyState from '../../../components/common/EmptyState';
+import LoadingState from '../../../components/common/LoadingState';
+import ErrorState from '../../../components/common/ErrorState';
 import { useThemeColors } from '../../../providers/ThemeProvider';
 import spacing from '../../../constants/spacing';
 import typography from '../../../constants/typography';
-import type { AuditEntry } from '../../../types/audit';
 import { formatDateTime } from '../../../utils/date';
+import { fetchAuditEntries } from '../../../services/audit';
+import type { AuditEntry } from '../../../types/audit';
 
 export default function AuditLogScreen() {
   const colors = useThemeColors();
-  const entries: AuditEntry[] = [];
+  const [entries, setEntries] = useState<AuditEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await fetchAuditEntries(50);
+      setEntries(data);
+    } catch (e: any) {
+      setError(e.message || 'Failed to load audit log');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+        <AdminHeader title="Audit log" subtitle="Recent operational activity" />
+        <LoadingState label="Loading audit log" />
+      </SafeAreaView>
+    );
+  }
+
+  if (error) {
+    return (
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+        <AdminHeader title="Audit log" subtitle="Recent operational activity" />
+        <ErrorState message={error} onRetry={load} />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
@@ -31,7 +72,7 @@ export default function AuditLogScreen() {
                 },
               ]}
             >
-              <Text style={[styles.action, { color: colors.text }]}>{entry.action}</Text>
+              <Text style={[styles.action, { color: colors.text }]}>{entry.action} · {entry.recordType}</Text>
               <Text style={[styles.meta, { color: colors.textMuted }]}>{entry.actor}</Text>
               <Text style={[styles.meta, { color: colors.textMuted }]}>{formatDateTime(entry.timestamp)}</Text>
             </View>

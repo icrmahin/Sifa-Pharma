@@ -1,7 +1,7 @@
 import { config } from "../constants/config";
 
 export const formatCurrency = (value: number): string =>
-  `${config.currencySymbol}${value.toLocaleString("en-KE", { maximumFractionDigits: 2 })}`;
+  `${config.currencySymbol}${value.toLocaleString("en-BD", { maximumFractionDigits: 2 })}`;
 
 export const calculateDiscount = (
   price: number,

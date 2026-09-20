@@ -24,11 +24,8 @@ import { formatCurrency } from "../../utils/currency";
 import { formatShortDate } from "../../utils/date";
 import type { IconName } from "../../components/common/Icon";
 
-function greeting(): string {
-  const h = new Date().getHours();
-  if (h < 12) return "Good morning";
-  if (h < 17) return "Good afternoon";
-  return "Good evening";
+function timeNow(): string {
+  return new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
 export default function AdminDashboardScreen() {
@@ -41,7 +38,7 @@ export default function AdminDashboardScreen() {
   if (loading) {
     return (
       <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-        <AdminHeader title="Dashboard" subtitle={`Welcome, ${user?.name ?? "Admin"}`} />
+        <AdminHeader title="Dashboard" subtitle={timeNow() + " · loading"} />
         <LoadingState label="Loading dashboard" />
       </SafeAreaView>
     );
@@ -49,7 +46,7 @@ export default function AdminDashboardScreen() {
   if (error) {
     return (
       <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-        <AdminHeader title="Dashboard" subtitle={`Welcome, ${user?.name ?? "Admin"}`} />
+        <AdminHeader title="Dashboard" subtitle={timeNow() + " · error"} />
         <ErrorState message={error} onRetry={reload} />
       </SafeAreaView>
     );
@@ -104,12 +101,26 @@ export default function AdminDashboardScreen() {
   const low = lowStockProducts;
   const out = Math.max(lowStockBatches.filter((b: any) => b.status === "out_of_stock").length, 0);
 
+  const time = timeNow();
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
       <AdminHeader
         title="Dashboard"
-        subtitle={`${greeting()}, ${user?.name ?? "Admin"} · 30 days`}
-        action={<Button title="Add product" onPress={() => open("/(admin)/products/add")} />}
+        subtitle={`${time} · live`}
+        action={
+          <Pressable
+            onPress={() => open("/(admin)/products/add")}
+            style={({ pressed }) => [
+              styles.addPill,
+              { backgroundColor: colors.primary, borderColor: colors.primary, opacity: pressed ? 0.85 : 1 },
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel="Add product"
+          >
+            <Icon name="add" size={16} color="#fff" />
+            <Text style={styles.addText}>Add</Text>
+          </Pressable>
+        }
       />
       <ScrollView contentContainerStyle={[styles.scroll, { paddingBottom: spacing.xxxl }]}>
         <ResponsiveContainer sidebarAware maxWidth={isWide ? 1200 : 960}>
@@ -338,6 +349,16 @@ const styles = StyleSheet.create({
   cmdText: { fontSize: 12, fontWeight: "700" },
   cmdSep: { width: 1, height: 20 },
   cockpit: { borderRadius: radius.xl, borderWidth: 1, padding: spacing.md, gap: spacing.sm },
+  addPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 14,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 1,
+  },
+  addText: { color: "#fff", fontSize: 12, fontWeight: "700" },
   cockpitHead: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   cockpitTitle: { fontSize: 13, fontWeight: "800" },
   link: { fontSize: 12, fontWeight: "700" },

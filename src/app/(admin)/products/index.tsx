@@ -4,7 +4,8 @@ import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AdminHeader from "../../../components/admin/AdminHeader";
 import AdminProductCard from "../../../components/admin/AdminProductCard";
-import Button from "../../../components/common/Button";
+import Icon from "../../../components/common/Icon";
+import { Pressable } from "react-native";
 import EmptyState from "../../../components/common/EmptyState";
 import FilterChip from "../../../components/common/FilterChip";
 import ResponsiveContainer from "../../../components/common/ResponsiveContainer";
@@ -83,10 +84,11 @@ export default function AdminProductsScreen() {
     });
   }, [products, query, status, stockFilter, categoryId]);
 
+  const time = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   if (loading) {
     return (
       <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-        <AdminHeader title="Products" subtitle="Manage catalog and stock" />
+        <AdminHeader title="Products" subtitle={`${time} · catalog`} />
         <LoadingState label="Loading products" />
       </SafeAreaView>
     );
@@ -94,7 +96,7 @@ export default function AdminProductsScreen() {
   if (error) {
     return (
       <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-        <AdminHeader title="Products" subtitle="Manage catalog and stock" />
+        <AdminHeader title="Products" subtitle={`${time} · catalog`} />
         <ErrorState message={error} onRetry={reload} />
       </SafeAreaView>
     );
@@ -104,9 +106,17 @@ export default function AdminProductsScreen() {
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
       <AdminHeader
         title="Products"
-        subtitle="Manage catalog and stock"
+        subtitle={`${time} · ${filtered.length} items`}
         action={
-          <Button title="Add" onPress={() => router.push("/(admin)/products/add")} />
+          <Pressable
+            onPress={() => router.push("/(admin)/products/add")}
+            style={({ pressed }) => [
+              { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 14, height: 32, borderRadius: 16, borderWidth: 1, backgroundColor: colors.primary, borderColor: colors.primary, opacity: pressed ? 0.85 : 1 },
+            ]}
+          >
+            <Icon name="add" size={16} color="#fff" />
+            <Text style={{ color: "#fff", fontSize: 12, fontWeight: "700" }}>Add</Text>
+          </Pressable>
         }
       />
 

@@ -24,8 +24,7 @@ export default function StockDonut({ healthy, low, out }: { healthy: number; low
           fill="none"
           strokeDasharray={`${circ * pctH} ${circ}`}
           strokeLinecap="round"
-          rotation={-90}
-          origin="42,42"
+          transform="rotate(-90 42 42)"
         />
         <Circle
           cx={42}
@@ -37,8 +36,7 @@ export default function StockDonut({ healthy, low, out }: { healthy: number; low
           strokeDasharray={`${circ * pctL} ${circ}`}
           strokeDashoffset={-circ * pctH}
           strokeLinecap="round"
-          rotation={-90}
-          origin="42,42"
+          transform="rotate(-90 42 42)"
         />
       </Svg>
       <View style={styles.center}>

@@ -16,6 +16,7 @@ export default function AdminHeader({ title, subtitle, action }: AdminHeaderProp
   const colors = useThemeColors();
   const shadows = useShadows();
 
+  // soft feather: minimal text, time when needed, icon+word CTA
   return (
     <View style={[styles.wrapper, { backgroundColor: colors.background }]}>
       <View
@@ -24,19 +25,22 @@ export default function AdminHeader({ title, subtitle, action }: AdminHeaderProp
           {
             backgroundColor: colors.backgroundAlt,
             borderColor: colors.borderSoft,
-            ...shadows.sm,
+            ...shadows.xs,
           },
         ]}
       >
         <View style={styles.titleArea}>
-          <Text style={[styles.eyebrow, { color: colors.textMuted }]}>Sifa-Pharma · Admin</Text>
           <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
             {title}
           </Text>
-          {subtitle ? <Text style={[styles.subtitle, { color: colors.textMuted }]}>{subtitle}</Text> : null}
+          {subtitle ? (
+            <Text style={[styles.subtitle, { color: colors.textMuted }]} numberOfLines={1}>
+              {subtitle}
+            </Text>
+          ) : null}
         </View>
 
-        {action ? <View>{action}</View> : null}
+        {action ? <View style={styles.action}>{action}</View> : null}
       </View>
     </View>
   );
@@ -45,33 +49,28 @@ export default function AdminHeader({ title, subtitle, action }: AdminHeaderProp
 const styles = StyleSheet.create({
   wrapper: {
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.sm,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.xs,
   },
   island: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.md,
+    gap: spacing.sm,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.sm,
     borderRadius: radius.lg,
     borderWidth: 1,
+    minHeight: 52,
   },
-  titleArea: { flex: 1 },
-  eyebrow: {
-    fontSize: typography.caption2,
-    fontWeight: "700",
-    letterSpacing: 1.2,
-    textTransform: "uppercase",
-  },
+  titleArea: { flex: 1, gap: 2 },
   title: {
-    fontSize: typography.title2,
+    fontSize: 16,
     fontWeight: "700",
-    letterSpacing: typography.letterSpacing.tight,
-    marginTop: spacing.xxs,
+    letterSpacing: -0.2,
   },
   subtitle: {
-    fontSize: typography.caption1,
-    marginTop: spacing.xxs,
+    fontSize: 11,
+    fontWeight: "500",
   },
+  action: { marginLeft: spacing.sm },
 });

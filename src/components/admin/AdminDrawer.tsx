@@ -1,9 +1,10 @@
 import { router } from "expo-router";
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Icon from "../common/Icon";
 import { useThemeColors } from "../../providers/ThemeProvider";
 import { useShadows } from "../../constants/shadows";
-import sizes from "../../constants/sizes";
+import { radius } from "../../constants/sizes";
 import spacing from "../../constants/spacing";
 import typography from "../../constants/typography";
 import type { IconName } from "../common/Icon";
@@ -18,15 +19,10 @@ const MENU_ITEMS: { label: string; path: string; icon: IconName }[] = [
 
 const SHOP_ITEM = { label: "Back to Shop", path: "/(customer)/(tabs)" as const, icon: "store" as IconName };
 
-export default function AdminDrawer({
-  visible,
-  onClose,
-}: {
-  visible: boolean;
-  onClose: () => void;
-}) {
+export default function AdminDrawer({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const colors = useThemeColors();
   const shadows = useShadows();
+  const insets = useSafeAreaInsets();
 
   const navigate = (path: string) => {
     onClose();
@@ -34,33 +30,32 @@ export default function AdminDrawer({
   };
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={onClose}
-    >
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose} statusBarTranslucent>
       <View style={styles.container}>
-        <Pressable style={styles.backdrop} onPress={onClose} />
+        <Pressable style={[styles.backdrop, { backgroundColor: "rgba(17,26,23,0.22)" }]} onPress={onClose} />
         <View
           style={[
-            styles.drawer,
+            styles.sheet,
             {
               backgroundColor: colors.backgroundAlt,
-              borderTopColor: colors.borderLight,
-              ...shadows.xl,
+              borderColor: colors.borderSoft,
+              paddingBottom: Math.max(insets.bottom, spacing.lg),
+              ...shadows.sm,
             },
           ]}
         >
-          <View style={[styles.drawerHeader, { borderBottomColor: colors.borderLight }]}>
-            <Text style={[styles.drawerTitle, { color: colors.text }]}>Menu</Text>
+          <View style={[styles.sheetHeader, { borderBottomColor: colors.borderSoft }]}>
+            <View>
+              <Text style={[styles.sheetEyebrow, { color: colors.textMuted }]}>Sifa-Pharma</Text>
+              <Text style={[styles.sheetTitle, { color: colors.text }]}>Menu</Text>
+            </View>
             <Pressable
               onPress={onClose}
-              style={[styles.closeButton, { backgroundColor: colors.background }]}
+              style={[styles.closeButton, { backgroundColor: colors.background, borderColor: colors.borderSoft }]}
               accessibilityRole="button"
               accessibilityLabel="Close menu"
             >
-              <Icon name="close" size={18} color={colors.textMuted} />
+              <Icon name="close" size={16} color={colors.textMuted} />
             </Pressable>
           </View>
 
@@ -68,17 +63,13 @@ export default function AdminDrawer({
             {MENU_ITEMS.map((item) => (
               <Pressable
                 key={item.label}
-                style={({ pressed }) => [
-                  styles.menuItem,
-                  pressed && { backgroundColor: colors.background },
-                ]}
+                style={({ pressed }) => [styles.menuItem, pressed && { backgroundColor: colors.primarySoft }]}
                 onPress={() => navigate(item.path)}
-                android_ripple={{ color: colors.ripple.primary }}
                 accessibilityRole="button"
                 accessibilityLabel={`Open ${item.label}`}
               >
-                <View style={[styles.iconTile, { backgroundColor: colors.primarySoft }]}>
-                  <Icon name={item.icon} size={18} color={colors.primary} />
+                <View style={[styles.iconTile, { backgroundColor: colors.background, borderColor: colors.borderSoft }]}>
+                  <Icon name={item.icon} size={16} color={colors.primary} />
                 </View>
                 <Text style={[styles.menuLabel, { color: colors.text }]}>{item.label}</Text>
                 <Icon name="chevron-right" size={16} color={colors.textMuted} />
@@ -86,20 +77,16 @@ export default function AdminDrawer({
             ))}
           </View>
 
-          <View style={[styles.divider, { backgroundColor: colors.borderLight }]} />
+          <View style={[styles.divider, { backgroundColor: colors.borderSoft }]} />
 
           <Pressable
-            style={({ pressed }) => [
-              styles.menuItem,
-              pressed && { backgroundColor: colors.background },
-            ]}
+            style={({ pressed }) => [styles.menuItem, pressed && { backgroundColor: colors.background }]}
             onPress={() => navigate(SHOP_ITEM.path)}
-            android_ripple={{ color: colors.ripple.primary }}
             accessibilityRole="button"
             accessibilityLabel="Back to shop"
           >
-            <View style={[styles.iconTile, { backgroundColor: colors.successSoft }]}>
-              <Icon name={SHOP_ITEM.icon} size={18} color={colors.success} />
+            <View style={[styles.iconTile, { backgroundColor: colors.successSoft, borderColor: colors.successBorder }]}>
+              <Icon name={SHOP_ITEM.icon} size={16} color={colors.success} />
             </View>
             <Text style={[styles.menuLabel, { color: colors.success }]}>{SHOP_ITEM.label}</Text>
             <Icon name="chevron-right" size={16} color={colors.textMuted} />
@@ -111,68 +98,52 @@ export default function AdminDrawer({
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "flex-end",
+  container: { flex: 1, justifyContent: "flex-end" },
+  backdrop: { ...StyleSheet.absoluteFill },
+  sheet: {
+    margin: spacing.lg,
+    marginBottom: spacing.md,
+    borderRadius: radius.xl,
+    borderWidth: 1,
+    paddingTop: spacing.md,
+    // soft feather, not xl hard shadow
   },
-  backdrop: {
-    ...StyleSheet.absoluteFill,
-    backgroundColor: "rgba(0,0,0,0.4)",
-  },
-  drawer: {
-    borderTopLeftRadius: sizes.borderRadius.xl,
-    borderTopRightRadius: sizes.borderRadius.xl,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.xxl,
-    borderTopWidth: 1,
-  },
-  drawerHeader: {
+  sheetHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.md,
     paddingBottom: spacing.md,
     borderBottomWidth: 1,
   },
-  drawerTitle: {
-    fontSize: typography.title3,
-    fontWeight: "700",
-  },
+  sheetEyebrow: { fontSize: 10, fontWeight: "700", letterSpacing: 0.7, textTransform: "uppercase" },
+  sheetTitle: { fontSize: typography.title3, fontWeight: "700", marginTop: 2 },
   closeButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
   },
-  section: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
-  },
+  section: { paddingHorizontal: spacing.sm, paddingTop: spacing.sm, gap: 2 },
   menuItem: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.md,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.md,
-    borderRadius: sizes.borderRadius.md,
-    minHeight: 48,
+    gap: spacing.sm,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.lg,
+    minHeight: 44,
   },
   iconTile: {
-    width: 32,
-    height: 32,
-    borderRadius: sizes.borderRadius.sm,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
   },
-  menuLabel: {
-    flex: 1,
-    fontSize: typography.subhead,
-    fontWeight: "500",
-  },
-  divider: {
-    height: 1,
-    marginHorizontal: spacing.lg,
-    marginVertical: spacing.md,
-  },
+  menuLabel: { flex: 1, fontSize: 13, fontWeight: "600" },
+  divider: { height: 1, marginHorizontal: spacing.md, marginVertical: spacing.sm },
 });

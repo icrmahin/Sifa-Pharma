@@ -21,10 +21,11 @@ export default function AdminOrdersScreen() {
   const { data: orders, loading, error, reload } = useAdminOrders();
   const [query, setQuery] = useState('');
 
+  const time = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   if (loading) {
     return (
       <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-        <AdminHeader title="Orders" subtitle="Approve and process orders" />
+        <AdminHeader title="Orders" subtitle={`${time} · ${orders.length} total`} />
         <LoadingState label="Loading orders" />
       </SafeAreaView>
     );
@@ -32,7 +33,7 @@ export default function AdminOrdersScreen() {
   if (error) {
     return (
       <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-        <AdminHeader title="Orders" subtitle="Approve and process orders" />
+        <AdminHeader title="Orders" subtitle={`${time} · live`} />
         <ErrorState message={error} onRetry={reload} />
       </SafeAreaView>
     );
@@ -48,7 +49,7 @@ export default function AdminOrdersScreen() {
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-      <AdminHeader title="Orders" subtitle="Approve and process orders" />
+      <AdminHeader title="Orders" subtitle={`${time} · ${orders.length} orders`} />
       <ScrollView contentContainerStyle={styles.container}>
         <ResponsiveContainer sidebarAware>
           <SearchBar value={query} onChangeText={setQuery} placeholder="Search order or customer" />

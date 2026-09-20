@@ -4,7 +4,7 @@ import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useThemeColors, useTheme } from "../../../providers/ThemeProvider";
 import { useAuth } from "../../../hooks/useAuth";
-import Header from "../../../components/common/Header";
+import SoftHeader from "../../../components/common/SoftHeader";
 import Icon from "../../../components/common/Icon";
 import ListItem from "../../../components/common/ListItem";
 import Toggle from "../../../components/common/Toggle";
@@ -19,7 +19,7 @@ export default function CustomerSettingsScreen() {
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-      <Header title="Settings" onBack={() => goBack()} />
+      <SoftHeader title="Settings" onBack={() => goBack()} />
       <ScrollView contentContainerStyle={styles.container}>
         <View style={[styles.sectionGroup, { backgroundColor: colors.backgroundAlt, borderColor: colors.border }]}>
           <ListItem title="Profile Details" left={<Icon name="person" size={20} color={colors.primary} />} onPress={() => router.push("/(customer)/account/profile")} divider />

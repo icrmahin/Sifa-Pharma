@@ -4,7 +4,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { goBack } from '@/utils/navigation';
 import { useThemeColors } from '../../../providers/ThemeProvider';
-import Header from '../../../components/common/Header';
+import SoftHeader from '../../../components/common/SoftHeader';
 import Input from '../../../components/common/Input';
 import Button from '../../../components/common/Button';
 import LoadingState from '../../../components/common/LoadingState';
@@ -65,7 +65,7 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-      <Header title="Profile" onBack={() => goBack()} />
+      <SoftHeader title="Profile" onBack={() => goBack()} />
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.card}>
           <Input label="Full name" value={name} onChangeText={setName} />

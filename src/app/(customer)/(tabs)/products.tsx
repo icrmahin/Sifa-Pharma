@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { FlatList, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useThemeColors } from "../../../providers/ThemeProvider";
-import Header from "../../../components/common/Header";
+import SoftHeader from "../../../components/common/SoftHeader";
 import SearchBar from "../../../components/common/SearchBar";
 import ResponsiveContainer from "../../../components/common/ResponsiveContainer";
 import ProductCard from "../../../components/products/ProductCard";
@@ -30,7 +30,7 @@ export default function CustomerProductsScreen() {
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-      <Header title="Products" subtitle="Browse by category and manufacturer" />
+      <SoftHeader title="Products" subtitle="Browse by category and manufacturer" />
       <FlatList
         data={products}
         contentContainerStyle={styles.container}

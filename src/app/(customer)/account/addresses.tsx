@@ -5,7 +5,7 @@ import { router } from 'expo-router';
 import { goBack } from '@/utils/navigation';
 import { useThemeColors } from '../../../providers/ThemeProvider';
 import Button from '../../../components/common/Button';
-import Header from '../../../components/common/Header';
+import SoftHeader from '../../../components/common/SoftHeader';
 import LoadingState from '../../../components/common/LoadingState';
 import ErrorState from '../../../components/common/ErrorState';
 import EmptyState from '../../../components/common/EmptyState';
@@ -20,7 +20,7 @@ export default function CustomerAddressesScreen() {
   if (loading) {
     return (
       <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-        <Header title="Addresses" onBack={() => goBack()} />
+        <SoftHeader title="Addresses" onBack={() => goBack()} />
         <LoadingState label="Loading addresses" />
       </SafeAreaView>
     );
@@ -29,7 +29,7 @@ export default function CustomerAddressesScreen() {
   if (error) {
     return (
       <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-        <Header title="Addresses" onBack={() => goBack()} />
+        <SoftHeader title="Addresses" onBack={() => goBack()} />
         <ErrorState message={error} onRetry={reload} />
       </SafeAreaView>
     );
@@ -55,7 +55,7 @@ export default function CustomerAddressesScreen() {
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-      <Header title="Addresses" onBack={() => goBack()} />
+      <SoftHeader title="Addresses" onBack={() => goBack()} />
       <ScrollView contentContainerStyle={styles.container}>
         {actionError ? <Text style={[styles.error, { color: colors.danger }]}>{actionError}</Text> : null}
         {addresses.length === 0 ? (

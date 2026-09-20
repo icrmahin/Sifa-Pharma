@@ -5,7 +5,7 @@ import { useLocalSearchParams } from "expo-router";
 import { ScrollView, StyleSheet, Text, View, Switch, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useThemeColors } from "../../../providers/ThemeProvider";
-import Header from "../../../components/common/Header";
+import SoftHeader from "../../../components/common/SoftHeader";
 import Input from "../../../components/common/Input";
 import Button from "../../../components/common/Button";
 import LoadingState from "../../../components/common/LoadingState";
@@ -65,7 +65,7 @@ export default function EditAddressScreen() {
   if (loading && isEditing) {
     return (
       <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-        <Header title="Edit Address" onBack={() => goBack()} />
+        <SoftHeader title="Edit Address" onBack={() => goBack()} />
         <LoadingState label="Loading address" />
       </SafeAreaView>
     );
@@ -73,7 +73,7 @@ export default function EditAddressScreen() {
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-      <Header title={isEditing ? "Edit Address" : "Add Address"} onBack={() => goBack()} />
+      <SoftHeader title={isEditing ? "Edit Address" : "Add Address"} onBack={() => goBack()} />
       <ScrollView contentContainerStyle={styles.container}>
         <Input label="Street Address" value={street} onChangeText={setStreet} placeholder="House, road, area" />
         <Input label="City" value={city} onChangeText={setCity} placeholder="e.g. Dhaka" />

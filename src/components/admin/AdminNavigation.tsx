@@ -6,10 +6,9 @@ import AdminDrawer from "./AdminDrawer";
 import Icon from "../common/Icon";
 import { useThemeColors } from "../../providers/ThemeProvider";
 import { useShadows } from "../../constants/shadows";
-import sizes from "../../constants/sizes";
+import { radius } from "../../constants/sizes";
 import spacing from "../../constants/spacing";
 import typography from "../../constants/typography";
-import { layout } from "../../constants/sizes";
 import type { IconName } from "../common/Icon";
 
 const MAIN_TABS: { label: string; path: string; icon: IconName }[] = [
@@ -37,17 +36,17 @@ export default function AdminNavigation() {
 
   return (
     <>
-      <View
-        style={[
-          styles.container,
-          {
-            paddingBottom: Math.max(insets.bottom, spacing.xs),
-            backgroundColor: colors.backgroundAlt,
-            borderTopColor: colors.borderLight,
-            ...shadows.xl,
-          },
-        ]}
-      >
+      <View style={[styles.wrapper, { paddingBottom: Math.max(insets.bottom, spacing.sm), backgroundColor: colors.background }]}>
+        <View
+          style={[
+            styles.island,
+            {
+              backgroundColor: colors.backgroundAlt,
+              borderColor: colors.borderSoft,
+              ...shadows.sm,
+            },
+          ]}
+        >
         {MAIN_TABS.map((item) => {
           const active = item.path === activePath;
           return (
@@ -87,35 +86,20 @@ export default function AdminNavigation() {
           );
         })}
 
-        <Pressable
-          style={({ pressed }) => [styles.item, pressed && styles.pressed]}
-          onPress={() => setDrawerOpen(true)}
-          android_ripple={{ color: colors.ripple.primary }}
-          accessibilityRole="button"
-          accessibilityLabel="Open menu"
-          accessibilityState={{ selected: isMenuActive }}
-        >
-          <View
-            style={[
-              styles.pill,
-              isMenuActive && { backgroundColor: colors.primarySoft },
-            ]}
+          <Pressable
+            style={({ pressed }) => [styles.item, pressed && styles.pressed]}
+            onPress={() => setDrawerOpen(true)}
+            android_ripple={{ color: colors.ripple.primary }}
+            accessibilityRole="button"
+            accessibilityLabel="Open menu"
+            accessibilityState={{ selected: isMenuActive }}
           >
-            <Icon
-              name="menu"
-              size={18}
-              color={isMenuActive ? colors.primary : colors.textMuted}
-            />
-          </View>
-          <Text
-            style={[
-              styles.label,
-              { color: isMenuActive ? colors.primary : colors.textMuted },
-            ]}
-          >
-            Menu
-          </Text>
-        </Pressable>
+            <View style={[styles.pill, isMenuActive && { backgroundColor: colors.primarySoft }]}>
+              <Icon name="menu" size={18} color={isMenuActive ? colors.primary : colors.textMuted} />
+            </View>
+            <Text style={[styles.label, { color: isMenuActive ? colors.primary : colors.textMuted }]}>Menu</Text>
+          </Pressable>
+        </View>
       </View>
 
       <AdminDrawer visible={drawerOpen} onClose={() => setDrawerOpen(false)} />
@@ -124,10 +108,15 @@ export default function AdminNavigation() {
 }
 
 const styles = StyleSheet.create({
-  container: {
+  wrapper: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+  },
+  island: {
     flexDirection: "row",
-    borderTopWidth: 1,
-    paddingTop: spacing.xs,
+    borderWidth: 1,
+    borderRadius: radius.xl,
+    paddingVertical: spacing.xs,
     paddingHorizontal: spacing.xs,
   },
   item: {
@@ -139,9 +128,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   pill: {
-    width: 36,
-    height: 28,
-    borderRadius: sizes.borderRadius.pill,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
   },

@@ -1,15 +1,15 @@
-// ─── Border radius ───────────────────────────────────────
+// ─── Border radius — feather-light soft UI ─────────────────
 export const radius = {
-  /** 3px — subtle rounding for small elements */
-  sm: 3,
-  /** 6px — default for buttons, inputs */
-  md: 6,
-  /** 10px — cards, panels */
-  lg: 10,
-  /** 14px — large cards, modals */
-  xl: 14,
-  /** 18px — feature cards */
-  xxl: 18,
+  /** 10px — small controls, chips (feather) */
+  sm: 10,
+  /** 12px — inputs, buttons */
+  md: 12,
+  /** 16px — cards, panels (soft) */
+  lg: 16,
+  /** 20px — large cards, modals */
+  xl: 20,
+  /** 24px — feature cards, islands */
+  xxl: 24,
   /** 999px — pill shape */
   pill: 999,
 } as const;

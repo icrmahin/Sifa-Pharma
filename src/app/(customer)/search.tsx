@@ -3,7 +3,7 @@ import { goBack } from '@/utils/navigation';
 import { FlatList, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useThemeColors } from "../../providers/ThemeProvider";
-import Header from "../../components/common/Header";
+import SoftHeader from "../../components/common/SoftHeader";
 import SearchBar from "../../components/common/SearchBar";
 import ProductCard from "../../components/products/ProductCard";
 import LoadingState from "../../components/common/LoadingState";
@@ -19,7 +19,7 @@ export default function CustomerSearchScreen() {
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-      <Header title="Search" onBack={() => goBack()} />
+      <SoftHeader title="Search" onBack={() => goBack()} />
       <FlatList
         data={results}
         contentContainerStyle={styles.container}

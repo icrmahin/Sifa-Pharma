@@ -3,7 +3,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { goBack } from '@/utils/navigation';
 import { useThemeColors } from '../../providers/ThemeProvider';
-import Header from '../../components/common/Header';
+import SoftHeader from '../../components/common/SoftHeader';
 import StatusBadge from '../../components/common/StatusBadge';
 import LoadingState from '../../components/common/LoadingState';
 import ErrorState from '../../components/common/ErrorState';
@@ -25,7 +25,7 @@ export default function DeliveryCycleScreen() {
   if (loading) {
     return (
       <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-        <Header title="Delivery cycle" onBack={() => goBack()} />
+        <SoftHeader title="Delivery cycle" onBack={() => goBack()} />
         <LoadingState label="Loading delivery cycle" />
       </SafeAreaView>
     );
@@ -34,7 +34,7 @@ export default function DeliveryCycleScreen() {
   if (error) {
     return (
       <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-        <Header title="Delivery cycle" onBack={() => goBack()} />
+        <SoftHeader title="Delivery cycle" onBack={() => goBack()} />
         <ErrorState message={error} onRetry={reload} />
       </SafeAreaView>
     );
@@ -43,7 +43,7 @@ export default function DeliveryCycleScreen() {
   if (!cycle) {
     return (
       <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-        <Header title="Delivery cycle" onBack={() => goBack()} />
+        <SoftHeader title="Delivery cycle" onBack={() => goBack()} />
         <ScrollView contentContainerStyle={styles.container}>
           <EmptyState title="No active cycle" message="Start a 24-hour delivery cycle to group your orders." />
           {createError ? <Text style={[styles.error, { color: colors.danger }]}>{createError}</Text> : null}
@@ -73,7 +73,7 @@ export default function DeliveryCycleScreen() {
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-      <Header title="Delivery cycle" onBack={() => goBack()} />
+      <SoftHeader title="Delivery cycle" onBack={() => goBack()} />
       <ScrollView contentContainerStyle={styles.container}>
         <View style={[styles.card, { backgroundColor: colors.backgroundAlt, borderColor: colors.border }]}>
           <Text style={[styles.title, { color: colors.text }]}>Active order cycle</Text>

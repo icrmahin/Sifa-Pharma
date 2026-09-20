@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { FlatList, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useThemeColors } from "../../../providers/ThemeProvider";
+import { useShadows } from "../../../constants/shadows";
 import AppLogo from "../../../components/common/AppLogo";
 import SearchBar from "../../../components/common/SearchBar";
 import Icon from "../../../components/common/Icon";
@@ -18,6 +19,7 @@ type DiscoveryTab = "all" | "trending" | "discount" | "new";
 
 export default function CustomerHomeScreen() {
   const colors = useThemeColors();
+  const shadows = useShadows();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const { unreadCount } = useNotifications();
@@ -54,37 +56,35 @@ export default function CustomerHomeScreen() {
 
   return (
     <SafeAreaView edges={["left", "right", "bottom"]} style={[styles.safeArea, { backgroundColor: colors.background }]}>
-      {/* Compact header — correct safe-area, no bald space */}
-      <View
-        style={[
-          styles.header,
-          {
-            paddingTop: insets.top + spacing.sm,
-            backgroundColor: colors.background,
-            borderBottomColor: colors.borderSoft,
-          },
-        ]}
-      >
-        <View style={styles.headerRow}>
-          <View style={styles.brandRow}>
-            <AppLogo size={32} />
-            <Text style={[styles.brandName, { color: colors.text }]}>Sifa-Pharma</Text>
+      {/* Feather-light island header */}
+      <View style={[styles.headerWrap, { paddingTop: insets.top + spacing.sm }]}>
+        <View
+          style={[
+            styles.headerIsland,
+            { backgroundColor: colors.backgroundAlt, borderColor: colors.borderSoft, ...shadows.sm },
+          ]}
+        >
+          <View style={styles.headerRow}>
+            <View style={styles.brandRow}>
+              <AppLogo size={30} />
+              <Text style={[styles.brandName, { color: colors.text }]}>Sifa-Pharma</Text>
+            </View>
+            <Pressable
+              onPress={() => router.push("/(customer)/account/notifications" as any)}
+              accessibilityRole="button"
+              accessibilityLabel={`Notifications${unreadCount > 0 ? `, ${unreadCount} unread` : ""}`}
+              style={[styles.cartButton, { backgroundColor: colors.background, borderColor: colors.borderSoft }]}
+            >
+              <Icon name="notifications" size={18} color={colors.primary} />
+              {unreadCount > 0 ? (
+                <View style={[styles.cartBadge, { backgroundColor: colors.danger }]}>
+                  <Text style={[styles.cartBadgeText, { color: colors.white }]}>
+                    {unreadCount > 99 ? "99+" : String(unreadCount)}
+                  </Text>
+                </View>
+              ) : null}
+            </Pressable>
           </View>
-          <Pressable
-            onPress={() => router.push("/(customer)/account/notifications" as any)}
-            accessibilityRole="button"
-            accessibilityLabel={`Notifications${unreadCount > 0 ? `, ${unreadCount} unread` : ""}`}
-            style={[styles.cartButton, { backgroundColor: colors.backgroundAlt, borderColor: colors.borderLight }]}
-          >
-            <Icon name="notifications" size={18} color={colors.primary} />
-            {unreadCount > 0 ? (
-              <View style={[styles.cartBadge, { backgroundColor: colors.danger }]}>
-                <Text style={[styles.cartBadgeText, { color: colors.white }]}>
-                  {unreadCount > 99 ? "99+" : String(unreadCount)}
-                </Text>
-              </View>
-            ) : null}
-          </Pressable>
         </View>
       </View>
 
@@ -219,16 +219,18 @@ function DiscoveryPill({ label, active, onPress, colors }: any) {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
-  header: {
-    borderBottomWidth: 1,
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.sm,
+  headerWrap: { paddingHorizontal: spacing.lg, paddingBottom: spacing.sm, backgroundColor: "transparent" },
+  headerIsland: {
+    borderWidth: 1,
+    borderRadius: radius.lg,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
   },
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    minHeight: 40,
+    minHeight: 38,
   },
   brandRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
   brandName: { fontWeight: "600", fontSize: 15, letterSpacing: -0.2 },

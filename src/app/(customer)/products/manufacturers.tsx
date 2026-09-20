@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { goBack } from '@/utils/navigation';
 import { useThemeColors } from '../../../providers/ThemeProvider';
-import Header from '../../../components/common/Header';
+import SoftHeader from '../../../components/common/SoftHeader';
 import LoadingState from '../../../components/common/LoadingState';
 import ErrorState from '../../../components/common/ErrorState';
 import EmptyState from '../../../components/common/EmptyState';
@@ -18,7 +18,7 @@ export default function CustomerManufacturersScreen() {
   if (loading) {
     return (
       <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-        <Header title="Manufacturers" onBack={() => goBack()} />
+        <SoftHeader title="Manufacturers" onBack={() => goBack()} />
         <LoadingState label="Loading manufacturers" />
       </SafeAreaView>
     );
@@ -27,7 +27,7 @@ export default function CustomerManufacturersScreen() {
   if (error) {
     return (
       <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-        <Header title="Manufacturers" onBack={() => goBack()} />
+        <SoftHeader title="Manufacturers" onBack={() => goBack()} />
         <ErrorState message={error} onRetry={reload} />
       </SafeAreaView>
     );
@@ -35,7 +35,7 @@ export default function CustomerManufacturersScreen() {
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-      <Header title="Manufacturers" onBack={() => goBack()} />
+      <SoftHeader title="Manufacturers" onBack={() => goBack()} />
       <ScrollView contentContainerStyle={styles.container}>
         {manufacturers.length === 0 ? (
           <EmptyState title="No manufacturers" message="Manufacturers will appear here once added." />

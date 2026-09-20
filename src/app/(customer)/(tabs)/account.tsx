@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, Pressable, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuth } from "../../../hooks/useAuth";
 import { useTheme, useThemeColors } from "../../../providers/ThemeProvider";
+import { useShadows } from "../../../constants/shadows";
 import spacing from "../../../constants/spacing";
 import typography from "../../../constants/typography";
 import { radius, layout } from "../../../constants/sizes";
@@ -22,30 +23,32 @@ type SettingsSection = {
   }[];
 };
 
+// Feather-light: core settings first, low-use moved to More Options
 const SECTIONS: SettingsSection[] = [
   {
     title: "Account",
     items: [
       { label: "Profile Details", icon: "person", route: "/(customer)/account/profile" },
-      { label: "Password & Security", icon: "lock", route: "/(customer)/account/profile" },
       { label: "Notifications", icon: "notifications", route: "/(customer)/account/notifications" },
-      { label: "Dark Mode", icon: "dark-mode", toggle: true },
+      { label: "Password & Security", icon: "lock", route: "/(customer)/account/profile" },
     ],
   },
   {
-    title: "Support",
+    title: "Preferences",
+    items: [{ label: "Dark Mode", icon: "dark-mode", toggle: true }],
+  },
+  {
+    title: "More Options",
     items: [
       { label: "Help & FAQ", icon: "help-outline" },
       { label: "Contact Us", icon: "phone" },
+      { label: "About Sifa-Pharma", icon: "info-outline" },
+      { label: "Terms & Privacy", icon: "description" },
     ],
   },
   {
     title: "App",
-    items: [
-      { label: "About Sifa-Pharma", icon: "info-outline" },
-      { label: "Terms & Privacy", icon: "description" },
-      { label: "Log Out", icon: "logout", destructive: true },
-    ],
+    items: [{ label: "Log Out", icon: "logout", destructive: true }],
   },
 ];
 
@@ -53,11 +56,13 @@ export default function AccountScreen() {
   const router = useRouter();
   const { user, isAdmin, signOut } = useAuth();
   const colors = useThemeColors();
+  const shadows = useShadows();
   const { themeMode, setThemeMode } = useTheme();
   const { isDesktop } = useResponsive();
 
   const isDark = themeMode === "dark" || (themeMode === "system" && colors.background === "#111A17");
   const initial = user?.name ? user.name.charAt(0).toUpperCase() : "U";
+  const statusText = isAdmin ? "Admin • Verified" : "Member • Active";
 
   const handleItemPress = (item: SettingsSection["items"][0]) => {
     if (item.destructive) {
@@ -80,12 +85,13 @@ export default function AccountScreen() {
     >
       <ResponsiveContainer maxWidth={isDesktop ? 800 : 1320}>
         <Text style={[styles.title, { color: colors.text }]}>Settings</Text>
+        <Text style={[styles.subtitle, { color: colors.textMuted }]}>Soft • feather-light • {isAdmin ? "admin" : "customer"}</Text>
 
-        {/* Profile Card */}
+        {/* Tiny but memorable Profile Card — useful status */}
         <Pressable
           style={({ pressed }) => [
             styles.profileCard,
-            { backgroundColor: colors.backgroundAlt, borderColor: colors.borderLight },
+            { backgroundColor: colors.backgroundAlt, borderColor: colors.borderSoft, ...shadows.sm },
             pressed && styles.pressed,
           ]}
           onPress={() => router.push("/(customer)/account/profile")}
@@ -94,24 +100,30 @@ export default function AccountScreen() {
         >
           <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
             <Text style={[styles.avatarText, { color: colors.white }]}>{initial}</Text>
+            <View style={[styles.avatarStatus, { backgroundColor: colors.success, borderColor: colors.backgroundAlt }]} />
           </View>
           <View style={styles.profileInfo}>
-            <Text style={[styles.profileName, { color: colors.text }]} numberOfLines={1}>
-              {user?.name || "User"}
-            </Text>
+            <View style={styles.nameRow}>
+              <Text style={[styles.profileName, { color: colors.text }]} numberOfLines={1}>
+                {user?.name || "User"}
+              </Text>
+              <View style={[styles.statusChip, { backgroundColor: colors.successSoft, borderColor: colors.successBorder }]}>
+                <Text style={[styles.statusChipText, { color: colors.success }]}>{statusText}</Text>
+              </View>
+            </View>
             <Text style={[styles.profileEmail, { color: colors.textMuted }]} numberOfLines={1}>
               {user?.email || ""}
             </Text>
           </View>
-          <Icon name="chevron-right" size={20} color={colors.textMuted} />
+          <Icon name="chevron-right" size={18} color={colors.textMuted} />
         </Pressable>
 
-        {/* Admin Dashboard */}
+        {/* Admin Dashboard — stays in Settings as main dashboard */}
         {isAdmin ? (
           <Pressable
             style={({ pressed }) => [
               styles.adminCard,
-              { backgroundColor: colors.backgroundAlt, borderColor: colors.borderLight },
+              { backgroundColor: colors.backgroundAlt, borderColor: colors.borderSoft, ...shadows.sm },
               pressed && styles.pressed,
             ]}
             onPress={() => router.push("/(admin)")}
@@ -119,26 +131,24 @@ export default function AccountScreen() {
             accessibilityLabel="Open admin dashboard"
           >
             <View style={[styles.adminIconContainer, { backgroundColor: colors.primarySoft }]}>
-              <Icon name="dashboard" size={20} color={colors.primary} />
+              <Icon name="dashboard" size={18} color={colors.primary} />
             </View>
             <View style={styles.adminInfo}>
               <Text style={[styles.adminLabel, { color: colors.text }]}>Admin Dashboard</Text>
-              <Text style={[styles.adminHint, { color: colors.textMuted }]}>Manage store operations</Text>
+              <Text style={[styles.adminHint, { color: colors.textMuted }]}>Products • Orders • Inventory — main cockpit</Text>
             </View>
-            <Icon name="chevron-right" size={20} color={colors.textMuted} />
+            <View style={[styles.adminArrow, { backgroundColor: colors.background, borderColor: colors.borderSoft }]}>
+              <Icon name="arrow-forward" size={16} color={colors.primary} />
+            </View>
           </Pressable>
         ) : null}
 
-        {/* Settings Sections */}
+        {/* Settings Sections — feather light */}
         <View style={[styles.sectionsGrid, isDesktop && styles.sectionsGridDesktop]}>
           {SECTIONS.map((section) => (
             <View key={section.title} style={[styles.section, isDesktop && styles.sectionDesktop]}>
-              <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>
-                {section.title}
-              </Text>
-              <View
-                style={[styles.sectionGroup, { backgroundColor: colors.backgroundAlt, borderColor: colors.borderLight }]}
-              >
+              <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>{section.title}</Text>
+              <View style={[styles.sectionGroup, { backgroundColor: colors.backgroundAlt, borderColor: colors.borderSoft, ...shadows.xs }]}>
                 {section.items.map((item, index) => (
                   <View key={item.label}>
                     <Pressable
@@ -153,22 +163,14 @@ export default function AccountScreen() {
                       accessibilityRole="button"
                       accessibilityLabel={item.label}
                     >
-                      <View style={[styles.rowIcon, { backgroundColor: colors.primarySoft }]}>
-                        <Icon
-                          name={item.icon}
-                          size={20}
-                          color={item.destructive ? colors.danger : colors.primary}
-                        />
+                      <View style={[styles.rowIcon, { backgroundColor: item.destructive ? colors.redSoft : colors.primarySoft }]}>
+                        <Icon name={item.icon} size={18} color={item.destructive ? colors.danger : colors.primary} />
                       </View>
-                      <Text
-                        style={[styles.rowLabel, { color: item.destructive ? colors.danger : colors.text }]}
-                      >
-                        {item.label}
-                      </Text>
+                      <Text style={[styles.rowLabel, { color: item.destructive ? colors.danger : colors.text }]}>{item.label}</Text>
                       {item.toggle ? (
                         <Toggle value={isDark} onValueChange={handleDarkModeToggle} size="sm" />
                       ) : (
-                        <Icon name="chevron-right" size={18} color={colors.textMuted} />
+                        <Icon name="chevron-right" size={16} color={colors.textMuted} />
                       )}
                     </Pressable>
                     {index < section.items.length - 1 ? (
@@ -191,62 +193,93 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.xl,
     paddingBottom: spacing.xxxl,
+    gap: spacing.xs,
   },
   title: {
     fontSize: typography.title2,
     fontWeight: "700",
     textAlign: "center",
-    marginBottom: spacing.xl,
+  },
+  subtitle: {
+    fontSize: typography.caption,
+    textAlign: "center",
+    marginBottom: spacing.lg,
   },
   profileCard: {
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.md,
     borderWidth: 1,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    marginBottom: spacing.xl,
+    borderRadius: radius.xl,
+    padding: spacing.md,
+    marginBottom: spacing.md,
   },
   avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: "center",
     justifyContent: "center",
+    position: "relative",
+  },
+  avatarStatus: {
+    position: "absolute",
+    bottom: 0,
+    right: 0,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    borderWidth: 2,
   },
   avatarText: { fontSize: typography.body, fontWeight: "700" },
-  profileInfo: { flex: 1, gap: spacing.xxs },
+  profileInfo: { flex: 1, gap: 2 },
+  nameRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm, flexWrap: "wrap" },
   profileName: { fontSize: typography.bodySmall, fontWeight: "700" },
+  statusChip: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+  },
+  statusChipText: { fontSize: 10, fontWeight: "700", letterSpacing: 0.3 },
   profileEmail: { fontSize: typography.caption },
   adminCard: {
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.md,
     borderWidth: 1,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    marginBottom: spacing.xl,
+    borderRadius: radius.xl,
+    padding: spacing.md,
+    marginBottom: spacing.lg,
   },
   adminIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: "center",
     justifyContent: "center",
   },
   adminInfo: { flex: 1 },
   adminLabel: { fontSize: typography.bodySmall, fontWeight: "700" },
-  adminHint: { fontSize: typography.caption, marginTop: spacing.xxs },
+  adminHint: { fontSize: typography.caption, marginTop: 2 },
+  adminArrow: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   sectionsGrid: {},
   sectionsGridDesktop: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: spacing.lg,
   },
-  section: { marginBottom: spacing.xl },
+  section: { marginBottom: spacing.lg },
   sectionDesktop: { flexBasis: "48%", marginBottom: 0 },
   sectionTitle: {
-    fontSize: typography.caption,
+    fontSize: 10,
     fontWeight: "700",
     letterSpacing: 0.8,
     textTransform: "uppercase",
@@ -255,7 +288,7 @@ const styles = StyleSheet.create({
   },
   sectionGroup: {
     borderWidth: 1,
-    borderRadius: radius.lg,
+    borderRadius: radius.xl,
     overflow: "hidden",
   },
   row: {
@@ -263,13 +296,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: spacing.md,
     paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    minHeight: layout.touch,
+    paddingHorizontal: spacing.md,
+    minHeight: 44,
   },
   rowIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
   },

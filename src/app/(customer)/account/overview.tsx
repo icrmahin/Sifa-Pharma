@@ -3,7 +3,7 @@ import { goBack } from '@/utils/navigation';
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useThemeColors } from "../../../providers/ThemeProvider";
-import Header from "../../../components/common/Header";
+import SoftHeader from "../../../components/common/SoftHeader";
 import Icon from "../../../components/common/Icon";
 import spacing from "../../../constants/spacing";
 import typography from "../../../constants/typography";
@@ -17,7 +17,7 @@ export default function CustomerAccountDashboard() {
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-      <Header title="Account" subtitle="Sifa-Pharma · Your account" onBack={() => goBack()} />
+      <SoftHeader title="Account" subtitle="Sifa-Pharma · Your account" onBack={() => goBack()} />
       <ScrollView contentContainerStyle={styles.container}>
         <View style={[styles.identityPanel, { backgroundColor: colors.backgroundAlt, borderColor: colors.border }]}>
           <View style={[styles.avatar, { backgroundColor: colors.primary }]}>

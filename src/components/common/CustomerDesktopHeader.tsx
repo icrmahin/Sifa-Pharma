@@ -2,6 +2,7 @@ import { router, usePathname } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useThemeColors } from "../../providers/ThemeProvider";
 import { useShadows } from "../../constants/shadows";
+import { radius } from "../../constants/sizes";
 import spacing from "../../constants/spacing";
 import { fontFamily, fontSize } from "../../constants/typography";
 import { useNotifications } from "../../hooks/useNotifications";
@@ -33,19 +34,19 @@ export default function CustomerDesktopHeader() {
   const activePath = getActivePath(pathname);
 
   return (
-    <View
-      style={[
-        styles.container,
-        {
-          backgroundColor: colors.backgroundAlt,
-          borderBottomColor: colors.borderLight,
-          ...shadows.sm,
-        },
-      ]}
-    >
-      <View style={styles.inner}>
+    <View style={[styles.wrapper, { backgroundColor: colors.background }]}>
+      <View
+        style={[
+          styles.island,
+          {
+            backgroundColor: colors.backgroundAlt,
+            borderColor: colors.borderSoft,
+            ...shadows.sm,
+          },
+        ]}
+      >
         <Pressable style={styles.brandRow} onPress={() => router.replace("/(customer)/(tabs)" as never)}>
-          <AppLogo size={32} />
+          <AppLogo size={30} />
           <Text style={[styles.brandName, { color: colors.text }]}>Sifa-Pharma</Text>
         </Pressable>
 
@@ -70,7 +71,7 @@ export default function CustomerDesktopHeader() {
 
         <View style={styles.rightSection}>
           <Pressable
-            style={[styles.notificationButton, { backgroundColor: colors.primarySoft, borderColor: colors.borderLight }]}
+            style={[styles.notificationButton, { backgroundColor: colors.background, borderColor: colors.borderSoft }]}
             onPress={() => router.push("/(customer)/account/notifications" as never)}
             accessibilityRole="button"
             accessibilityLabel={`Notifications${unreadCount > 0 ? `, ${unreadCount} unread` : ""}`}
@@ -89,12 +90,19 @@ export default function CustomerDesktopHeader() {
 }
 
 const styles = StyleSheet.create({
-  container: { borderBottomWidth: 1, width: "100%" },
-  inner: { flexDirection: "row", alignItems: "center", height: 56, paddingHorizontal: spacing.xl, width: "100%" },
-  brandRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm, marginRight: spacing.xxxl },
+  wrapper: { paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.sm },
+  island: {
+    flexDirection: "row",
+    alignItems: "center",
+    height: 52,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+  },
+  brandRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm, marginRight: spacing.xl },
   brandName: { fontFamily: fontFamily.semiBold, fontSize: fontSize.body, lineHeight: fontSize.body * 1.3 },
   navLinks: { flexDirection: "row", alignItems: "center", gap: spacing.xs, flex: 1 },
-  navItem: { flexDirection: "row", alignItems: "center", gap: spacing.xs, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderRadius: 6, minHeight: 36 },
+  navItem: { flexDirection: "row", alignItems: "center", gap: spacing.xs, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderRadius: radius.pill, minHeight: 32 },
   navLabel: { fontFamily: fontFamily.medium, fontSize: fontSize.caption, lineHeight: fontSize.caption * 1.3 },
   rightSection: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
   notificationButton: { width: 36, height: 36, borderRadius: 18, borderWidth: 1, alignItems: "center", justifyContent: "center", position: "relative" },

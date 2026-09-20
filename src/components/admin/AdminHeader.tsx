@@ -2,6 +2,7 @@ import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { useThemeColors } from "../../providers/ThemeProvider";
 import { useShadows } from "../../constants/shadows";
+import { radius } from "../../constants/sizes";
 import spacing from "../../constants/spacing";
 import typography from "../../constants/typography";
 
@@ -16,44 +17,45 @@ export default function AdminHeader({ title, subtitle, action }: AdminHeaderProp
   const shadows = useShadows();
 
   return (
-    <View
-      style={[
-        styles.header,
-        {
-          backgroundColor: colors.backgroundAlt,
-          borderBottomColor: colors.borderLight,
-          ...shadows.sm,
-        },
-      ]}
-    >
-      <View style={styles.titleArea}>
-        <Text style={[styles.eyebrow, { color: colors.textMuted }]}>
-          Sifa-Pharma · Admin
-        </Text>
-        <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
-          {title}
-        </Text>
-        {subtitle ? (
-          <Text style={[styles.subtitle, { color: colors.textMuted }]}>
-            {subtitle}
+    <View style={[styles.wrapper, { backgroundColor: colors.background }]}>
+      <View
+        style={[
+          styles.island,
+          {
+            backgroundColor: colors.backgroundAlt,
+            borderColor: colors.borderSoft,
+            ...shadows.sm,
+          },
+        ]}
+      >
+        <View style={styles.titleArea}>
+          <Text style={[styles.eyebrow, { color: colors.textMuted }]}>Sifa-Pharma · Admin</Text>
+          <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
+            {title}
           </Text>
-        ) : null}
-      </View>
+          {subtitle ? <Text style={[styles.subtitle, { color: colors.textMuted }]}>{subtitle}</Text> : null}
+        </View>
 
-      {action ? <View>{action}</View> : null}
+        {action ? <View>{action}</View> : null}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  header: {
+  wrapper: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.sm,
+  },
+  island: {
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.md,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.md,
-    borderBottomWidth: 1,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    borderRadius: radius.lg,
+    borderWidth: 1,
   },
   titleArea: { flex: 1 },
   eyebrow: {

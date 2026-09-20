@@ -1,113 +1,42 @@
 import { router } from "expo-router";
-import type { ReactNode } from "react";
-import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AdminHeader from "../../components/admin/AdminHeader";
-import AdminStatCard from "../../components/admin/AdminStatCard";
-import InventoryStatus from "../../components/admin/InventoryStatus";
+import Sparkline from "../../components/admin/Sparkline";
+import StockDonut from "../../components/admin/StockDonut";
 import Button from "../../components/common/Button";
 import EmptyState from "../../components/common/EmptyState";
 import ResponsiveContainer from "../../components/common/ResponsiveContainer";
 import StatusBadge from "../../components/common/StatusBadge";
+import InventoryStatus from "../../components/admin/InventoryStatus";
 import Icon from "../../components/common/Icon";
 import { useThemeColors } from "../../providers/ThemeProvider";
+import { useShadows } from "../../constants/shadows";
 import { useResponsive } from "../../hooks/useResponsive";
 import { useAdmin } from "../../hooks/useAdmin";
 import { useAuth } from "../../hooks/useAuth";
 import LoadingState from "../../components/common/LoadingState";
 import ErrorState from "../../components/common/ErrorState";
-import config from "../../constants/config";
-import sizes from "../../constants/sizes";
+import { radius } from "../../constants/sizes";
 import spacing from "../../constants/spacing";
 import typography from "../../constants/typography";
 import { formatCurrency } from "../../utils/currency";
 import { formatShortDate } from "../../utils/date";
 import type { IconName } from "../../components/common/Icon";
 
-type StatusTone = "success" | "warning" | "danger" | "info";
-
-const QUICK_ACTIONS: { label: string; meta: string; route: string; icon: IconName }[] = [
-  { label: "Add product", meta: "New medicine", route: "/(admin)/products/add", icon: "add-circle" },
-  { label: "Manage orders", meta: "Review queue", route: "/(admin)/orders", icon: "receipt-long" },
-  { label: "Inventory", meta: "Stock levels", route: "/(admin)/inventory", icon: "inventory" },
-  { label: "Customers", meta: "Records", route: "/(admin)/customers", icon: "people" },
-];
-
-function toneForStatus(status: string): StatusTone {
-  if (status === "DELIVERED") return "success";
-  if (status === "PENDING") return "warning";
-  if (status === "CANCELLED" || status === "RETURNED") return "danger";
-  return "info";
-}
-
 function greeting(): string {
-  const hour = new Date().getHours();
-  if (hour < 12) return "Good morning";
-  if (hour < 17) return "Good afternoon";
+  const h = new Date().getHours();
+  if (h < 12) return "Good morning";
+  if (h < 17) return "Good afternoon";
   return "Good evening";
-}
-
-type AttentionRowData = {
-  key: string;
-  icon: IconName;
-  title: string;
-  meta: string;
-  status: ReactNode;
-  actionLabel: string;
-  onPress: () => void;
-};
-
-function SectionHead({
-  index,
-  title,
-  linkLabel,
-  onLink,
-  colors,
-}: {
-  index: string;
-  title: string;
-  linkLabel?: string;
-  onLink?: () => void;
-  colors: ReturnType<typeof useThemeColors>;
-}) {
-  return (
-    <View style={styles.sectionHead}>
-      <Text style={[styles.sectionIndex, { color: colors.textMuted }]}>{index}</Text>
-      <Text style={[styles.sectionTitle, { color: colors.text }]}>{title}</Text>
-      <View style={[styles.sectionRule, { backgroundColor: colors.borderLight }]} />
-      {linkLabel && onLink ? (
-        <Pressable
-          accessibilityRole="link"
-          accessibilityLabel={linkLabel}
-          onPress={onLink}
-        >
-          <Text style={[styles.sectionLink, { color: colors.primary }]}>{linkLabel}</Text>
-        </Pressable>
-      ) : null}
-    </View>
-  );
-}
-
-function ActionChip({ label, colors }: { label: string; colors: ReturnType<typeof useThemeColors> }) {
-  return (
-    <View style={[styles.actionChip, { borderColor: colors.borderLight, backgroundColor: colors.background }]}>
-      <Text style={[styles.actionChipText, { color: colors.primary }]}>{label}</Text>
-    </View>
-  );
 }
 
 export default function AdminDashboardScreen() {
   const colors = useThemeColors();
+  const shadows = useShadows();
   const { user } = useAuth();
   const { dashboard, loading, error, reload } = useAdmin();
-  const { isMobile, isTablet, isWide } = useResponsive();
-  const isCompact = isMobile;
+  const { isWide, isMobile } = useResponsive();
 
   if (loading) {
     return (
@@ -127,6 +56,11 @@ export default function AdminDashboardScreen() {
   }
 
   const {
+    totalSalesQty = 0,
+    totalSalesRevenue = 0,
+    totalEarning = 0,
+    salesTrend = [],
+    earningTrend = [],
     pendingOrders = 0,
     processingOrders = 0,
     activeProducts = 0,
@@ -136,384 +70,221 @@ export default function AdminDashboardScreen() {
     lowStockBatches = [],
     expiringBatches = [],
     recentOrders = [],
-    recentActivity = [],
   } = dashboard ?? {};
 
-  const openRow = (href: string) => router.push(href as never);
-  const openOrder = (orderId: string) =>
-    router.push({ pathname: "/(admin)/orders/[orderId]", params: { orderId } });
-  const openReturn = (returnId: string) =>
-    router.push({
-      pathname: "/(admin)/returns/[returnId]",
-      params: { returnId },
-    });
+  const open = (href: string) => router.push(href as never);
+  const openOrder = (id: string) => router.push({ pathname: "/(admin)/orders/[orderId]", params: { orderId: id } });
 
-  const attention: AttentionRowData[] = [
-    ...attentionOrders.map((order: any) => ({
-      key: order.id,
-      icon: "pending-actions" as IconName,
-      title: `Order ${order.orderNumber} pending`,
-      meta: `${order.customerName} · ${formatCurrency(order.total)}`,
-      status: <StatusBadge label="Pending" tone="warning" />,
-      actionLabel: "Review",
-      onPress: () => openOrder(order.id),
+  // Fix now — top 3 priority (orders pending > low stock)
+  const fixNow = [
+    ...attentionOrders.slice(0, 2).map((o: any) => ({
+      id: o.id,
+      title: o.orderNumber,
+      sub: `${o.customerName} · ${formatCurrency(o.total)}`,
+      icon: "receipt-long" as IconName,
+      action: "Review",
+      onPress: () => openOrder(o.id),
     })),
-    ...lowStockBatches.map((item: any) => ({
-      key: item.id,
-      icon: "warning" as IconName,
-      title: item.productName,
-      meta: `Batch ${item.batchNumber} · Qty ${item.quantity}`,
-      status: <InventoryStatus status={item.status} />,
-      actionLabel: "Restock",
-      onPress: () => openRow("/(admin)/inventory"),
+    ...lowStockBatches.slice(0, 3 - Math.min(2, attentionOrders.length)).map((b: any) => ({
+      id: b.id,
+      title: b.productName,
+      sub: `Batch ${b.batchNumber} · ${b.quantity} left`,
+      icon: "inventory-2" as IconName,
+      action: "Restock",
+      onPress: () => open("/(admin)/inventory"),
     })),
-    ...pendingReturns.map((entry: any) => ({
-      key: entry.id,
-      icon: "assignment-return" as IconName,
-      title: entry.productName,
-      meta: `${entry.customerName} · Qty ${entry.quantity}`,
-      status: <StatusBadge label="Pending" tone="warning" />,
-      actionLabel: "Decide",
-      onPress: () => openReturn(entry.id),
-    })),
-  ];
+  ].slice(0, 3);
 
-  const snapshot = [
-    ...lowStockBatches,
-    ...expiringBatches.filter(
-      (entry: any) => !lowStockBatches.some((item: any) => item.id === entry.id),
-    ),
-  ].slice(0, 5);
+  if (pendingReturns.length && fixNow.length < 3) {
+    const r: any = pendingReturns[0];
+    fixNow.push({ id: r.id, title: r.productName, sub: `${r.customerName} · ${r.quantity} pcs`, icon: "assignment-return" as IconName, action: "Decide", onPress: () => open(`/(admin)/returns/${r.id}`) });
+  }
+
+  const healthy = Math.max(activeProducts - lowStockProducts, 0);
+  const low = lowStockProducts;
+  const out = Math.max(lowStockBatches.filter((b: any) => b.status === "out_of_stock").length, 0);
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
       <AdminHeader
         title="Dashboard"
-        subtitle={`${greeting()}, ${user?.name ?? "Admin"}`}
-        action={
-          <Button
-            title="Add product"
-            onPress={() => router.push("/(admin)/products/add")}
-          />
-        }
+        subtitle={`${greeting()}, ${user?.name ?? "Admin"} · 30 days`}
+        action={<Button title="Add product" onPress={() => open("/(admin)/products/add")} />}
       />
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <ScrollView contentContainerStyle={[styles.scroll, { paddingBottom: spacing.xxxl }]}>
         <ResponsiveContainer sidebarAware maxWidth={isWide ? 1200 : 960}>
           <View style={styles.page}>
-          {/* Key statistics */}
-          <SectionHead index="01" title="Summary" colors={colors} />
-          <View style={styles.grid}>
-            {[
-              {
-                label: "Pending orders",
-                value: pendingOrders,
-                detail: "Awaiting review",
-                accent: "gold" as const,
-                icon: "pending-actions" as IconName,
-              },
-              {
-                label: "Processing",
-                value: processingOrders,
-                detail: "Being fulfilled",
-                accent: "neutral" as const,
-                icon: "sync" as IconName,
-              },
-              {
-                label: "Low-stock",
-                value: lowStockProducts,
-                detail: `Below ${config.lowStockThreshold} units`,
-                accent: "gold" as const,
-                icon: "warning" as IconName,
-              },
-              {
-                label: "Active products",
-                value: activeProducts,
-                detail: "In the catalogue",
-                accent: "green" as const,
-                icon: "verified" as IconName,
-              },
-            ].map((stat) => (
-              <View
-                key={stat.label}
-                style={[styles.statCell, !isCompact && styles.statCellWide]}
-              >
-                <AdminStatCard
-                  label={stat.label}
-                  value={stat.value}
-                  detail={stat.detail}
-                  accent={stat.accent}
-                  icon={stat.icon}
-                />
-              </View>
-            ))}
-          </View>
-
-          {/* Actionable items */}
-          <SectionHead index="02" title="Needs attention" colors={colors} />
-          <View
-            style={[
-              styles.panel,
-              {
-                backgroundColor: colors.backgroundAlt,
-                borderColor: colors.borderLight,
-              },
-            ]}
-          >
-            {attention.length === 0 ? (
-              <View style={styles.inlineNote}>
-                <Text style={[styles.inlineNoteText, { color: colors.success }]}>
-                  Nothing needs your attention right now.
-                </Text>
-              </View>
-            ) : (
-              attention.map((item, index) => (
-                <View key={item.key}>
-                  <Pressable
-                    style={({ pressed }) => [
-                      styles.listRow,
-                      pressed && styles.pressed,
-                    ]}
-                    android_ripple={{ color: colors.ripple.primary }}
-                    accessibilityRole="button"
-                    accessibilityLabel={`${item.actionLabel} ${item.title}`}
-                    onPress={item.onPress}
-                  >
-                    <View
-                      style={[
-                        styles.iconTile,
-                        {
-                          borderColor: colors.borderLight,
-                          backgroundColor: colors.background,
-                        },
-                      ]}
-                    >
-                      <Icon name={item.icon} size={18} color={colors.primary} />
-                    </View>
-                    <View style={styles.listMain}>
-                      <Text style={[styles.listTitle, { color: colors.text }]} numberOfLines={1}>
-                        {item.title}
-                      </Text>
-                      <Text style={[styles.listMeta, { color: colors.textMuted }]} numberOfLines={1}>
-                        {item.meta}
-                      </Text>
-                    </View>
-                    {item.status}
-                    <ActionChip label={item.actionLabel} colors={colors} />
-                  </Pressable>
-                  {index < attention.length - 1 ? (
-                    <View style={[styles.hairline, { backgroundColor: colors.borderSoft }]} />
-                  ) : null}
-                </View>
-              ))
-            )}
-          </View>
-
-          {/* Fast paths */}
-          <SectionHead index="03" title="Quick actions" colors={colors} />
-          <View style={styles.actionGrid}>
-            {QUICK_ACTIONS.map((action) => (
+            {/* ===== Hero 4 — Sales > Earning > Orders > Stock (classic, compact, soft) ===== */}
+            <View style={styles.heroGrid}>
+              {/* Sales — primary */}
               <Pressable
-                key={action.label}
-                style={({ pressed }) => [
-                  styles.actionTile,
-                  {
-                    backgroundColor: colors.backgroundAlt,
-                    borderColor: colors.borderLight,
-                  },
-                  !isCompact && styles.actionTileWide,
-                  pressed && styles.pressed,
-                ]}
-                android_ripple={{ color: colors.ripple.primary }}
-                accessibilityRole="button"
-                accessibilityLabel={action.label}
-                onPress={() => openRow(action.route)}
+                onPress={() => open("/(admin)/orders")}
+                style={({ pressed }) => [styles.heroCard, { backgroundColor: colors.backgroundAlt, borderColor: colors.borderSoft, ...shadows.xs }, pressed && styles.pressed]}
               >
-                <View
-                  style={[
-                    styles.iconTile,
-                    {
-                      borderColor: colors.borderLight,
-                      backgroundColor: colors.background,
-                    },
-                  ]}
-                >
-                  <Icon name={action.icon} size={18} color={colors.primary} />
+                <View style={styles.heroTop}>
+                  <View style={[styles.heroIcon, { backgroundColor: colors.primarySoft }]}>
+                    <Icon name="trending-up" size={16} color={colors.primary} />
+                  </View>
+                  <Text style={[styles.heroLabel, { color: colors.textMuted }]}>Sales</Text>
                 </View>
-                <Text style={[styles.actionLabel, { color: colors.text }]}>{action.label}</Text>
-                <Text style={[styles.actionMeta, { color: colors.textMuted }]}>{action.meta}</Text>
+                <Text style={[styles.heroValue, { color: colors.text }]}>{totalSalesQty}</Text>
+                <Text style={[styles.heroSub, { color: colors.textMuted }]}>{totalSalesQty === 1 ? "item sold" : "items sold"} · {formatCurrency(totalSalesRevenue)}</Text>
+                <View style={styles.sparkWrap}>
+                  <Sparkline data={salesTrend.length ? salesTrend : [0, 1, 0, 2, 1, 3, totalSalesQty]} color={colors.primary} />
+                </View>
               </Pressable>
-            ))}
-          </View>
 
-          {/* Two columns on wide screens */}
-          <View style={[styles.body, isWide && styles.bodyWide]}>
-            <View style={[styles.bodyCol, isWide && styles.bodyColLeft]}>
-              <SectionHead
-                index="04"
-                title="Recent orders"
-                linkLabel="View all"
-                onLink={() => openRow("/(admin)/orders")}
-                colors={colors}
-              />
-              <View
-                style={[
-                  styles.panel,
-                  {
-                    backgroundColor: colors.backgroundAlt,
-                    borderColor: colors.borderLight,
-                  },
-                ]}
+              {/* Earning */}
+              <Pressable
+                onPress={() => open("/(admin)/orders")}
+                style={({ pressed }) => [styles.heroCard, { backgroundColor: colors.backgroundAlt, borderColor: colors.borderSoft, ...shadows.xs }, pressed && styles.pressed]}
               >
-                {recentOrders.length === 0 ? (
-                  <EmptyState
-                    title="No recent orders"
-                    message="New customer orders will appear here."
-                  />
-                ) : (
-                  recentOrders.map((order: any, index: number) => (
-                    <View key={order.id}>
-                      <Pressable
-                        style={({ pressed }) => [
-                          styles.listRow,
-                          pressed && styles.pressed,
-                        ]}
-                        android_ripple={{ color: colors.ripple.primary }}
-                        accessibilityRole="button"
-                        accessibilityLabel={`Review order ${order.orderNumber}`}
-                        onPress={() => openOrder(order.id)}
-                      >
-                        <View style={styles.listMain}>
-                          <Text style={[styles.listTitle, { color: colors.text }]} numberOfLines={1}>
-                            {order.orderNumber} · {formatCurrency(order.total)}
-                          </Text>
-                          <Text style={[styles.listMeta, { color: colors.textMuted }]} numberOfLines={1}>
-                            {order.customerName} · {formatShortDate(order.createdAt)}
-                          </Text>
-                        </View>
-                        <StatusBadge
-                          label={order.status}
-                          tone={toneForStatus(order.status)}
-                        />
-                        <Icon name="chevron-right" size={16} color={colors.textMuted} />
-                      </Pressable>
-                      {index < recentOrders.length - 1 ? (
-                        <View style={[styles.hairline, { backgroundColor: colors.borderSoft }]} />
-                      ) : null}
-                    </View>
-                  ))
-                )}
-              </View>
+                <View style={styles.heroTop}>
+                  <View style={[styles.heroIcon, { backgroundColor: colors.successSoft }]}>
+                    <Icon name="payments" size={16} color={colors.success} />
+                  </View>
+                  <Text style={[styles.heroLabel, { color: colors.textMuted }]}>Earning</Text>
+                </View>
+                <Text style={[styles.heroValue, { color: colors.text }]}>{formatCurrency(totalEarning)}</Text>
+                <Text style={[styles.heroSub, { color: colors.success }]}>profit · 30d</Text>
+                <View style={styles.sparkWrap}>
+                  <Sparkline data={earningTrend.length ? earningTrend : [0, 2, 1, 3, 2, 4, Math.round(totalEarning / 30)]} color={colors.success} />
+                </View>
+              </Pressable>
+
+              {/* Orders */}
+              <Pressable
+                onPress={() => open("/(admin)/orders")}
+                style={({ pressed }) => [styles.heroCard, { backgroundColor: colors.backgroundAlt, borderColor: colors.borderSoft, ...shadows.xs }, pressed && styles.pressed]}
+              >
+                <View style={styles.heroTop}>
+                  <View style={[styles.heroIcon, { backgroundColor: colors.warningSoft }]}>
+                    <Icon name="receipt-long" size={16} color={colors.warning} />
+                  </View>
+                  <Text style={[styles.heroLabel, { color: colors.textMuted }]}>Orders</Text>
+                </View>
+                <Text style={[styles.heroValue, { color: colors.text }]}>{pendingOrders}</Text>
+                <Text style={[styles.heroSub, { color: colors.textMuted }]}>{pendingOrders === 1 ? "awaiting" : "awaiting"} · {processingOrders} in motion</Text>
+                <View style={styles.heroFoot}>
+                  <View style={[styles.dot, { backgroundColor: colors.warning }]} />
+                  <Text style={[styles.footText, { color: colors.textMuted }]}>Pending</Text>
+                </View>
+              </Pressable>
+
+              {/* Stock */}
+              <Pressable
+                onPress={() => open("/(admin)/products")}
+                style={({ pressed }) => [styles.heroCard, { backgroundColor: colors.backgroundAlt, borderColor: colors.borderSoft, ...shadows.xs }, pressed && styles.pressed]}
+              >
+                <View style={styles.heroTop}>
+                  <View style={[styles.heroIcon, { backgroundColor: colors.background }]}>
+                    <Icon name="inventory-2" size={16} color={colors.textMuted} />
+                  </View>
+                  <Text style={[styles.heroLabel, { color: colors.textMuted }]}>Stock</Text>
+                </View>
+                <Text style={[styles.heroValue, { color: colors.text }]}>{activeProducts}</Text>
+                <Text style={[styles.heroSub, { color: low > 0 ? colors.warning : colors.success }]}>{low > 0 ? `${low} fraying` : "all healthy"} · live</Text>
+                <View style={styles.heroFoot}>
+                  <Text style={[styles.footText, { color: colors.textMuted }]}>{healthy} ok</Text>
+                </View>
+              </Pressable>
             </View>
 
-            <View style={[styles.bodyCol, isWide && styles.bodyColRight]}>
-              <SectionHead
-                index="05"
-                title="Inventory snapshot"
-                linkLabel="Manage"
-                onLink={() => openRow("/(admin)/inventory")}
-                colors={colors}
-              />
-              <View
-                style={[
-                  styles.panel,
-                  {
-                    backgroundColor: colors.backgroundAlt,
-                    borderColor: colors.borderLight,
-                  },
-                ]}
-              >
-                {snapshot.length === 0 ? (
-                  <View style={styles.inlineNote}>
-                    <Text style={[styles.inlineNoteText, { color: colors.success }]}>
-                      All stock levels are healthy.
-                    </Text>
+            {/* ===== Mission Board — Fix now + Donut (connectivity) ===== */}
+            <View style={[styles.mission, isWide && styles.missionWide]}>
+              <View style={[styles.missionLeft, { backgroundColor: colors.backgroundAlt, borderColor: colors.borderSoft, ...shadows.xs }]}>
+                <View style={styles.missionHead}>
+                  <Text style={[styles.missionTitle, { color: colors.text }]}>Fix now</Text>
+                  <Text style={[styles.missionCount, { color: colors.textMuted }]}>{fixNow.length} · tap to act</Text>
+                </View>
+                {fixNow.length === 0 ? (
+                  <View style={styles.calm}>
+                    <Icon name="verified" size={20} color={colors.success} />
+                    <Text style={[styles.calmText, { color: colors.success }]}>All calm — nothing needs you</Text>
                   </View>
                 ) : (
-                  snapshot.map((item: any, index: number) => {
-                    const isExpiring = expiringBatches.some(
-                      (entry: any) => entry.id === item.id,
-                    );
-                    return (
-                      <View key={item.id}>
-                        <Pressable
-                          style={({ pressed }) => [
-                            styles.listRow,
-                            pressed && styles.pressed,
-                          ]}
-                          android_ripple={{ color: colors.ripple.primary }}
-                          accessibilityRole="button"
-                          accessibilityLabel={`Review ${item.productName} stock`}
-                          onPress={() => openRow("/(admin)/inventory")}
-                        >
-                          <View style={styles.listMain}>
-                            <Text style={[styles.listTitle, { color: colors.text }]} numberOfLines={1}>
-                              {item.productName}
-                            </Text>
-                            <Text style={[styles.listMeta, { color: colors.textMuted }]} numberOfLines={1}>
-                              {isExpiring && item.expiryDate
-                                ? `Batch ${item.batchNumber} · Qty ${item.quantity} · Exp ${formatShortDate(item.expiryDate)}`
-                                : `Batch ${item.batchNumber} · Qty ${item.quantity}`}
-                            </Text>
-                          </View>
-                          <InventoryStatus status={item.status} />
-                          <Icon name="chevron-right" size={16} color={colors.textMuted} />
-                        </Pressable>
-                        {index < snapshot.length - 1 ? (
-                          <View style={[styles.hairline, { backgroundColor: colors.borderSoft }]} />
-                        ) : null}
-                      </View>
-                    );
-                  })
-                )}
-              </View>
-
-              <SectionHead
-                index="06"
-                title="Recent activity"
-                linkLabel="Audit log"
-                onLink={() => openRow("/(admin)/audit")}
-                colors={colors}
-              />
-              <View
-                style={[
-                  styles.panel,
-                  {
-                    backgroundColor: colors.backgroundAlt,
-                    borderColor: colors.borderLight,
-                  },
-                ]}
-              >
-                {recentActivity.length === 0 ? (
-                  <EmptyState
-                    title="No activity yet"
-                    message="Admin actions will be recorded here."
-                  />
-                ) : (
-                  recentActivity.map((entry: any, index: number) => (
-                    <View key={entry.id}>
-                      <View style={styles.listRow}>
-                        <View style={styles.listMain}>
-                          <Text style={[styles.listTitle, { color: colors.text }]} numberOfLines={1}>
-                            {entry.action}
-                          </Text>
-                          <Text style={[styles.listMeta, { color: colors.textMuted }]} numberOfLines={1}>
-                            {entry.actor} · {entry.recordType}
-                          </Text>
+                  fixNow.map((it, idx) => (
+                    <View key={it.id}>
+                      <Pressable style={({ pressed }) => [styles.row, pressed && styles.pressed]} onPress={it.onPress}>
+                        <View style={[styles.rowIcon, { backgroundColor: colors.background, borderColor: colors.borderSoft }]}>
+                          <Icon name={it.icon} size={16} color={colors.primary} />
                         </View>
-                        <Text style={[styles.rowDate, { color: colors.textMuted }]}>
-                          {formatShortDate(entry.timestamp)}
-                        </Text>
-                      </View>
-                      {index < recentActivity.length - 1 ? (
-                        <View style={[styles.hairline, { backgroundColor: colors.borderSoft }]} />
-                      ) : null}
+                        <View style={styles.rowMain}>
+                          <Text style={[styles.rowTitle, { color: colors.text }]} numberOfLines={1}>{it.title}</Text>
+                          <Text style={[styles.rowSub, { color: colors.textMuted }]} numberOfLines={1}>{it.sub}</Text>
+                        </View>
+                        <View style={[styles.chip, { borderColor: colors.primary + "22", backgroundColor: colors.primarySoft }]}>
+                          <Text style={[styles.chipText, { color: colors.primary }]}>{it.action}</Text>
+                        </View>
+                      </Pressable>
+                      {idx < fixNow.length - 1 ? <View style={[styles.hairline, { backgroundColor: colors.borderSoft }]} /> : null}
                     </View>
                   ))
                 )}
               </View>
-            </View>
-          </View>
 
+              <View style={[styles.missionRight, { backgroundColor: colors.backgroundAlt, borderColor: colors.borderSoft, ...shadows.xs }]}>
+                <Text style={[styles.missionTitle, { color: colors.text }]}>Stock pulse</Text>
+                <Text style={[styles.missionSub, { color: colors.textMuted }]}>30 days</Text>
+                <View style={styles.donutRow}>
+                  <StockDonut healthy={healthy} low={low} out={out} />
+                  <View style={styles.legend}>
+                    <View style={styles.legRow}><View style={[styles.legDot, { backgroundColor: colors.success }]} /><Text style={[styles.legText, { color: colors.textMuted }]}>Healthy {healthy}</Text></View>
+                    <View style={styles.legRow}><View style={[styles.legDot, { backgroundColor: colors.warning }]} /><Text style={[styles.legText, { color: colors.textMuted }]}>Low {low}</Text></View>
+                    <View style={styles.legRow}><View style={[styles.legDot, { backgroundColor: colors.danger }]} /><Text style={[styles.legText, { color: colors.textMuted }]}>Out {out}</Text></View>
+                  </View>
+                </View>
+                {expiringBatches.length ? <Text style={[styles.expiry, { color: colors.warning }]}>{expiringBatches.length} expiring in 60d</Text> : null}
+              </View>
+            </View>
+
+            {/* ===== Command bar — feather pill ===== */}
+            <View style={[styles.commandBar, { backgroundColor: colors.backgroundAlt, borderColor: colors.borderSoft, ...shadows.xs }]}>
+              <Pressable onPress={() => open("/(admin)/products/add")} style={styles.cmd}><Icon name="add" size={16} color={colors.primary} /><Text style={[styles.cmdText, { color: colors.text }]}>Add</Text></Pressable>
+              <View style={[styles.cmdSep, { backgroundColor: colors.borderSoft }]} />
+              <Pressable onPress={() => open("/(admin)/orders")} style={styles.cmd}><Icon name="receipt-long" size={16} color={colors.textMuted} /><Text style={[styles.cmdText, { color: colors.textMuted }]}>Orders</Text></Pressable>
+              <Pressable onPress={() => open("/(admin)/products")} style={styles.cmd}><Icon name="inventory-2" size={16} color={colors.textMuted} /><Text style={[styles.cmdText, { color: colors.textMuted }]}>Products</Text></Pressable>
+              <Pressable onPress={() => open("/(admin)/inventory")} style={styles.cmd}><Icon name="warehouse" size={16} color={colors.textMuted} /><Text style={[styles.cmdText, { color: colors.textMuted }]}>Stock</Text></Pressable>
+            </View>
+
+            {/* ===== Product cockpit ===== */}
+            <View style={[styles.cockpit, { backgroundColor: colors.backgroundAlt, borderColor: colors.borderSoft, ...shadows.xs }]}>
+              <View style={styles.cockpitHead}>
+                <Text style={[styles.cockpitTitle, { color: colors.text }]}>Products</Text>
+                <Pressable onPress={() => open("/(admin)/products")}><Text style={[styles.link, { color: colors.primary }]}>Manage →</Text></Pressable>
+              </View>
+              <View style={styles.productMiniList}>
+                {recentLowPreview(lowStockBatches).map((p: any) => (
+                  <Pressable key={p.id} onPress={() => open(`/admin/products/${p.product_id}`)} style={[styles.miniCard, { borderColor: colors.borderSoft, backgroundColor: colors.background }]}>
+                    <Text style={[styles.miniName, { color: colors.text }]} numberOfLines={1}>{p.productName}</Text>
+                    <Text style={[styles.miniMeta, { color: colors.textMuted }]}>Batch {p.batchNumber} · {p.quantity} left</Text>
+                    <InventoryStatus status={p.status} />
+                  </Pressable>
+                ))}
+                {lowStockBatches.length === 0 ? <Text style={[styles.calmText, { color: colors.textMuted }]}>No fraying stock</Text> : null}
+              </View>
+            </View>
+
+            {/* Recent orders — keep one compact list */}
+            <View style={[styles.panel, { backgroundColor: colors.backgroundAlt, borderColor: colors.borderSoft, ...shadows.xs }]}>
+              <View style={styles.panelHead}>
+                <Text style={[styles.panelTitle, { color: colors.text }]}>Latest orders</Text>
+                <Pressable onPress={() => open("/(admin)/orders")}><Text style={[styles.link, { color: colors.primary }]}>View all</Text></Pressable>
+              </View>
+              {recentOrders.length === 0 ? <EmptyState title="No orders" message="New orders will appear here." /> : recentOrders.slice(0, 4).map((o: any, i: number) => (
+                <View key={o.id}>
+                  <Pressable style={({ pressed }) => [styles.row, pressed && styles.pressed]} onPress={() => openOrder(o.id)}>
+                    <View style={styles.rowMain}>
+                      <Text style={[styles.rowTitle, { color: colors.text }]}>{o.orderNumber} · {formatCurrency(o.total)}</Text>
+                      <Text style={[styles.rowSub, { color: colors.textMuted }]}>{o.customerName} · {formatShortDate(o.createdAt)}</Text>
+                    </View>
+                    <StatusBadge label={o.status} tone={o.status === "DELIVERED" ? "success" : o.status === "PENDING" ? "warning" : "info"} />
+                    <Icon name="chevron-right" size={16} color={colors.textMuted} />
+                  </Pressable>
+                  {i < Math.min(4, recentOrders.length) - 1 ? <View style={[styles.hairline, { backgroundColor: colors.borderSoft }]} /> : null}
+                </View>
+              ))}
+            </View>
           </View>
         </ResponsiveContainer>
       </ScrollView>
@@ -521,115 +292,61 @@ export default function AdminDashboardScreen() {
   );
 }
 
+function recentLowPreview(batches: any[]) { return batches.slice(0, 4); }
+
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
-  scroll: {
-    padding: spacing.lg,
-    paddingBottom: spacing.xxl,
-  },
-  page: { width: "100%", alignSelf: "center", gap: spacing.lg },
-  pageTablet: { maxWidth: 860 },
-  pageWide: { maxWidth: 1120 },
-
-  sectionHead: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-    marginTop: spacing.xs,
-  },
-  sectionIndex: {
-    fontSize: typography.caption2,
-    fontWeight: "700",
-    letterSpacing: 0.8,
-  },
-  sectionTitle: {
-    fontSize: typography.footnote,
-    fontWeight: "700",
-    letterSpacing: typography.letterSpacing.tight,
-  },
-  sectionRule: { flex: 1, height: 1 },
-  sectionLink: {
-    fontSize: typography.footnote,
-    fontWeight: "600",
-  },
-
-  grid: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
-  statCell: { flexGrow: 1, flexBasis: "46%" },
-  statCellWide: { flexBasis: "22%" },
-
-  actionGrid: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
-  actionTile: {
-    flexGrow: 1,
-    flexBasis: "46%",
-    minHeight: 68,
-    borderRadius: sizes.borderRadius.md,
-    borderWidth: 1,
-    padding: spacing.md,
-    gap: spacing.xs,
-    justifyContent: "center",
-  },
-  actionTileWide: { flexBasis: "23%" },
-  iconTile: {
-    width: 28,
-    height: 28,
-    borderRadius: sizes.borderRadius.sm,
-    borderWidth: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  actionLabel: {
-    fontSize: typography.footnote,
-    fontWeight: "600",
-  },
-  actionMeta: { fontSize: typography.caption2 },
-
-  body: { flexDirection: "column", gap: spacing.lg },
-  bodyWide: { flexDirection: "row", alignItems: "flex-start" },
-  bodyCol: { flexDirection: "column", gap: spacing.lg, minWidth: 0 },
-  bodyColLeft: { flex: 1.6 },
-  bodyColRight: { flex: 1 },
-
-  panel: {
-    borderRadius: sizes.borderRadius.md,
-    borderWidth: 1,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-  },
-  listRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: spacing.sm,
-    paddingVertical: spacing.sm,
-    minHeight: 44,
-  },
-  listMain: { flex: 1, gap: spacing.xs },
-  listTitle: {
-    fontSize: typography.footnote,
-    fontWeight: "700",
-  },
-  listMeta: { fontSize: typography.caption2 },
-  rowDate: {
-    fontSize: typography.caption2,
-    letterSpacing: 0.2,
-  },
-  actionChip: {
-    borderWidth: 1,
-    borderRadius: sizes.borderRadius.sm,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-  },
-  actionChipText: {
-    fontSize: typography.caption2,
-    fontWeight: "700",
-    letterSpacing: 0.4,
-    textTransform: "uppercase",
-  },
-  inlineNote: { paddingVertical: spacing.md, alignItems: "flex-start" },
-  inlineNoteText: {
-    fontSize: typography.footnote,
-    fontWeight: "600",
-  },
-  pressed: { opacity: 0.6, transform: [{ scale: 0.99 }] },
+  scroll: { padding: spacing.lg, gap: spacing.md },
+  page: { gap: spacing.md },
+  heroGrid: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
+  heroCard: { flexGrow: 1, flexBasis: "46%", minHeight: 92, borderRadius: radius.xl, borderWidth: 1, padding: spacing.md, gap: 2 },
+  heroTop: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
+  heroIcon: { width: 26, height: 26, borderRadius: 13, alignItems: "center", justifyContent: "center" },
+  heroLabel: { fontSize: 10, fontWeight: "700", letterSpacing: 0.7, textTransform: "uppercase" },
+  heroValue: { fontSize: 22, fontWeight: "800", letterSpacing: -0.4, marginTop: spacing.xs },
+  heroSub: { fontSize: 11, fontWeight: "600" },
+  sparkWrap: { marginTop: spacing.xs, opacity: 0.9 },
+  heroFoot: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: spacing.xs },
+  dot: { width: 6, height: 6, borderRadius: 3 },
+  footText: { fontSize: 11 },
+  mission: { gap: spacing.sm },
+  missionWide: { flexDirection: "row", gap: spacing.sm },
+  missionLeft: { flex: 1, borderRadius: radius.xl, borderWidth: 1, padding: spacing.md },
+  missionRight: { borderRadius: radius.xl, borderWidth: 1, padding: spacing.md, minWidth: 160, alignItems: "center", gap: spacing.xs },
+  missionHead: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: spacing.sm },
+  missionTitle: { fontSize: 13, fontWeight: "800" },
+  missionCount: { fontSize: 11 },
+  missionSub: { fontSize: 11 },
+  donutRow: { flexDirection: "row", alignItems: "center", gap: spacing.md },
+  legend: { gap: 4 },
+  legRow: { flexDirection: "row", alignItems: "center", gap: 6 },
+  legDot: { width: 8, height: 8, borderRadius: 4 },
+  legText: { fontSize: 11, fontWeight: "600" },
+  expiry: { fontSize: 11, fontWeight: "600", marginTop: spacing.xs },
+  calm: { flexDirection: "row", alignItems: "center", gap: spacing.sm, paddingVertical: spacing.md },
+  calmText: { fontSize: 12, fontWeight: "600" },
+  row: { flexDirection: "row", alignItems: "center", gap: spacing.sm, paddingVertical: spacing.sm, minHeight: 44 },
+  rowIcon: { width: 28, height: 28, borderRadius: 14, borderWidth: 1, alignItems: "center", justifyContent: "center" },
+  rowMain: { flex: 1, gap: 2 },
+  rowTitle: { fontSize: 13, fontWeight: "700" },
+  rowSub: { fontSize: 11 },
+  chip: { borderWidth: 1, borderRadius: 20, paddingHorizontal: spacing.sm, paddingVertical: 4 },
+  chipText: { fontSize: 10, fontWeight: "700", letterSpacing: 0.3 },
   hairline: { height: 1 },
+  commandBar: { flexDirection: "row", alignItems: "center", borderRadius: radius.xl, borderWidth: 1, padding: spacing.xs, gap: spacing.xs },
+  cmd: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, paddingVertical: spacing.sm, borderRadius: radius.pill },
+  cmdText: { fontSize: 12, fontWeight: "700" },
+  cmdSep: { width: 1, height: 20 },
+  cockpit: { borderRadius: radius.xl, borderWidth: 1, padding: spacing.md, gap: spacing.sm },
+  cockpitHead: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  cockpitTitle: { fontSize: 13, fontWeight: "800" },
+  link: { fontSize: 12, fontWeight: "700" },
+  productMiniList: { flexDirection: "row", gap: spacing.sm, flexWrap: "wrap" },
+  miniCard: { flexGrow: 1, flexBasis: "46%", borderWidth: 1, borderRadius: radius.lg, padding: spacing.sm, gap: 4 },
+  miniName: { fontSize: 12, fontWeight: "700" },
+  miniMeta: { fontSize: 11 },
+  panel: { borderRadius: radius.xl, borderWidth: 1, padding: spacing.md, gap: spacing.xs },
+  panelHead: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: spacing.xs },
+  panelTitle: { fontSize: 13, fontWeight: "800" },
+  pressed: { opacity: 0.7, transform: [{ scale: 0.99 }] },
 });

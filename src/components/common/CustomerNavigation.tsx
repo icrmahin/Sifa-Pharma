@@ -5,7 +5,6 @@ import { useThemeColors } from "../../providers/ThemeProvider";
 import { useShadows } from "../../constants/shadows";
 import spacing from "../../constants/spacing";
 import { useCart } from "../../providers/CartProvider";
-import { useAuth } from "../../hooks/useAuth";
 import Icon from "./Icon";
 import type { IconName } from "./Icon";
 
@@ -14,46 +13,20 @@ const navigationItems: {
   path: string;
   icon: IconName;
   activeIcon: IconName;
+  badge?: boolean;
 }[] = [
-  {
-    label: "Home",
-    path: "/(customer)/(tabs)",
-    icon: "home",
-    activeIcon: "home",
-  },
-  {
-    label: "Search",
-    path: "/(customer)/search",
-    icon: "search",
-    activeIcon: "search",
-  },
-  {
-    label: "Cart",
-    path: "/(customer)/(tabs)/cart",
-    icon: "shopping-cart",
-    activeIcon: "shopping-cart",
-  },
-  {
-    label: "Favorites",
-    path: "/(customer)/(tabs)/products",
-    icon: "favorite-border",
-    activeIcon: "favorite",
-  },
-  {
-    label: "Settings",
-    path: "/(customer)/(tabs)/account",
-    icon: "settings",
-    activeIcon: "settings",
-  },
+  { label: "Home", path: "/(customer)/(tabs)", icon: "home", activeIcon: "home" },
+  { label: "Cart", path: "/(customer)/(tabs)/cart", icon: "shopping-cart", activeIcon: "shopping-cart", badge: true },
+  { label: "Favorites", path: "/(customer)/(tabs)/products", icon: "favorite-border", activeIcon: "favorite" },
+  { label: "Orders", path: "/(customer)/(tabs)/orders", icon: "receipt-long", activeIcon: "receipt-long" },
+  { label: "Settings", path: "/(customer)/(tabs)/account", icon: "settings", activeIcon: "settings" },
 ] as const;
 
 function getActivePath(pathname: string) {
   if (pathname.includes("/cart")) return "/(customer)/(tabs)/cart";
-  if (pathname.includes("/search")) return "/(customer)/search";
-  if (pathname.includes("/products") || pathname.includes("/product/"))
-    return "/(customer)/(tabs)/products";
-  if (pathname.includes("/account") || pathname.includes("/address") || pathname.includes("/settings"))
-    return "/(customer)/(tabs)/account";
+  if (pathname.includes("/orders") || pathname.includes("/order/")) return "/(customer)/(tabs)/orders";
+  if (pathname.includes("/products") || pathname.includes("/product/")) return "/(customer)/(tabs)/products";
+  if (pathname.includes("/account") || pathname.includes("/address") || pathname.includes("/settings") || pathname.includes("/notifications") || pathname.includes("/profile")) return "/(customer)/(tabs)/account";
   return "/(customer)/(tabs)";
 }
 
@@ -62,8 +35,7 @@ export default function CustomerNavigation() {
   const insets = useSafeAreaInsets();
   const colors = useThemeColors();
   const shadows = useShadows();
-  const { itemCount } = useCart();
-  const { isAdmin } = useAuth();
+  const { distinctCount } = useCart();
   const activePath = getActivePath(pathname);
 
   return (
@@ -73,8 +45,8 @@ export default function CustomerNavigation() {
         {
           paddingBottom: Math.max(insets.bottom, spacing.xs),
           backgroundColor: colors.backgroundAlt,
-          borderTopColor: colors.borderLight,
-          ...shadows.xl,
+          borderTopColor: colors.borderSoft,
+          ...shadows.sm,
         },
       ]}
     >
@@ -87,53 +59,21 @@ export default function CustomerNavigation() {
             onPress={() => router.replace(item.path as never)}
             android_ripple={{ color: colors.ripple.primary }}
             accessibilityRole="button"
-            accessibilityLabel={`${item.label}${item.label === "Cart" && itemCount > 0 ? `, ${itemCount} items` : ""}`}
+            accessibilityLabel={item.label}
             accessibilityState={{ selected: active }}
           >
-            <View
-              style={[
-                styles.iconContainer,
-                active && { backgroundColor: colors.primarySoft },
-              ]}
-            >
-              <Icon
-                name={active ? item.activeIcon : item.icon}
-                size={20}
-                color={active ? colors.primary : colors.textMuted}
-              />
-              {item.label === "Cart" && itemCount > 0 ? (
-                <View style={[styles.badge, { backgroundColor: colors.gold }]} accessibilityLabel={`${itemCount} items in cart`}>
-                  <Text style={[styles.badgeText, { color: colors.white }]}>
-                    {itemCount > 99 ? "99+" : itemCount}
-                  </Text>
+            <View style={[styles.iconContainer, active && { backgroundColor: colors.primarySoft }]}>
+              <Icon name={active ? item.activeIcon : item.icon} size={20} color={active ? colors.primary : colors.textMuted} />
+              {item.badge && distinctCount > 0 ? (
+                <View style={[styles.badge, { backgroundColor: colors.primary }]}>
+                  <Text style={[styles.badgeText, { color: colors.white }]}>{distinctCount > 99 ? "99+" : String(distinctCount)}</Text>
                 </View>
               ) : null}
             </View>
-            <Text
-              style={[
-                styles.label,
-                { color: active ? colors.primary : colors.textMuted },
-              ]}
-            >
-              {item.label}
-            </Text>
+            <Text style={[styles.label, { color: active ? colors.primary : colors.textMuted }]}>{item.label}</Text>
           </Pressable>
         );
       })}
-      {isAdmin ? (
-        <Pressable
-          style={({ pressed }) => [styles.item, pressed && styles.pressed]}
-          onPress={() => router.replace("/(admin)" as never)}
-          android_ripple={{ color: colors.ripple.primary }}
-          accessibilityRole="button"
-          accessibilityLabel="Open Admin"
-        >
-          <View style={styles.iconContainer}>
-            <Icon name="dashboard" size={20} color={colors.textMuted} />
-          </View>
-          <Text style={[styles.label, { color: colors.textMuted }]}>Admin</Text>
-        </Pressable>
-      ) : null}
     </View>
   );
 }

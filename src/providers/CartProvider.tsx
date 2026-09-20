@@ -11,6 +11,7 @@ type CartContextValue = {
   summary: CartSummary
   loading: boolean
   itemCount: number
+  distinctCount: number
   addItem: (productId: string, quantity?: number) => Promise<void>
   setQuantity: (itemId: string, quantity: number) => Promise<void>
   removeItem: (itemId: string) => Promise<void>
@@ -65,21 +66,50 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const addItem = useCallback(async (productId: string, quantity = 1) => {
     if (!user) throw new Error('User not authenticated')
+    // optimistic: if product already in cart, bump quantity immediately
+    const existing = items.find((i) => i.productId === productId || (i.product && (i.product as Product).id === productId))
+    if (existing) {
+      const prev = items
+      setItems((cur) => cur.map((it) => (it.id === existing.id ? { ...it, quantity: it.quantity + quantity } : it)))
+      try {
+        await addToCart(user.id, productId, quantity)
+      } catch (e) {
+        setItems(prev)
+        throw e
+      }
+      return
+    }
     await addToCart(user.id, productId, quantity)
     await loadCart()
-  }, [user, loadCart])
+  }, [user, loadCart, items])
 
   const setQuantity = useCallback(async (itemId: string, quantity: number) => {
     if (!user) throw new Error('User not authenticated')
-    await updateCartItemQuantity(user.id, itemId, quantity)
-    await loadCart()
-  }, [user, loadCart])
+    const prev = items
+    if (quantity <= 0) {
+      setItems((cur) => cur.filter((it) => it.id !== itemId))
+    } else {
+      setItems((cur) => cur.map((it) => (it.id === itemId ? { ...it, quantity } : it)))
+    }
+    try {
+      await updateCartItemQuantity(user.id, itemId, quantity)
+    } catch (e) {
+      setItems(prev)
+      throw e
+    }
+  }, [user, items])
 
   const removeItem = useCallback(async (itemId: string) => {
     if (!user) throw new Error('User not authenticated')
-    await removeFromCart(user.id, itemId)
-    await loadCart()
-  }, [user, loadCart])
+    const prev = items
+    setItems((cur) => cur.filter((it) => it.id !== itemId))
+    try {
+      await removeFromCart(user.id, itemId)
+    } catch (e) {
+      setItems(prev)
+      throw e
+    }
+  }, [user, items])
 
   const clear = useCallback(async () => {
     if (!user) throw new Error('User not authenticated')
@@ -99,6 +129,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [items])
 
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0)
+  const distinctCount = items.length
 
   const value = useMemo<CartContextValue>(
     () => ({
@@ -106,13 +137,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
       summary,
       loading,
       itemCount,
+      distinctCount,
       addItem,
       setQuantity,
       removeItem,
       clear,
       reload: loadCart,
     }),
-    [items, summary, loading, itemCount, addItem, setQuantity, removeItem, clear, loadCart]
+    [items, summary, loading, itemCount, distinctCount, addItem, setQuantity, removeItem, clear, loadCart]
   )
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>

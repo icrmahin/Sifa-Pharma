@@ -1,171 +1,48 @@
+# Sifa-Pharma — Build TODO
 
-### Sifa-Pharma — Main Build TODO
+## Sprint: UI/UX Overhaul — 2026-09-21
+> Instructions captured verbatim then expanded into actionable tasks.
+> **Constraint:** No git add / commit / push.
 
-* [x] **01 — Project foundation**
+### Raw Instructions From Owner
+1. Home page navigation (customer side): **remove** search, favorites, admin navigations.
+2. New navigation (customer `+` admin) items: `i. Home  ii. Cart  iii. Favorites  iv. Orders (customer side)  v. Settings`.
+3. Admin panel is accessible from the Settings menu only.
+4. Top-right cart button → replaced by **notification** button.
+5. Product details page: remove top Expo default navigator/Header to gain space; strip unnecessary info — keep **only** image, name, price, status (stock etc.), qty `+`/`-` selector, **Add to Cart** + **Cancel** button.
+6. Checkout page: proper section spacing; add **delete saved location** option; remove top `Checkout` + `<-` title bar (bring content higher) + add floating top-right **go-back** button; `Add new address` must be compact + thumb-reachable; `Add new address` + `Submit order` in **one row**.
+7. Cart semantics: 1 product = 1 cart item regardless of quantity (e.g. 10 packs of Napa = “1 item in cart”); `+`/`-` must be **optimistic** — no full reload per increment/decrement.
 
-  * Clean the cloned project
-  * Remove inherited Hibbullah backend/Supabase code
-  * Establish Sifa-Pharma project structure
-  * Configure TypeScript, Expo, ESLint, formatting, Git
-  * Add reusable `AGENT.md`
+### Decomposed Tasks
+- [ ] **NAV-01** Update `CustomerNavigation.tsx` — 5 items only, remove admin tab
+- [ ] **NAV-02** Update `(tabs)/_layout.tsx` — tabs align to Home/Cart/Favorites/Orders/Settings
+- [ ] **NAV-03** Update `CustomerDesktopHeader.tsx` — notifications icon instead of cart; clean nav links
+- [ ] **NAV-04** Update `(customer)/(tabs)/index.tsx` top bar — notifications instead of cart
+- [ ] **SETTINGS-01** Ensure admin entry lives ONLY in `account.tsx` Settings
+- [ ] **PDP-01** Redesign `products/[productId].tsx` — no Header, minimal info, qty +/-, Add to Cart + Cancel
+- [ ] **CHECKOUT-01** Redesign `checkout.tsx` — floating back, spacing, delete address, row buttons
+- [ ] **CART-01** `CartProvider.tsx` — expose `distinctCount`, optimistic `setQuantity`/`addItem` without reload
+- [ ] **CART-02** Wire all badges to `distinctCount` (not `itemCount`)
+- [ ] **QA** `tsc --noEmit` + `expo lint` + manual verification
 
-* [x] **02 — Brand assets**
+---
 
-  * Add finalized Sifa-Pharma logo
-  * Add light/dark logo variants
-  * Add app icon
-  * Add required fonts
-  * Optimize all image assets
-  * Establish asset naming/conventions
+## Foundation (Completed)
+- [x] **01 — Project foundation** — TS, Expo, ESLint, Git, structure
+- [x] **02 — Brand assets** — logos, icons, fonts
+- [x] **03 — Design tokens** — palette, typography, spacing, radius, shadows
+- [x] **04 — Core UI foundation** — primitives, buttons, inputs, etc.
+- [x] **05 — Industrial Transparent UI system**
+- [x] **06 — Physics / interaction system**
+- [x] **07 — Product architecture** — roles, flows, boundaries
+- [x] **08 — Backend from scratch** — schema, RLS, auth, storage
 
-* [x] **03 — Design tokens**
+## In-Progress / Remaining
+- [ ] **09 — Build the product** — auth, catalogue, cart, orders, notifications, settings
+- [ ] **10 — Integration** — frontend → API → DB, empty/error/offline states
+- [ ] **11 — Testing & quality** — typecheck, lint, unit/integration, perms
+- [ ] **12 — Performance / APK discipline** — deps, assets, bundle, startup/mem
+- [ ] **13 — EAS production** — config, prod env, AAB/APK, device test
+- [ ] **14 — Final polish** — UI/a11y/perf/security audit, cleanup, docs
 
-  * Deep Green `#123C35`
-  * Sage Green `#8FB8A8`
-  * Warm Gold `#D7B878`
-  * Off-White `#F6F7F4`
-  * Charcoal `#18201E`
-  * Typography system
-  * Spacing scale
-  * Radius scale
-  * Border system
-  * Shadow/elevation system
-  * Motion/physics tokens
-
-* [x] **04 — Core UI foundation**
-
-  * Screen/container primitives
-  * Typography components
-  * Buttons
-  * Icon buttons
-  * Inputs
-  * Selects
-  * Cards
-  * Badges/chips
-  * Toggles
-  * Alerts
-  * Navigation
-  * Tabs
-  * Lists
-  * Tables where actually needed
-  * Loading/empty/error states
-
-* [x] **05 — Industrial Transparent UI system**
-
-  * Layered surfaces
-  * Controlled transparency
-  * Borders/dividers
-  * Soft depth
-  * Technical visual details
-  * Consistent component geometry
-  * Avoid excessive glass/blur
-  * Keep everything readable and functional
-
-* [x] **06 — Physics / interaction system**
-
-  * Press compression
-  * Spring-based transitions
-  * Bouncy navigation
-  * Card interaction
-  * Gesture feedback
-  * Modal/sheet movement
-  * Microinteractions
-  * Reduced-motion handling
-  * Performance-safe animation architecture
-
-* [x] **07 — Product architecture**
-
-  * Define actual Sifa-Pharma requirements
-  * Define domain entities
-  * Define user roles
-  * Define application flows
-  * Define frontend state boundaries
-  * Define API boundaries
-  * Define backend responsibilities
-
-* [x] **08 — Backend from scratch**
-
-  * Database schema
-  * Relationships
-  * Constraints
-  * API structure
-  * Validation
-  * Authentication
-  * Authorization
-  * Error handling
-  * File/image storage
-  * Business logic
-  * Logging
-
-* [ ] **09 — Build the product**
-
-  * Authentication flow
-  * Main application
-  * Product/medicine functionality
-  * Admin functionality
-  * Customer functionality
-  * Orders/transactions if required
-  * Notifications if required
-  * Settings/account
-  * Every feature based on actual requirements
-
-* [ ] **10 — Integration**
-
-  * Connect frontend → API → database
-  * Replace development data
-  * Handle loading/error/empty states
-  * Handle offline/network failures
-  * Verify authorization boundaries
-
-* [ ] **11 — Testing & quality**
-
-  * Typecheck
-  * Lint
-  * Unit tests
-  * Integration tests
-  * Critical flow tests
-  * Error cases
-  * Permission tests
-  * Regression testing
-
-* [ ] **12 — Performance / APK discipline**
-
-  * Audit dependencies
-  * Audit native modules
-  * Compress/optimize assets
-  * Remove unused assets
-  * Remove unnecessary fonts
-  * Audit bundle
-  * Test release build
-  * Measure APK/AAB size
-  * Check startup performance
-  * Check memory usage
-  * Check animation performance
-
-* [ ] **13 — EAS production**
-
-  * Configure EAS
-  * Android application configuration
-  * Production environment variables
-  * Production build profile
-  * Build AAB/APK
-  * Install on physical device
-  * Test release behavior
-  * Verify final size
-
-* [ ] **14 — Final product polish**
-
-  * UI consistency audit
-  * Interaction audit
-  * Accessibility audit
-  * Performance audit
-  * Security audit
-  * Remove development leftovers
-  * Final Git cleanup
-  * Release documentation
-
-The important sequence is:
-
-**Brand → Tokens → UI primitives → UI system → Physics → Architecture → Backend → Features → Integration → Testing → EAS → Optimization → Release**
-
-
+Sequence: **Brand → Tokens → UI primitives → UI system → Physics → Architecture → Backend → Features → Integration → Testing → EAS → Optimization → Release**

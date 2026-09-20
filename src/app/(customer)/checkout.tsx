@@ -1,19 +1,15 @@
 /* eslint-disable react-hooks/set-state-in-effect -- data fetching and derived state sync require setState inside effects */
-import { goBack } from '@/utils/navigation';
-import React from "react";
+import { goBack } from "@/utils/navigation";
 import { router } from "expo-router";
 import { useState, useEffect } from "react";
-import { ScrollView, StyleSheet, Text, View, Pressable } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { ScrollView, StyleSheet, Text, View, Pressable, Alert } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useThemeColors } from "../../providers/ThemeProvider";
 import Button from "../../components/common/Button";
 import EmptyState from "../../components/common/EmptyState";
-import Header from "../../components/common/Header";
-import Input from "../../components/common/Input";
 import LoadingState from "../../components/common/LoadingState";
 import ResponsiveContainer from "../../components/common/ResponsiveContainer";
 import spacing from "../../constants/spacing";
-import typography from "../../constants/typography";
 import { useResponsive } from "../../hooks/useResponsive";
 import { useAuth } from "../../hooks/useAuth";
 import { useCart } from "../../providers/CartProvider";
@@ -25,38 +21,36 @@ import Icon from "../../components/common/Icon";
 
 export default function CheckoutScreen() {
   const colors = useThemeColors();
+  const insets = useSafeAreaInsets();
   const { items, summary, loading: cartLoading } = useCart();
   const { user, isAdmin } = useAuth();
-  const { data: addresses, loading: addressesLoading, create: createAddress, setDefault: setDefaultAddress } = useAddresses();
-  const { create: createOrder, loading: orderLoading, error: orderError } = useCreateOrder();
+  const { data: addresses, loading: addressesLoading, remove: removeAddress } = useAddresses();
+  const { create: createOrder } = useCreateOrder();
   const { isDesktop } = useResponsive();
 
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
-  const [address, setAddress] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
     if (addresses.length > 0 && !selectedAddressId) {
-      const defaultAddress = addresses.find(a => a.isDefault) || addresses[0];
+      const defaultAddress = addresses.find((a) => a.isDefault) || addresses[0];
       setSelectedAddressId(defaultAddress.id);
-      setAddress(`${defaultAddress.street}, ${defaultAddress.city}${defaultAddress.county ? `, ${defaultAddress.county}` : ''}${defaultAddress.postalCode ? `, ${defaultAddress.postalCode}` : ''}`);
     }
   }, [addresses, selectedAddressId]);
 
   const handleSubmit = async () => {
     if (!items.length || submitting || !selectedAddressId) return;
-    // Admin has no restriction: can shop without phone. User must have phone + address.
     if (!isAdmin) {
-      const phone = (user as any)?.phone || ''
+      const phone = (user as any)?.phone || "";
       if (!phone || !/^\+?8801[0-9]{9}$/.test(phone)) {
-        setError('Please add your Bangladeshi phone (+8801XXXXXXXXX, e.g. +8801865858544) in Account → Profile before ordering.');
+        setError("Please add your Bangladeshi phone (+8801XXXXXXXXX) in Account → Profile before ordering.");
         return;
       }
     }
     if (!selectedAddressId) {
-      setError('Please select or add a delivery address. User info is required to place order.');
+      setError("Please select or add a delivery address.");
       return;
     }
     setSubmitting(true);
@@ -71,124 +65,221 @@ export default function CheckoutScreen() {
     }
   };
 
-  const handleAddAddress = async () => {
-    const newAddress = await createAddress({
-      label: "Home",
-      street: address,
-      city: "Nairobi",
-      county: "Nairobi",
-      postalCode: "00100",
-      isDefault: true,
-    });
-    setSelectedAddressId(newAddress.id);
+  const handleDeleteAddress = (id: string) => {
+    Alert.alert("Delete address", "Remove this saved location?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await removeAddress(id);
+            if (selectedAddressId === id) setSelectedAddressId(addresses.find((a) => a.id !== id)?.id ?? null);
+          } catch (e) {
+            setError(normalizeError(e).message);
+          }
+        },
+      },
+    ]);
   };
 
   if (cartLoading || addressesLoading) return <LoadingState label="Loading checkout" />;
   if (!items.length) {
     return (
-      <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-        <Header title="Checkout" onBack={() => goBack()} />
+      <View style={[styles.safeArea, { backgroundColor: colors.background, paddingTop: insets.top + spacing.md }]}>
+        <Pressable
+          style={[styles.floatingBack, { backgroundColor: colors.backgroundAlt, borderColor: colors.borderLight }]}
+          onPress={() => goBack()}
+          accessibilityLabel="Go back"
+        >
+          <Icon name="arrow-back" size={18} color={colors.text} />
+        </Pressable>
         <EmptyState title="Your cart is empty" message="Add a medicine before checking out." actionLabel="Browse products" onAction={() => router.replace("/(customer)/(tabs)/products")} />
-      </SafeAreaView>
+      </View>
     );
   }
 
+  const addressSection = (
+    <View style={styles.section}>
+      <Text style={[styles.sectionTitle, { color: colors.text }]}>Delivery Address</Text>
+      <Text style={[styles.sectionHint, { color: colors.textMuted }]}>Choose where to deliver · swipe delete to remove</Text>
+      <View style={styles.addressList}>
+        {addresses.map((addr) => {
+          const active = selectedAddressId === addr.id;
+          return (
+            <Pressable
+              key={addr.id}
+              onPress={() => setSelectedAddressId(addr.id)}
+              style={[
+                styles.addressOption,
+                active && styles.addressOptionSelected,
+                { backgroundColor: active ? colors.primarySoft : colors.backgroundAlt, borderColor: active ? colors.primary : colors.borderLight },
+              ]}
+            >
+              <View style={styles.addressOptionContent}>
+                <Text style={[styles.addressLabel, { color: colors.text }]}>{addr.label}</Text>
+                <Text style={[styles.addressDetail, { color: colors.textMuted }]} numberOfLines={2}>
+                  {addr.street}, {addr.city}
+                  {addr.county ? `, ${addr.county}` : ""}
+                  {addr.postalCode ? ` · ${addr.postalCode}` : ""}
+                </Text>
+              </View>
+              <View style={styles.addressActions}>
+                {active && <Icon name="check-circle" size={18} color={colors.primary} />}
+                <Pressable
+                  onPress={() => handleDeleteAddress(addr.id)}
+                  hitSlop={8}
+                  style={[styles.deleteBtn, { backgroundColor: colors.danger + "12" }]}
+                  accessibilityLabel={`Delete ${addr.label}`}
+                >
+                  <Icon name="delete-outline" size={16} color={colors.danger} />
+                </Pressable>
+              </View>
+            </Pressable>
+          );
+        })}
+        {addresses.length === 0 ? <Text style={[styles.emptyHint, { color: colors.textMuted }]}>No saved addresses — add one below.</Text> : null}
+      </View>
+    </View>
+  );
+
+  const summaryBox = (
+    <View style={[styles.summaryBox, { backgroundColor: colors.backgroundAlt, borderColor: colors.borderLight }]}>
+      <Text style={[styles.sectionTitle, { color: colors.text, marginBottom: spacing.sm }]}>Order summary</Text>
+      {items.map((item) => (
+        <View key={item.id} style={styles.row}>
+          <Text style={[styles.rowLabel, { color: colors.text }]} numberOfLines={1}>
+            {item.product.name}
+          </Text>
+          <Text style={[styles.rowValue, { color: colors.textMuted }]}>
+            {item.quantity} × {formatCurrency(item.product.price)}
+          </Text>
+        </View>
+      ))}
+      <View style={[styles.divider, { backgroundColor: colors.borderSoft }]} />
+      <View style={styles.row}>
+        <Text style={[styles.rowLabel, { color: colors.textMuted }]}>Subtotal</Text>
+        <Text style={[styles.rowValue, { color: colors.text }]}>{formatCurrency(summary.subtotal)}</Text>
+      </View>
+      <View style={styles.row}>
+        <Text style={[styles.rowLabel, { color: colors.textMuted }]}>Discount</Text>
+        <Text style={[styles.rowValue, { color: colors.success }]}>-{formatCurrency(summary.discount)}</Text>
+      </View>
+      <View style={styles.row}>
+        <Text style={[styles.rowLabel, { color: colors.textMuted }]}>Delivery</Text>
+        <Text style={[styles.rowValue, { color: colors.text }]}>{formatCurrency(summary.deliveryFee)}</Text>
+      </View>
+      <View style={[styles.row, styles.totalRow, { borderTopColor: colors.borderLight }]}>
+        <Text style={[styles.totalText, { color: colors.text }]}>Total</Text>
+        <Text style={[styles.totalText, { color: colors.text }]}>{formatCurrency(summary.total)}</Text>
+      </View>
+    </View>
+  );
+
+  const paymentBox = (
+    <View style={[styles.paymentBox, { backgroundColor: colors.backgroundAlt, borderColor: colors.borderLight }]}>
+      <Text style={[styles.sectionTitle, { color: colors.text }]}>Payment</Text>
+      <Text style={[styles.paymentMethod, { color: colors.textMuted }]}>Cash on Delivery</Text>
+    </View>
+  );
+
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-      <Header title="Checkout" onBack={() => goBack()} />
-      <ScrollView contentContainerStyle={styles.container}>
+    <View style={[styles.safeArea, { backgroundColor: colors.background }]}>
+      {/* Floating top-right go back — thumb reachable, no title bar */}
+      <View style={[styles.floatingWrap, { top: insets.top + spacing.sm }]}>
+        <Pressable
+          style={[styles.floatingBack, { backgroundColor: colors.backgroundAlt, borderColor: colors.borderLight }]}
+          onPress={() => goBack()}
+          accessibilityLabel="Go back"
+          hitSlop={8}
+        >
+          <Icon name="arrow-back" size={18} color={colors.text} />
+        </Pressable>
+      </View>
+
+      <ScrollView contentContainerStyle={[styles.container, { paddingTop: insets.top + 52, paddingBottom: Math.max(insets.bottom, spacing.lg) + 24 }]} showsVerticalScrollIndicator={false}>
         <ResponsiveContainer maxWidth={isDesktop ? 960 : 1320}>
           {isDesktop ? (
             <View style={styles.desktopLayout}>
               <View style={styles.formColumn}>
-                <Input label="Customer name" value={user?.name ?? user?.email ?? "Customer"} editable={false} />
-                <View style={styles.addressSection}>
-                  <Text style={[styles.sectionTitle, { color: colors.text }]}>Delivery Address</Text>
-                  {addresses.map((addr) => (
-                    <Pressable key={addr.id} style={[styles.addressOption, selectedAddressId === addr.id && styles.addressOptionSelected, { backgroundColor: selectedAddressId === addr.id ? colors.primarySoft : colors.backgroundAlt, borderColor: selectedAddressId === addr.id ? colors.primary : colors.border }]} onPress={() => { setSelectedAddressId(addr.id); setAddress(`${addr.street}, ${addr.city}${addr.county ? `, ${addr.county}` : ''}${addr.postalCode ? `, ${addr.postalCode}` : ''}`); }}>
-                      <View style={styles.addressOptionContent}>
-                        <Text style={[styles.addressLabel, { color: colors.text }]}>{addr.label}</Text>
-                        <Text style={[styles.addressDetail, { color: colors.textMuted }]}>{addr.street}, ${addr.city}${addr.county ? `, ${addr.county}` : ''}</Text>
-                      </View>
-{selectedAddressId === addr.id && <Icon name="check-circle-outline" size={20} color={colors.primary} />}
-                    </Pressable>
-                  ))}
-                  <Pressable style={[styles.addressOption, styles.addAddressButton, { backgroundColor: colors.backgroundAlt, borderColor: colors.border, borderStyle: 'dashed' }]} onPress={() => router.push("/(customer)/address/edit")}>
-<Icon name="add" size={20} color={colors.primary} />
-                    <Text style={[styles.addAddressText, { color: colors.primary }]}>Add new address</Text>
-                  </Pressable>
-                </View>
+                {addressSection}
+                {paymentBox}
               </View>
               <View style={styles.summaryColumn}>
-                <View style={[styles.summaryBox, { backgroundColor: colors.backgroundAlt, borderColor: colors.border }]}>
-                  <Text style={[styles.sectionTitle, { color: colors.text }]}>Order summary</Text>
-                  {items.map((item) => (
-                    <View key={item.id} style={styles.row}><Text>{item.product.name}</Text><Text>{item.quantity} x {formatCurrency(item.product.price)}</Text></View>
-                  ))}
-                  <View style={styles.row}><Text>Subtotal</Text><Text>{formatCurrency(summary.subtotal)}</Text></View>
-                  <View style={styles.row}><Text>Discount</Text><Text>-{formatCurrency(summary.discount)}</Text></View>
-                  <View style={styles.row}><Text>Delivery</Text><Text>{formatCurrency(summary.deliveryFee)}</Text></View>
-                  <View style={[styles.row, styles.total, { borderTopColor: colors.border }]}><Text style={[styles.totalText, { color: colors.text }]}>Total</Text><Text style={[styles.totalText, { color: colors.text }]}>{formatCurrency(summary.total)}</Text></View>
-                </View>
-                <View style={[styles.paymentBox, { backgroundColor: colors.backgroundAlt, borderColor: colors.border }]}>
-                  <Text style={[styles.sectionTitle, { color: colors.text }]}>Payment</Text>
-                  <Text style={[styles.paymentMethod, { color: colors.textMuted }]}>Cash on Delivery</Text>
-                </View>
+                {summaryBox}
                 {error ? <Text style={[styles.error, { color: colors.danger }]}>{error}</Text> : null}
-                {success ? <Text style={[styles.success, { color: colors.success }]}>Order submitted and added to your delivery cycle.</Text> : null}
-                <Button title={success ? "View delivery cycle" : "Submit order"} onPress={success ? () => router.replace("/(customer)/delivery-cycle") : handleSubmit} loading={submitting} disabled={success || !selectedAddressId || submitting} fullWidth />
+                {success ? <Text style={[styles.success, { color: colors.success }]}>Order submitted — view delivery cycle.</Text> : null}
+                <View style={styles.bottomRow}>
+                  <View style={{ flex: 1 }}>
+                    <Button title="Add address" variant="secondary" onPress={() => router.push("/(customer)/address/edit")} fullWidth />
+                  </View>
+                  <View style={{ flex: 1.2 }}>
+                    <Button
+                      title={success ? "View cycle" : "Submit order"}
+                      onPress={success ? () => router.replace("/(customer)/delivery-cycle") : handleSubmit}
+                      loading={submitting}
+                      disabled={success ? false : !selectedAddressId || submitting}
+                      fullWidth
+                    />
+                  </View>
+                </View>
               </View>
             </View>
           ) : (
-            <>
-              <View style={styles.addressSection}>
-                <Text style={[styles.sectionTitle, { color: colors.text }]}>Delivery Address</Text>
-                {addresses.map((addr) => (
-                  <Pressable key={addr.id} style={[styles.addressOption, selectedAddressId === addr.id && styles.addressOptionSelected, { backgroundColor: selectedAddressId === addr.id ? colors.primarySoft : colors.backgroundAlt, borderColor: selectedAddressId === addr.id ? colors.primary : colors.border }]} onPress={() => { setSelectedAddressId(addr.id); setAddress(`${addr.street}, ${addr.city}${addr.county ? `, ${addr.county}` : ''}${addr.postalCode ? `, ${addr.postalCode}` : ''}`); }}>
-                    <View style={styles.addressOptionContent}>
-                      <Text style={[styles.addressLabel, { color: colors.text }]}>{addr.label}</Text>
-                      <Text style={[styles.addressDetail, { color: colors.textMuted }]}>{addr.street}, ${addr.city}${addr.county ? `, ${addr.county}` : ''}</Text>
-                    </View>
-                    {selectedAddressId === addr.id && <Icon name="check-circle-outline" size={20} color={colors.primary} />}
-                  </Pressable>
-                ))}
-                <Pressable style={[styles.addressOption, styles.addAddressButton, { backgroundColor: colors.backgroundAlt, borderColor: colors.border, borderStyle: 'dashed' }]} onPress={() => router.push("/(customer)/address/edit")}>
-                  <Icon name="add" size={20} color={colors.primary} />
-                  <Text style={[styles.addAddressText, { color: colors.primary }]}>Add new address</Text>
-                </Pressable>
-              </View>
-              <View style={[styles.summaryBox, { backgroundColor: colors.backgroundAlt, borderColor: colors.border }]}>
-                <Text style={[styles.sectionTitle, { color: colors.text }]}>Order summary</Text>
-                {items.map((item) => (
-                  <View key={item.id} style={styles.row}><Text>{item.product.name}</Text><Text>{item.quantity} x {formatCurrency(item.product.price)}</Text></View>
-                ))}
-                <View style={styles.row}><Text>Subtotal</Text><Text>{formatCurrency(summary.subtotal)}</Text></View>
-                <View style={styles.row}><Text>Discount</Text><Text>-{formatCurrency(summary.discount)}</Text></View>
-                <View style={styles.row}><Text>Delivery</Text><Text>{formatCurrency(summary.deliveryFee)}</Text></View>
-                <View style={[styles.row, styles.total, { borderTopColor: colors.border }]}><Text style={[styles.totalText, { color: colors.text }]}>Total</Text><Text style={[styles.totalText, { color: colors.text }]}>{formatCurrency(summary.total)}</Text></View>
-              </View>
-              <View style={[styles.paymentBox, { backgroundColor: colors.backgroundAlt, borderColor: colors.border }]}>
-                <Text style={[styles.sectionTitle, { color: colors.text }]}>Payment</Text>
-                <Text style={[styles.paymentMethod, { color: colors.textMuted }]}>Cash on Delivery</Text>
-              </View>
+            <View style={styles.mobileStack}>
+              {addressSection}
+              {summaryBox}
+              {paymentBox}
               {error ? <Text style={[styles.error, { color: colors.danger }]}>{error}</Text> : null}
-              {success ? <Text style={[styles.success, { color: colors.success }]}>Order submitted and added to your delivery cycle.</Text> : null}
-              <Button title={success ? "View delivery cycle" : "Submit order"} onPress={success ? () => router.replace("/(customer)/delivery-cycle") : handleSubmit} loading={submitting} disabled={success || !selectedAddressId || submitting} fullWidth />
-            </>
+              {success ? <Text style={[styles.success, { color: colors.success }]}>Order submitted — view delivery cycle.</Text> : null}
+              {/* Compact thumb-reachable row */}
+              <View style={styles.bottomRow}>
+                <View style={{ flex: 1 }}>
+                  <Button title="Add address" variant="secondary" onPress={() => router.push("/(customer)/address/edit")} fullWidth />
+                </View>
+                <View style={{ flex: 1.2 }}>
+                  <Button
+                    title={success ? "View cycle" : "Submit order"}
+                    onPress={success ? () => router.replace("/(customer)/delivery-cycle") : handleSubmit}
+                    loading={submitting}
+                    disabled={success ? false : !selectedAddressId || submitting}
+                    fullWidth
+                  />
+                </View>
+              </View>
+            </View>
           )}
         </ResponsiveContainer>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
-  container: { padding: spacing.lg, gap: spacing.lg, paddingBottom: spacing.xxl },
+  floatingWrap: { position: "absolute", right: 16, zIndex: 10 },
+  floatingBack: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  container: { paddingHorizontal: spacing.lg, gap: spacing.lg },
   desktopLayout: { flexDirection: "row", gap: spacing.xl },
   formColumn: { flex: 1, gap: spacing.lg },
   summaryColumn: { flex: 1, gap: spacing.lg },
-  addressSection: { gap: spacing.sm },
+  mobileStack: { gap: spacing.lg },
+  section: { gap: spacing.sm },
+  sectionTitle: { fontWeight: "700", fontSize: 14 },
+  sectionHint: { fontSize: 11, marginTop: -4 },
+  addressList: { gap: spacing.sm, marginTop: spacing.xs },
   addressOption: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -196,26 +287,25 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     borderRadius: 12,
     borderWidth: 1,
+    gap: spacing.sm,
   },
-  addressOptionSelected: {
-    borderWidth: 2,
-  },
-  addressOptionContent: { flex: 1 },
-  addressLabel: { fontWeight: "600", fontSize: 14 },
-  addressDetail: { fontSize: 12, marginTop: 2 },
-  addAddressButton: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: spacing.lg,
-  },
-  addAddressText: { fontWeight: "600" },
-  summaryBox: { borderRadius: 16, borderWidth: 1, padding: spacing.lg },
-  sectionTitle: { fontWeight: "700", fontSize: 14, marginBottom: spacing.md },
-  row: { flexDirection: "row", justifyContent: "space-between", marginBottom: spacing.sm },
-  total: { borderTopWidth: 1, borderTopColor: "#D0D6D4", paddingTop: spacing.md, marginTop: spacing.md },
+  addressOptionSelected: { borderWidth: 2 },
+  addressOptionContent: { flex: 1, gap: 2 },
+  addressLabel: { fontWeight: "700", fontSize: 13 },
+  addressDetail: { fontSize: 12, lineHeight: 16 },
+  addressActions: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
+  deleteBtn: { width: 30, height: 30, borderRadius: 15, alignItems: "center", justifyContent: "center" },
+  emptyHint: { fontSize: 12, paddingVertical: spacing.sm },
+  summaryBox: { borderRadius: 16, borderWidth: 1, padding: spacing.lg, gap: spacing.xs },
+  row: { flexDirection: "row", justifyContent: "space-between", gap: spacing.md, marginBottom: spacing.xs },
+  rowLabel: { fontSize: 12, flex: 1 },
+  rowValue: { fontSize: 12, fontWeight: "600" },
+  divider: { height: 1, marginVertical: spacing.sm },
+  totalRow: { marginTop: spacing.sm, paddingTop: spacing.md, borderTopWidth: 1 },
   totalText: { fontWeight: "800", fontSize: 14 },
-  paymentBox: { borderRadius: 16, borderWidth: 1, padding: spacing.lg },
-  paymentMethod: { fontSize: 12 },
+  paymentBox: { borderRadius: 16, borderWidth: 1, padding: spacing.lg, gap: spacing.xs },
+  paymentMethod: { fontSize: 12, marginTop: 2 },
   error: { fontSize: 12, textAlign: "center" },
   success: { fontSize: 12, textAlign: "center" },
+  bottomRow: { flexDirection: "row", gap: spacing.md, marginTop: spacing.sm },
 });

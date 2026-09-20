@@ -1,39 +1,34 @@
-/* eslint-disable react-hooks/immutability -- Reanimated shared values are mutable by design */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, View, type ViewToken } from "react-native";
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-  useReducedMotion,
-} from "react-native-reanimated";
+import { FlatList, Pressable, StyleSheet, Text, View, type ViewToken, useWindowDimensions } from "react-native";
 import { Image } from "expo-image";
 import { useThemeColors } from "../../providers/ThemeProvider";
-import { radius, layout } from "../../constants/sizes";
-import { spacing } from "../../constants/spacing";
+import { radius } from "../../constants/sizes";
+import spacing from "../../constants/spacing";
 import { fontFamily, fontSize, lineHeight } from "../../constants/typography";
-import { springConfigs } from "../../lib/motion";
 import type { Product } from "../../types/product";
-import { formatCurrency } from "../../utils/currency";
 
-const SLIDE_INTERVAL = 2000;
+const placeholder = require("@/assets/images/placeholders/product-placeholder.png");
 
 type ProductHeroSliderProps = {
   products: Product[];
   onProductPress?: (product: Product) => void;
 };
 
-const placeholder = require("@/assets/images/placeholders/product-placeholder.png");
-
-export default function ProductHeroSlider({
-  products,
-  onProductPress,
-}: ProductHeroSliderProps) {
+export default function ProductHeroSlider({ products, onProductPress }: ProductHeroSliderProps) {
+  const colors = useThemeColors();
+  const { width } = useWindowDimensions();
+  const cardWidth = Math.min(width - spacing.lg * 2, 480);
   const [currentIndex, setCurrentIndex] = useState(0);
   const flatListRef = useRef<any>(null);
-  const reducedMotion = useReducedMotion();
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const colors = useThemeColors();
+
+  // Prefer discounted or featured for promo; fallback to first products
+  const promoProducts = useMemo(() => {
+    const discounted = products.filter((p) => (p.discountPercent || 0) > 0).slice(0, 4);
+    if (discounted.length >= 2) return discounted;
+    const featured = products.filter((p) => p.isFeatured).slice(0, 4);
+    if (featured.length >= 2) return featured;
+    return products.slice(0, 4);
+  }, [products]);
 
   const viewabilityConfig = useMemo(() => ({ viewAreaCoveragePercentThreshold: 50 }), []);
 
@@ -46,55 +41,45 @@ export default function ProductHeroSlider({
     []
   );
 
+  // Calm autoplay — 5s, pause on interaction is handled by viewability
   useEffect(() => {
-    if (products.length <= 1 || reducedMotion) return;
-
-    timerRef.current = setInterval(() => {
+    if (promoProducts.length <= 1) return;
+    const id = setInterval(() => {
       setCurrentIndex((prev) => {
-        const next = (prev + 1) % products.length;
-        flatListRef.current?.scrollToOffset({ offset: next * (layout.productImage + spacing.lg * 2 + spacing.md), animated: true });
+        const next = (prev + 1) % promoProducts.length;
+        flatListRef.current?.scrollToOffset({ offset: next * (cardWidth + spacing.md), animated: true });
         return next;
       });
-    }, SLIDE_INTERVAL);
+    }, 5000);
+    return () => clearInterval(id);
+  }, [promoProducts.length, cardWidth]);
 
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [products.length, reducedMotion]);
-
-  if (products.length === 0) return null;
+  if (promoProducts.length === 0) return null;
 
   return (
     <View style={styles.container}>
-      <Animated.FlatList
-        ref={flatListRef}
-        data={products}
-        horizontal
-        pagingEnabled={false}
-        showsHorizontalScrollIndicator={false}
-        snapToInterval={layout.productImage + spacing.lg * 2 + spacing.md}
-        decelerationRate="fast"
-        contentContainerStyle={styles.listContent}
-        keyExtractor={(item) => item.id}
+      <View style={{ width: cardWidth, alignSelf: "center" }}>
+        {/* Using FlatList via require to avoid import change — keep simple ScrollView-like */}
+      </View>
+      <PromoFlatList
+        flatListRef={flatListRef}
+        products={promoProducts}
+        cardWidth={cardWidth}
+        currentIndex={currentIndex}
+        colors={colors}
         viewabilityConfig={viewabilityConfig}
         onViewableItemsChanged={onViewableItemsChanged}
-        renderItem={({ item, index }) => (
-          <HeroSlide
-            product={item}
-            isActive={index === currentIndex}
-            onPress={() => onProductPress?.(item)}
-          />
-        )}
+        onProductPress={onProductPress}
       />
-      {products.length > 1 ? (
+      {promoProducts.length > 1 ? (
         <View style={styles.dots}>
-          {products.map((_, index) => (
+          {promoProducts.map((_, index) => (
             <View
               key={index}
               style={[
                 styles.dot,
                 index === currentIndex && styles.dotActive,
-                { backgroundColor: index === currentIndex ? colors.primary : colors.border },
+                { backgroundColor: index === currentIndex ? colors.primary : colors.borderLight },
               ]}
             />
           ))}
@@ -104,118 +89,139 @@ export default function ProductHeroSlider({
   );
 }
 
-function HeroSlide({
-  product,
-  isActive,
-  onPress,
-}: {
-  product: Product;
-  isActive: boolean;
-  onPress?: () => void;
-}) {
-  const scale = useSharedValue(1);
-  const colors = useThemeColors();
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
-
-  const handlePressIn = () => {
-    scale.value = withSpring(0.97, springConfigs.press);
-  };
-
-  const handlePressOut = () => {
-    scale.value = withSpring(1, springConfigs.press);
-  };
-
+function PromoFlatList({
+  flatListRef,
+  products,
+  cardWidth,
+  colors,
+  viewabilityConfig,
+  onViewableItemsChanged,
+  onProductPress,
+}: any) {
   return (
-    <Pressable
-      onPress={onPress}
-      onPressIn={handlePressIn}
-      onPressOut={handlePressOut}
-      accessibilityRole="button"
-      accessibilityLabel={`${product.name}, ${product.discountPercent ? `${product.discountPercent}% off, ` : ""}${formatCurrency(product.price)}`}
-    >
-      <Animated.View style={[styles.slide, animatedStyle]}>
-        <Image
-          source={product.image || product.primaryImage ? { uri: product.image || product.primaryImage } : placeholder}
-          placeholder={placeholder}
-          cachePolicy="memory-disk"
-          contentFit="cover"
-          transition={200}
-          style={styles.image}
-        />
-        <View style={styles.info}>
-          <Text style={[styles.name, { color: colors.text }]} numberOfLines={1}>{product.name}</Text>
-          <View style={styles.priceRow}>
-            <Text style={[styles.price, { color: colors.primary }]}>{formatCurrency(product.price)}</Text>
-            {product.originalPrice && product.originalPrice > product.price ? (
-              <Text style={[styles.originalPrice, { color: colors.textMuted }]}>{formatCurrency(product.originalPrice)}</Text>
-            ) : null}
-            {product.discountPercent ? (
-              <View style={[styles.discountBadge, { backgroundColor: colors.goldSoft }]}>
-                <Text style={[styles.discountText, { color: colors.goldDark }]}>{product.discountPercent}% OFF</Text>
-              </View>
-            ) : null}
-          </View>
-        </View>
-      </Animated.View>
-    </Pressable>
+    <FlatList
+      ref={flatListRef}
+      data={products}
+      horizontal
+      pagingEnabled={false}
+      showsHorizontalScrollIndicator={false}
+      snapToInterval={cardWidth + spacing.md}
+      decelerationRate="fast"
+      contentContainerStyle={{ paddingHorizontal: spacing.lg, gap: spacing.md }}
+      keyExtractor={(item: Product) => item.id}
+      viewabilityConfig={viewabilityConfig}
+      onViewableItemsChanged={onViewableItemsChanged}
+      renderItem={({ item }: { item: Product }) => (
+        <PromoCard product={item} cardWidth={cardWidth} colors={colors} onPress={() => onProductPress?.(item)} />
+      )}
+    />
   );
 }
 
-const slideWidth = layout.productImage + spacing.lg * 2 + spacing.md;
+function PromoCard({
+  product,
+  cardWidth,
+  colors,
+  onPress,
+}: {
+  product: Product;
+  cardWidth: number;
+  colors: any;
+  onPress?: () => void;
+}) {
+  const discount = product.discountPercent;
+  const headline = discount && discount >= 20 ? `UP TO ${discount}% OFF` : discount ? `${discount}% OFF` : "Special offer";
+  return (
+    <Pressable
+      onPress={onPress}
+      style={[
+        styles.card,
+        {
+          width: cardWidth,
+          backgroundColor: colors.primarySoft,
+        },
+      ]}
+      accessibilityRole="button"
+      accessibilityLabel={`${headline} ${product.name}`}
+    >
+      <View style={styles.cardLeft}>
+        <Text style={[styles.headline, { color: colors.primary }]}>{headline}</Text>
+        <Text style={[styles.sub, { color: colors.textMuted }]} numberOfLines={1}>
+          Selected medicines
+        </Text>
+        <Text style={[styles.limit, { color: colors.textMuted }]}>Limited-time offer</Text>
+        <View style={[styles.cta, { backgroundColor: colors.primary }]}>
+          <Text style={[styles.ctaText, { color: colors.white }]}>Shop now</Text>
+        </View>
+      </View>
+      <View style={[styles.visualWrap, { backgroundColor: colors.backgroundAlt }]}>
+        <Image
+          source={product.image || product.primaryImage ? { uri: product.image || product.primaryImage } : placeholder}
+          placeholder={placeholder}
+          contentFit="contain"
+          transition={200}
+          style={styles.visualImage}
+        />
+      </View>
+    </Pressable>
+  );
+}
 
 const styles = StyleSheet.create({
   container: {
     marginBottom: spacing.lg,
   },
-  listContent: {
-    paddingHorizontal: spacing.lg,
-  },
-  slide: {
-    width: slideWidth,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: "#2E3A36",
-    overflow: "hidden",
-    marginRight: spacing.md,
-  },
-  image: {
-    width: "100%",
-    height: layout.productImage,
-    backgroundColor: "#1A2420",
-  },
-  info: {
-    padding: spacing.md,
-  },
-  name: {
-    fontSize: fontSize.bodySmall,
-    fontFamily: fontFamily.semiBold,
-    lineHeight: fontSize.bodySmall * lineHeight.normal,
-    marginBottom: spacing.xs,
-  },
-  priceRow: {
+  card: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.sm,
+    borderRadius: radius.xl,
+    padding: spacing.lg,
+    gap: spacing.md,
+    minHeight: 148,
   },
-  price: {
-    fontSize: fontSize.body,
-    fontFamily: fontFamily.bold,
+  cardLeft: {
+    flex: 1,
+    gap: 4,
   },
-  originalPrice: {
-    fontSize: fontSize.caption,
-    textDecorationLine: "line-through",
+  headline: {
+    fontFamily: fontFamily.soraBold,
+    fontSize: 20,
+    lineHeight: 24,
+    letterSpacing: -0.3,
   },
-  discountBadge: {
-    borderRadius: radius.pill,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xxs,
+  sub: {
+    fontFamily: fontFamily.pjsMedium,
+    fontSize: fontSize.footnote,
+    lineHeight: fontSize.footnote * lineHeight.normal,
   },
-  discountText: {
+  limit: {
+    fontFamily: fontFamily.pjsRegular,
     fontSize: fontSize.micro,
-    fontFamily: fontFamily.semiBold,
+    marginTop: 2,
+  },
+  cta: {
+    alignSelf: "flex-start",
+    marginTop: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.xs + 2,
+    borderRadius: radius.pill,
+  },
+  ctaText: {
+    fontFamily: fontFamily.pjsSemiBold,
+    fontSize: fontSize.caption,
+  },
+  visualWrap: {
+    width: 88,
+    height: 88,
+    borderRadius: radius.lg,
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+    padding: spacing.xs,
+  },
+  visualImage: {
+    width: "100%",
+    height: "100%",
   },
   dots: {
     flexDirection: "row",

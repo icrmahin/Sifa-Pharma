@@ -1,7 +1,6 @@
 import { Image } from "expo-image";
 import { memo } from "react";
 import { StyleSheet, type ImageStyle, type StyleProp } from "react-native";
-import { useThemeColors } from "../../providers/ThemeProvider";
 
 const placeholder = require("@/assets/images/placeholders/product-placeholder.png");
 
@@ -9,10 +8,10 @@ type ProductImageProps = {
   uri?: string | null;
   recyclingKey?: string;
   style?: StyleProp<ImageStyle>;
+  contentFit?: "cover" | "contain";
 };
 
-function ProductImage({ uri, recyclingKey, style }: ProductImageProps) {
-  const colors = useThemeColors();
+function ProductImage({ uri, recyclingKey, style, contentFit = "cover" }: ProductImageProps) {
   return (
     <Image
       source={uri ? { uri } : placeholder}
@@ -20,9 +19,9 @@ function ProductImage({ uri, recyclingKey, style }: ProductImageProps) {
       recyclingKey={recyclingKey}
       cachePolicy="memory-disk"
       priority="low"
-      contentFit="cover"
+      contentFit={contentFit}
       transition={recyclingKey ? 0 : 180}
-      style={[styles.image, { backgroundColor: colors.background }, style]}
+      style={[styles.image, style]}
     />
   );
 }

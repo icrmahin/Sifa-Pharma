@@ -20,19 +20,16 @@ export default function CustomerCartScreen() {
   const colors = useThemeColors();
   const { items, summary, loading, setQuantity, removeItem } = useCart();
   const [error, setError] = useState<string | null>(null);
-  const [updating, setUpdating] = useState(false);
   const { isDesktop } = useResponsive();
 
   const updateQuantity = async (itemId: string, quantity: number) => {
-    setUpdating(true);
     setError(null);
-    try { await setQuantity(itemId, quantity); } catch (nextError) { setError(normalizeError(nextError).message); } finally { setUpdating(false); }
+    try { await setQuantity(itemId, quantity); } catch (nextError) { setError(normalizeError(nextError).message); }
   };
 
   const removeCartItem = async (itemId: string) => {
-    setUpdating(true);
     setError(null);
-    try { await removeItem(itemId); } catch (nextError) { setError(normalizeError(nextError).message); } finally { setUpdating(false); }
+    try { await removeItem(itemId); } catch (nextError) { setError(normalizeError(nextError).message); }
   };
 
   if (loading) return <LoadingState label="Loading your cart" />;
@@ -60,7 +57,7 @@ export default function CustomerCartScreen() {
                 </View>
                 <View style={styles.actions}>
                   <Button title="Continue shopping" variant="secondary" onPress={() => router.push("/(customer)/(tabs)/products")} fullWidth />
-                  <Button title="Proceed to checkout" onPress={() => router.push("/(customer)/checkout")} disabled={items.length === 0 || updating} fullWidth />
+                  <Button title="Proceed to checkout" onPress={() => router.push("/(customer)/checkout")} disabled={items.length === 0} fullWidth />
                 </View>
               </View>
             </View>
@@ -75,7 +72,7 @@ export default function CustomerCartScreen() {
               </View>
               <View style={styles.actions}>
                 <Button title="Continue shopping" variant="secondary" onPress={() => router.push("/(customer)/(tabs)/products")} fullWidth />
-                <Button title="Proceed to checkout" onPress={() => router.push("/(customer)/checkout")} disabled={items.length === 0 || updating} fullWidth />
+                <Button title="Proceed to checkout" onPress={() => router.push("/(customer)/checkout")} disabled={items.length === 0} fullWidth />
               </View>
             </>
           )}

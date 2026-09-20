@@ -15,9 +15,9 @@ export default function CustomerTabsLayout() {
       }}
     >
       <Tabs.Screen name="index" options={{ title: "Home", tabBarIcon: ({ color }) => <Icon name="home" size={22} color={color} /> }} />
-      <Tabs.Screen name="products" options={{ title: "Products", tabBarIcon: ({ color }) => <Icon name="grid-view" size={22} color={color} /> }} />
-      <Tabs.Screen name="orders" options={{ title: "Orders", tabBarIcon: ({ color }) => <Icon name="inventory-2" size={22} color={color} /> }} />
-      <Tabs.Screen name="cart" options={{ href: null }} />
+      <Tabs.Screen name="cart" options={{ title: "Cart", tabBarIcon: ({ color }) => <Icon name="shopping-cart" size={22} color={color} /> }} />
+      <Tabs.Screen name="products" options={{ title: "Favorites", tabBarIcon: ({ color }) => <Icon name="favorite" size={22} color={color} /> }} />
+      <Tabs.Screen name="orders" options={{ title: "Orders", tabBarIcon: ({ color }) => <Icon name="receipt-long" size={22} color={color} /> }} />
       <Tabs.Screen name="account" options={{ title: "Settings", tabBarIcon: ({ color }) => <Icon name="settings" size={22} color={color} /> }} />
     </Tabs>
   );

@@ -10,6 +10,7 @@ import ProductImage from "./ProductImage";
 import Icon from "../common/Icon";
 import { formatCurrency } from "../../utils/currency";
 import { useCart } from "../../providers/CartProvider";
+import { useFavorites } from "../../providers/FavoritesProvider";
 
 type ProductCardProps = {
   product: Product;
@@ -21,7 +22,9 @@ function ProductCard({ product, compact, onPress }: ProductCardProps) {
   const colors = useThemeColors();
   const shadows = useShadows();
   const { addItem } = useCart();
+  const { isFavorite, toggleFavorite } = useFavorites();
   const [adding, setAdding] = useState(false);
+  const fav = isFavorite(product.id);
 
   const handleAdd = async () => {
     if (product.stock === 0 || adding) return;
@@ -29,10 +32,16 @@ function ProductCard({ product, compact, onPress }: ProductCardProps) {
     try {
       await addItem(product.id, 1);
     } catch {
-      // silent — cart provider handles
+      // silent
     } finally {
       setAdding(false);
     }
+  };
+
+  const handleFav = async () => {
+    try {
+      await toggleFavorite(product.id);
+    } catch {}
   };
 
   const showLowStock = product.stock > 0 && product.stock <= 3;
@@ -80,7 +89,6 @@ function ProductCard({ product, compact, onPress }: ProductCardProps) {
                 </Text>
               ) : null}
             </View>
-            <View style={styles.plusSpacer} />
           </View>
 
           {product.stock === 0 ? (
@@ -91,21 +99,42 @@ function ProductCard({ product, compact, onPress }: ProductCardProps) {
         </View>
       </Pressable>
 
-      <Pressable
-        onPress={handleAdd}
-        disabled={product.stock === 0 || adding}
-        hitSlop={8}
-        accessibilityRole="button"
-        accessibilityLabel={`Add ${product.name} to cart`}
-        style={({ pressed }) => [
-          styles.cartButton,
-          { backgroundColor: product.stock === 0 ? colors.borderLight : colors.primary },
-          product.stock === 0 && { opacity: 0.45 },
-          pressed && product.stock !== 0 && styles.cartPressed,
-        ]}
-      >
-        <Icon name="shopping-cart" size={16} color={colors.white} />
-      </Pressable>
+      {/* Bottom compact action row: + and heart — no overlap, well defined */}
+      <View style={styles.actionsRow}>
+        <Pressable
+          onPress={handleFav}
+          hitSlop={6}
+          accessibilityRole="button"
+          accessibilityLabel={fav ? `Remove ${product.name} from favorites` : `Add ${product.name} to favorites`}
+          style={({ pressed }) => [
+            styles.iconBtn,
+            {
+              backgroundColor: fav ? colors.danger + "16" : colors.background,
+              borderColor: fav ? colors.danger + "30" : colors.borderLight,
+            },
+            pressed && styles.pressed,
+          ]}
+        >
+          <Icon name={fav ? "favorite" : "favorite-border"} size={14} color={fav ? colors.danger : colors.textMuted} />
+        </Pressable>
+
+        <Pressable
+          onPress={handleAdd}
+          disabled={product.stock === 0 || adding}
+          hitSlop={6}
+          accessibilityRole="button"
+          accessibilityLabel={`Add ${product.name} to cart`}
+          style={({ pressed }) => [
+            styles.iconBtn,
+            styles.primaryBtn,
+            { backgroundColor: product.stock === 0 ? colors.borderLight : colors.primary, borderColor: product.stock === 0 ? colors.borderLight : colors.primary },
+            product.stock === 0 && { opacity: 0.45 },
+            pressed && product.stock !== 0 && styles.pressed,
+          ]}
+        >
+          <Icon name="add" size={16} color={colors.white} />
+        </Pressable>
+      </View>
     </View>
   );
 }
@@ -132,7 +161,7 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: spacing.md,
     paddingTop: spacing.sm,
-    paddingBottom: spacing.md,
+    paddingBottom: 56,
     gap: 2,
   },
   name: {
@@ -149,9 +178,7 @@ const styles = StyleSheet.create({
   priceRow: {
     flexDirection: "row",
     alignItems: "flex-end",
-    justifyContent: "space-between",
     marginTop: spacing.xs,
-    gap: spacing.sm,
   },
   priceBlock: {
     flex: 1,
@@ -167,23 +194,35 @@ const styles = StyleSheet.create({
     fontSize: fontSize.micro,
     textDecorationLine: "line-through",
   },
-  plusSpacer: { width: 32 },
-  cartButton: {
-    position: "absolute",
-    right: spacing.sm,
-    bottom: spacing.sm,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  cartPressed: { opacity: 0.82, transform: [{ scale: 0.96 }] },
   stock: {
     fontFamily: fontFamily.pjsRegular,
     fontSize: fontSize.micro,
     marginTop: 2,
   },
+  actionsRow: {
+    position: "absolute",
+    right: spacing.sm,
+    bottom: spacing.sm,
+    flexDirection: "row",
+    gap: 6,
+    alignItems: "center",
+  },
+  iconBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  primaryBtn: {
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 1,
+  },
+  pressed: { opacity: 0.82, transform: [{ scale: 0.96 }] },
 });
 
 export default memo(ProductCard);

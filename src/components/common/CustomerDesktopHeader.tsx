@@ -12,15 +12,15 @@ import type { IconName } from "./Icon";
 const navLinks: { label: string; path: string; icon: IconName }[] = [
   { label: "Home", path: "/(customer)/(tabs)", icon: "home" },
   { label: "Cart", path: "/(customer)/(tabs)/cart", icon: "shopping-cart" },
-  { label: "Favorites", path: "/(customer)/(tabs)/products", icon: "favorite-border" },
+  { label: "Favorites", path: "/(customer)/(tabs)/favorites", icon: "favorite-border" },
   { label: "Orders", path: "/(customer)/(tabs)/orders", icon: "receipt-long" },
   { label: "Settings", path: "/(customer)/(tabs)/account", icon: "settings" },
 ];
 
 function getActivePath(pathname: string) {
+  if (pathname.includes("/favorites")) return "/(customer)/(tabs)/favorites";
   if (pathname.includes("/cart")) return "/(customer)/(tabs)/cart";
   if (pathname.includes("/orders") || pathname.includes("/order/")) return "/(customer)/(tabs)/orders";
-  if (pathname.includes("/products") || pathname.includes("/product/")) return "/(customer)/(tabs)/products";
   if (pathname.includes("/account") || pathname.includes("/address") || pathname.includes("/settings") || pathname.includes("/notifications") || pathname.includes("/profile")) return "/(customer)/(tabs)/account";
   return "/(customer)/(tabs)";
 }

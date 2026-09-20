@@ -16,7 +16,9 @@ export default function CustomerTabsLayout() {
     >
       <Tabs.Screen name="index" options={{ title: "Home", tabBarIcon: ({ color }) => <Icon name="home" size={22} color={color} /> }} />
       <Tabs.Screen name="cart" options={{ title: "Cart", tabBarIcon: ({ color }) => <Icon name="shopping-cart" size={22} color={color} /> }} />
-      <Tabs.Screen name="products" options={{ title: "Favorites", tabBarIcon: ({ color }) => <Icon name="favorite" size={22} color={color} /> }} />
+      <Tabs.Screen name="favorites" options={{ title: "Favorites", tabBarIcon: ({ color }) => <Icon name="favorite" size={22} color={color} /> }} />
+      {/* Products catalogue — not a bottom-tab, but keep as stack-navigable (Home → View all) */}
+      <Tabs.Screen name="products" options={{ href: null, title: "Products" }} />
       <Tabs.Screen name="orders" options={{ title: "Orders", tabBarIcon: ({ color }) => <Icon name="receipt-long" size={22} color={color} /> }} />
       <Tabs.Screen name="account" options={{ title: "Settings", tabBarIcon: ({ color }) => <Icon name="settings" size={22} color={color} /> }} />
     </Tabs>

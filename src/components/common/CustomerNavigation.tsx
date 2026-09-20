@@ -17,15 +17,16 @@ const navigationItems: {
 }[] = [
   { label: "Home", path: "/(customer)/(tabs)", icon: "home", activeIcon: "home" },
   { label: "Cart", path: "/(customer)/(tabs)/cart", icon: "shopping-cart", activeIcon: "shopping-cart", badge: true },
-  { label: "Favorites", path: "/(customer)/(tabs)/products", icon: "favorite-border", activeIcon: "favorite" },
+  { label: "Favorites", path: "/(customer)/(tabs)/favorites", icon: "favorite-border", activeIcon: "favorite" },
   { label: "Orders", path: "/(customer)/(tabs)/orders", icon: "receipt-long", activeIcon: "receipt-long" },
   { label: "Settings", path: "/(customer)/(tabs)/account", icon: "settings", activeIcon: "settings" },
 ] as const;
 
 function getActivePath(pathname: string) {
+  if (pathname.includes("/favorites")) return "/(customer)/(tabs)/favorites";
   if (pathname.includes("/cart")) return "/(customer)/(tabs)/cart";
   if (pathname.includes("/orders") || pathname.includes("/order/")) return "/(customer)/(tabs)/orders";
-  if (pathname.includes("/products") || pathname.includes("/product/")) return "/(customer)/(tabs)/products";
+  if (pathname.includes("/products") || pathname.includes("/product/")) return "/(customer)/(tabs)/favorites";
   if (pathname.includes("/account") || pathname.includes("/address") || pathname.includes("/settings") || pathname.includes("/notifications") || pathname.includes("/profile")) return "/(customer)/(tabs)/account";
   return "/(customer)/(tabs)";
 }

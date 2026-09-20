@@ -7,6 +7,7 @@ import type { CartItem } from "../../types/cart";
 import { formatCurrency } from "../../utils/currency";
 import ProductImage from "../products/ProductImage";
 import QuantitySelector from "./QuantitySelector";
+import Icon from "../common/Icon";
 
 export default function CartItemRow({
   item,
@@ -20,31 +21,24 @@ export default function CartItemRow({
   const colors = useThemeColors();
   return (
     <View style={[styles.row, { backgroundColor: colors.backgroundAlt, borderColor: colors.borderLight }]}>
-      <ProductImage
-        uri={item.product.image}
-        recyclingKey={item.id}
-        style={styles.image}
-      />
+      <ProductImage uri={item.product.image} recyclingKey={item.id} style={styles.image} />
       <View style={styles.info}>
-        <Text style={[styles.name, { color: colors.text }]}>{item.product.name}</Text>
+        <Text style={[styles.name, { color: colors.text }]} numberOfLines={1}>
+          {item.product.name}
+        </Text>
         <Text style={[styles.meta, { color: colors.textMuted }]}>{formatCurrency(item.product.price)}</Text>
-        <QuantitySelector
-          value={item.quantity}
-          onChange={onQuantity}
-          max={item.product.stock}
-        />
+        <QuantitySelector value={item.quantity} onChange={onQuantity} max={item.product.stock} />
       </View>
       <View style={styles.aside}>
-        <Text style={[styles.price, { color: colors.text }]}>
-          {formatCurrency(item.product.price * item.quantity)}
-        </Text>
+        <Text style={[styles.price, { color: colors.text }]}>{formatCurrency(item.product.price * item.quantity)}</Text>
         <Pressable
           onPress={onRemove}
           hitSlop={8}
           accessibilityRole="button"
           accessibilityLabel={`Remove ${item.product.name} from cart`}
+          style={[styles.deleteBtn, { backgroundColor: colors.danger + "14" }]}
         >
-          <Text style={[styles.remove, { color: colors.danger }]}>Remove</Text>
+          <Icon name="delete-outline" size={16} color={colors.danger} />
         </Pressable>
       </View>
     </View>
@@ -58,15 +52,19 @@ const styles = StyleSheet.create({
     borderRadius: sizes.borderRadius.lg,
     borderWidth: 1,
     padding: spacing.md,
+    alignItems: "center",
   },
   image: { width: sizes.thumbnail, height: sizes.thumbnail, borderRadius: sizes.borderRadius.md },
-  info: { flex: 1, gap: spacing.xxs },
+  info: { flex: 1, gap: spacing.xs },
   name: { fontSize: typography.subhead, fontWeight: "600" },
   meta: { fontSize: typography.caption1 },
-  aside: { alignItems: "flex-end", justifyContent: "space-between" },
-  price: { fontSize: typography.subhead, fontWeight: "600" },
-  remove: {
-    fontSize: typography.caption2,
-    fontWeight: "600",
+  aside: { alignItems: "flex-end", justifyContent: "space-between", gap: spacing.md, alignSelf: "stretch" },
+  price: { fontSize: typography.subhead, fontWeight: "700" },
+  deleteBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

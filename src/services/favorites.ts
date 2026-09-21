@@ -5,7 +5,7 @@ import type { Product } from "../types/product";
 
 const LOCAL_KEY_PREFIX = "@favorites:";
 
-function isMissingTableError(error: any): boolean {
+export function isMissingTableError(error: any): boolean {
   return error?.code === "PGRST205" || String(error?.message || "").includes("Could not find the table 'public.favorites'");
 }
 
@@ -35,6 +35,29 @@ async function fetchProductsByIds(productIds: string[]): Promise<Product[]> {
   return productIds.map((id) => byId.get(id)).filter(Boolean) as Product[];
 }
 
+export async function syncLocalFavoritesToRemote(userId: string): Promise<number> {
+  const ids = await getLocalIds(userId);
+  if (ids.length === 0) return 0;
+  // Verify remote exists before attempting sync
+  const { error: probeError } = await supabase.from("favorites").select("id").limit(1);
+  if (probeError && isMissingTableError(probeError)) return 0;
+  if (probeError) throw probeError;
+  let synced = 0;
+  for (const productId of ids) {
+    const { error } = await supabase.from("favorites").insert({ user_id: userId, product_id: productId });
+    if (!error) synced++;
+    else if (error.code === "23505") synced++; // already exists counts as synced
+    else if (isMissingTableError(error)) break;
+    else console.warn("[favorites] sync insert failed", productId, error.message);
+  }
+  if (synced > 0) {
+    try {
+      await AsyncStorage.removeItem(localKey(userId));
+    } catch {}
+  }
+  return synced;
+}
+
 export async function fetchFavorites(userId: string): Promise<Product[]> {
   const { data, error } = await supabase
     .from("favorites")
@@ -49,7 +72,13 @@ export async function fetchFavorites(userId: string): Promise<Product[]> {
     }
     throw error;
   }
-  return (data || []).map((row: any) => mapProduct(row.products)).filter(Boolean);
+  const remote = (data || []).map((row: any) => mapProduct(row.products)).filter(Boolean) as Product[];
+  // One-time migration: if local buffer exists, sync in background without blocking UI
+  const localIds = await getLocalIds(userId);
+  if (localIds.length > 0) {
+    syncLocalFavoritesToRemote(userId).catch(() => {});
+  }
+  return remote;
 }
 
 export async function addFavorite(userId: string, productId: string): Promise<void> {
@@ -66,6 +95,14 @@ export async function addFavorite(userId: string, productId: string): Promise<vo
     }
     throw error;
   }
+  // Mirror to local for offline resilience, deduplicated
+  try {
+    const ids = await getLocalIds(userId);
+    if (!ids.includes(productId)) {
+      ids.unshift(productId);
+      await setLocalIds(userId, ids);
+    }
+  } catch {}
 }
 
 export async function removeFavorite(userId: string, productId: string): Promise<void> {

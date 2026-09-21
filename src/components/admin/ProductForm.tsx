@@ -45,6 +45,7 @@ export default function ProductForm({
   const [unit, setUnit] = useState(product?.unit ?? "pack");
   const [description, setDescription] = useState(product?.description ?? "");
   const [price, setPrice] = useState(product ? String(product.price) : "");
+  const [costPrice, setCostPrice] = useState(product?.costPrice != null ? String(product.costPrice) : "");
   const [originalPrice, setOriginalPrice] = useState(
     product?.originalPrice ? String(product.originalPrice) : "",
   );
@@ -82,6 +83,13 @@ export default function ProductForm({
     else if (Number.isNaN(priceNum) || priceNum <= 0)
       next.price = "Enter a valid price.";
 
+    const costNum = costPrice ? Number(costPrice) : NaN;
+    if (costPrice) {
+      if (Number.isNaN(costNum) || costNum < 0) next.costPrice = "Enter a valid cost price.";
+      else if (!isEmpty(price) && !Number.isNaN(priceNum) && costNum > priceNum)
+        next.costPrice = "Cost cannot exceed selling price.";
+    }
+
     const originalNum = originalPrice ? Number(originalPrice) : NaN;
     if (originalPrice && (Number.isNaN(originalNum) || originalNum <= 0))
       next.originalPrice = "Enter a valid original price.";
@@ -106,7 +114,7 @@ export default function ProductForm({
     return next;
   }, [
     name, brand, genericName, categoryId, manufacturerId, unit, description,
-    price, originalPrice, discountPercent, stock, image, expiryDate,
+    price, costPrice, originalPrice, discountPercent, stock, image, expiryDate,
   ]);
 
   const handleSubmit = async () => {
@@ -125,6 +133,7 @@ export default function ProductForm({
         categoryId,
         description: description.trim(),
         price: Number(price),
+        costPrice: costPrice ? Number(costPrice) : undefined,
         originalPrice: originalPrice ? Number(originalPrice) : undefined,
         discountPercent: discountPercent ? Number(discountPercent) : undefined,
         stock: Number(stock),
@@ -217,17 +226,35 @@ export default function ProductForm({
               <Input label="Price" value={price} onChangeText={setPrice} keyboardType="decimal-pad" error={errors.price} placeholder="0.00" />
             </View>
             <View style={styles.field}>
+              <Input label="Cost price" value={costPrice} onChangeText={setCostPrice} keyboardType="decimal-pad" error={errors.costPrice} placeholder="Optional · e.g. 320" />
+            </View>
+          </View>
+          {costPrice || price ? (
+            <Text style={[styles.hint, { color: colors.textMuted }]}>
+              {(() => {
+                const p = Number(price);
+                const c = Number(costPrice);
+                if (!p || Number.isNaN(p) || !c || Number.isNaN(c)) return "Leave cost empty to auto-set price×0.8";
+                const margin = ((p - c) / p) * 100;
+                return `Margin ${margin.toFixed(1)}% · Profit ${c < p ? `৳ ${(p - c).toFixed(2)}` : "—"} per unit`;
+              })()}
+            </Text>
+          ) : null}
+
+          <View style={styles.row}>
+            <View style={styles.field}>
               <Input label="Original price" value={originalPrice} onChangeText={setOriginalPrice} keyboardType="decimal-pad" error={errors.originalPrice} placeholder="Optional" />
+            </View>
+            <View style={styles.field}>
+              <Input label="Discount (%)" value={discountPercent} onChangeText={setDiscountPercent} keyboardType="numeric" error={errors.discountPercent} placeholder="Optional" />
             </View>
           </View>
 
           <View style={styles.row}>
             <View style={styles.field}>
-              <Input label="Discount (%)" value={discountPercent} onChangeText={setDiscountPercent} keyboardType="numeric" error={errors.discountPercent} placeholder="Optional" />
-            </View>
-            <View style={styles.field}>
               <Input label="Stock" value={stock} onChangeText={setStock} keyboardType="numeric" error={errors.stock} placeholder="0" />
             </View>
+            <View style={styles.field} />
           </View>
 
           {SECTION("Batch")}
@@ -392,6 +419,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   switchHint: { fontSize: typography.caption },
+  hint: { fontSize: typography.caption, marginTop: -spacing.xs, marginBottom: spacing.xs },
   error: { fontSize: typography.caption },
   footer: {
     padding: spacing.lg,

@@ -69,7 +69,9 @@ export default function DeliveryCycleScreen() {
     );
   }
 
-  const pendingOrders = orders.filter((o) => o.status === 'PENDING' || o.status === 'CONFIRMED' || o.status === 'PROCESSING');
+  // cycle.products now comes from delivery_cycle_items join; fallback to pending orders filtered by cycle window if still empty
+  const cycleProducts = (cycle as any).products as any[]
+  const pendingOrders = orders.filter((o) => o.status === 'PENDING' || o.status === 'CONFIRMED' || o.status === 'PROCESSING')
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
@@ -81,9 +83,21 @@ export default function DeliveryCycleScreen() {
           <Text style={[styles.meta, { color: colors.textMuted }]}>Start: {formatDateTime(cycle.startedAt)}</Text>
           <Text style={[styles.meta, { color: colors.textMuted }]}>Closes: {formatDateTime(cycle.closesAt)}</Text>
           <Text style={[styles.total, { color: colors.text }]}>Estimated total: {formatCurrency(cycle.estimatedTotal)}</Text>
+          {cycleProducts.length > 0 ? (
+            <View style={{ marginTop: spacing.md, gap: spacing.sm }}>
+              <Text style={[styles.meta, { color: colors.text, fontWeight: '700' }]}>Products in cycle ({cycleProducts.length})</Text>
+              {cycleProducts.map((p: any) => (
+                <View key={p.id} style={styles.row}>
+                  <Text style={[styles.itemName, { color: colors.text }]} numberOfLines={1}>{p.name} × {p.quantity ?? 1}</Text>
+                  <Text style={[styles.itemPrice, { color: colors.text }]}>{p.price ? formatCurrency(p.price * (p.quantity ?? 1)) : ''}</Text>
+                </View>
+              ))}
+            </View>
+          ) : null}
         </View>
         <View style={[styles.card, { backgroundColor: colors.backgroundAlt, borderColor: colors.border }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Pending orders in cycle ({pendingOrders.length})</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Pending orders in window ({pendingOrders.length})</Text>
+          <Text style={[styles.meta, { color: colors.textMuted, marginBottom: spacing.sm }]}>Orders with status PENDING/CONFIRMED/PROCESSING created after {formatDateTime(cycle.startedAt)}</Text>
           {pendingOrders.length === 0 ? (
             <Text style={[styles.meta, { color: colors.textMuted }]}>No pending orders. New orders will be grouped here.</Text>
           ) : (

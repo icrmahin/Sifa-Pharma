@@ -1,7 +1,9 @@
+import { useEffect } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { useThemeColors } from "../../providers/ThemeProvider";
+import { useAuth } from "../../hooks/useAuth";
 import Button from "../../components/common/Button";
 import AppLogo from "../../components/common/AppLogo";
 import spacing from "../../constants/spacing";
@@ -10,6 +12,11 @@ import { radius } from "../../constants/sizes";
 
 export default function WelcomeScreen() {
   const colors = useThemeColors();
+  const { user, loading } = useAuth();
+
+  useEffect(() => {
+    if (!loading && user) router.replace("/" as any);
+  }, [user, loading]);
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
@@ -31,18 +38,13 @@ export default function WelcomeScreen() {
 
           <View style={styles.actions}>
             <Button
-              title="Sign in"
-              onPress={() => router.push("/(auth)/login")}
+              title="Get Started"
+              onPress={() => router.push("/(auth)/login" as any)}
               fullWidth
               style={styles.primaryButton}
+              accessibilityLabel="Get Started — continue to sign in or create account"
             />
-            <Button
-              title="Create account"
-              variant="secondary"
-              onPress={() => router.push({ pathname: "/(auth)/login", params: { mode: "signup" } } as any)}
-              fullWidth
-              style={styles.secondaryButton}
-            />
+            <Text style={[styles.hint, { color: colors.textMuted }]}>Sign in or create account on next screen</Text>
           </View>
         </View>
       </View>
@@ -96,7 +98,13 @@ const styles = StyleSheet.create({
   spacer: { flexGrow: 1 },
   actions: {
     gap: spacing.sm,
+    alignItems: "center",
   },
   primaryButton: { borderRadius: radius.xl },
-  secondaryButton: { borderRadius: radius.xl },
+  hint: {
+    fontFamily: fontFamily.pjsRegular,
+    fontSize: fontSize.caption,
+    lineHeight: fontSize.caption * lineHeight.normal,
+    textAlign: "center",
+  },
 });

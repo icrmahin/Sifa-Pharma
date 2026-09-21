@@ -1,5 +1,6 @@
 /* eslint-disable react-hooks/set-state-in-effect -- data fetching and derived state sync require setState inside effects */
 import { useState, useEffect, useCallback } from 'react'
+import { supabase } from '../lib/supabase'
 import { useAuth } from './useAuth'
 import type { NotificationItem } from '../types/notification'
 import { fetchNotifications, markNotificationAsRead, markAllNotificationsAsRead, getUnreadCount } from '../services/notifications'
@@ -36,7 +37,23 @@ export function useNotifications() {
 
   useEffect(() => {
     loadNotifications()
-  }, [loadNotifications])
+    if (!user?.id) return
+    // Unique channel per hook instance: multiple screens call useNotifications() (e.g. Home tabs + notifications screen).
+    // Supabase caches channels by name; same name + StrictMode double-mount causes
+    // "cannot add postgres_changes callbacks after subscribe()" on second instance.
+    const channelName = `notifications:${user.id}:${Math.random().toString(36).slice(2, 8)}`
+    const channel = supabase
+      .channel(channelName)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
+        () => loadNotifications()
+      )
+      .subscribe()
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [user?.id]) // intentionally exclude loadNotifications to avoid re-subscribing on every render; loadNotifications is stable via user id
 
   const markAsRead = useCallback(async (notificationId: string) => {
     if (!user) throw new Error('User not authenticated')

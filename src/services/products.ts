@@ -112,6 +112,7 @@ export async function searchProducts(query: string, limit = 10): Promise<Product
 export async function createProduct(input: Omit<Product, 'id' | 'createdAt'> & { batchNumber?: string; expiryDate?: string }): Promise<Product> {
   const primaryUrl = await resolveProductImageUri(input.primaryImage ?? input.image ?? null);
   const secondaryUrl = await resolveProductImageUri(input.secondaryImage ?? null);
+  const costPrice = input.costPrice != null ? Number(input.costPrice) : Math.round(Number(input.price) * 0.8 * 100) / 100;
   const { data, error } = await supabase
     .from('products')
     .insert({
@@ -122,6 +123,7 @@ export async function createProduct(input: Omit<Product, 'id' | 'createdAt'> & {
       category_id: input.categoryId,
       description: input.description,
       price: input.price,
+      cost_price: costPrice,
       original_price: input.originalPrice ?? null,
       discount_percent: input.discountPercent ?? 0,
       stock: 0,
@@ -158,6 +160,7 @@ export async function updateProduct(productId: string, input: Partial<Omit<Produ
   if (input.categoryId !== undefined) payload.category_id = input.categoryId
   if (input.description !== undefined) payload.description = input.description
   if (input.price !== undefined) payload.price = input.price
+  if (input.costPrice !== undefined) payload.cost_price = input.costPrice ?? null
   if (input.originalPrice !== undefined) payload.original_price = input.originalPrice ?? null
   if (input.discountPercent !== undefined) payload.discount_percent = input.discountPercent ?? 0
   if (input.unit !== undefined) payload.unit = input.unit

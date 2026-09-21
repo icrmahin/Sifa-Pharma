@@ -3,7 +3,7 @@ import { createContext, useContext, useEffect, useState, useCallback, useMemo, t
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../hooks/useAuth";
 import type { Product } from "../types/product";
-import { fetchFavorites, addFavorite, removeFavorite } from "../services/favorites";
+import { fetchFavorites, addFavorite, removeFavorite, syncLocalFavoritesToRemote, isMissingTableError } from "../services/favorites";
 
 type FavoritesContextValue = {
   items: Product[];
@@ -29,12 +29,14 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
     }
     setLoading(true);
     try {
+      // Opportunistic one-time sync: push any AsyncStorage buffer before fetching
+      try {
+        await syncLocalFavoritesToRemote(user.id);
+      } catch {}
       const favs = await fetchFavorites(user.id);
       setItems(favs);
     } catch (e: any) {
-      // PGRST205 = table not yet migrated remotely — fallback to local storage, don't spam LogBox
-      const isMissing = e?.code === "PGRST205" || String(e?.message || "").includes("Could not find the table 'public.favorites'");
-      if (!isMissing) console.warn("Failed to load favorites", e);
+      if (!isMissingTableError(e)) console.warn("Failed to load favorites", e);
       setItems([]);
     } finally {
       setLoading(false);
@@ -49,9 +51,11 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
       channel = supabase
         .channel(`favorites-changes-${user.id}`)
         .on("postgres_changes", { event: "*", schema: "public", table: "favorites", filter: `user_id=eq.${user.id}` }, () => load())
-        .subscribe();
+        .subscribe((status, err) => {
+          if (err && !String(err).includes("PGRST205")) console.warn("[favorites] realtime subscribe", status, err);
+        });
     } catch {
-      // table may not exist yet — realtime will fail silently
+      // table may not exist yet — realtime will fail silently until migration pushed
     }
     return () => {
       if (channel) supabase.removeChannel(channel);

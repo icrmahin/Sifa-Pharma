@@ -9,6 +9,7 @@ export type Product = {
   price: number;
   originalPrice?: number;
   discountPercent?: number;
+  costPrice?: number;
   stock: number;
   unit: string;
   image?: string;

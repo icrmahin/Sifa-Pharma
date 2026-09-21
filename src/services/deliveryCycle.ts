@@ -2,10 +2,12 @@ import { supabase } from '../lib/supabase'
 import { mapDeliveryCycle } from '../lib/mappers'
 import type { DeliveryCycleWithProducts } from '../types/deliveryCycle'
 
+const CYCLE_WITH_ITEMS = '*, delivery_cycle_items(quantity, products(id, name, price, image_url))'
+
 export async function fetchActiveDeliveryCycle(userId: string): Promise<DeliveryCycleWithProducts | null> {
   const { data, error } = await supabase
     .from('delivery_cycles')
-    .select('*')
+    .select(CYCLE_WITH_ITEMS)
     .eq('customer_id', userId)
     .eq('status', 'PENDING')
     .order('created_at', { ascending: false })
@@ -22,7 +24,7 @@ export async function fetchActiveDeliveryCycle(userId: string): Promise<Delivery
 export async function fetchDeliveryCycles(userId: string): Promise<DeliveryCycleWithProducts[]> {
   const { data, error } = await supabase
     .from('delivery_cycles')
-    .select('*')
+    .select(CYCLE_WITH_ITEMS)
     .eq('customer_id', userId)
     .order('created_at', { ascending: false })
     .limit(20)
@@ -34,7 +36,7 @@ export async function fetchDeliveryCycles(userId: string): Promise<DeliveryCycle
 export async function fetchDeliveryCycleById(cycleId: string): Promise<DeliveryCycleWithProducts | null> {
   const { data, error } = await supabase
     .from('delivery_cycles')
-    .select('*')
+    .select(CYCLE_WITH_ITEMS)
     .eq('id', cycleId)
     .single()
 
@@ -45,7 +47,7 @@ export async function fetchDeliveryCycleById(cycleId: string): Promise<DeliveryC
   return mapDeliveryCycle(data) as DeliveryCycleWithProducts
 }
 
-export async function createDeliveryCycle(userId: string): Promise<DeliveryCycleWithProducts> {
+export async function createDeliveryCycle(userId: string, items?: { productId: string; quantity: number }[]): Promise<DeliveryCycleWithProducts> {
   const now = new Date()
   const closesAt = new Date(now.getTime() + 24 * 60 * 60 * 1000)
 
@@ -62,7 +64,27 @@ export async function createDeliveryCycle(userId: string): Promise<DeliveryCycle
     .single()
 
   if (error) throw error
-  return mapDeliveryCycle(data) as DeliveryCycleWithProducts
+
+  if (items && items.length > 0) {
+    const rows = items.map(i => ({ delivery_cycle_id: data.id, product_id: i.productId, quantity: i.quantity }))
+    const { error: itemsError } = await supabase.from('delivery_cycle_items').insert(rows)
+    if (itemsError) throw itemsError
+    // trigger will have updated estimated_total; refetch with items
+    return (await fetchDeliveryCycleById(data.id)) as DeliveryCycleWithProducts
+  }
+
+  return mapDeliveryCycle({ ...data, delivery_cycle_items: [] }) as DeliveryCycleWithProducts
+}
+
+export async function addProductsToCycle(cycleId: string, items: { productId: string; quantity: number }[]): Promise<void> {
+  const rows = items.map(i => ({ delivery_cycle_id: cycleId, product_id: i.productId, quantity: i.quantity }))
+  const { error } = await supabase.from('delivery_cycle_items').insert(rows)
+  if (error) throw error
+}
+
+export async function removeProductFromCycle(cycleId: string, productId: string): Promise<void> {
+  const { error } = await supabase.from('delivery_cycle_items').delete().eq('delivery_cycle_id', cycleId).eq('product_id', productId)
+  if (error) throw error
 }
 
 export async function updateDeliveryCycleStatus(cycleId: string, status: string): Promise<void> {

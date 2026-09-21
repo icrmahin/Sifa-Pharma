@@ -19,6 +19,7 @@ export function mapProduct(db: any): Product {
     price: Number(db.price),
     originalPrice: db.original_price != null ? Number(db.original_price) : undefined,
     discountPercent: db.discount_percent ?? db.discountPercent ?? 0,
+    costPrice: db.cost_price != null ? Number(db.cost_price) : db.costPrice != null ? Number(db.costPrice) : undefined,
     stock: Number(db.stock ?? 0),
     unit: db.unit ?? 'pack',
     image: db.image_url ?? db.image ?? undefined,
@@ -93,6 +94,18 @@ export function mapNotification(db: any): NotificationItem {
 
 export function mapDeliveryCycle(db: any): DeliveryCycle {
   if (!db) return db
+  const rawItems = db.delivery_cycle_items ?? db.items ?? []
+  const products = rawItems.map((it: any) => {
+    const p = it.products ?? it.product ?? {}
+    return {
+      id: p.id ?? it.product_id,
+      name: p.name ?? 'Unknown',
+      price: p.price != null ? Number(p.price) : undefined,
+      image: p.image_url ?? p.image,
+      quantity: it.quantity,
+      ...p,
+    }
+  })
   return {
     id: db.id,
     customerId: db.customer_id ?? db.customerId,
@@ -100,7 +113,7 @@ export function mapDeliveryCycle(db: any): DeliveryCycle {
     startedAt: db.started_at ?? db.startedAt,
     closesAt: db.closes_at ?? db.closesAt,
     estimatedTotal: Number(db.estimated_total ?? db.estimatedTotal ?? 0),
-    products: db.products ?? [],
+    products: products.length ? products : (db.products ?? []),
     createdAt: db.created_at ?? db.createdAt,
   }
 }

@@ -62,6 +62,52 @@ export interface AdminDashboardData {
   recentActivity: { id: string; action: string; actor: string; recordType: string; timestamp: string }[]
 }
 
+async function fetchSalesAggregates(since30Iso: string): Promise<{ totalSalesQty: number; totalSalesRevenue: number; totalEarning: number; salesTrend: number[]; earningTrend: number[] }> {
+  const { data, error } = await supabase.rpc('get_admin_dashboard_sales', { p_since: since30Iso })
+  if (!error && data) {
+    const j = data as any
+    return {
+      totalSalesQty: Number(j.totalSalesQty || 0),
+      totalSalesRevenue: Number(j.totalSalesRevenue || 0),
+      totalEarning: Number(j.totalEarning || 0),
+      salesTrend: Array.isArray(j.salesTrend) ? j.salesTrend : [],
+      earningTrend: Array.isArray(j.earningTrend) ? j.earningTrend : [],
+    }
+  }
+  // Fallback to client-side aggregation if RPC missing (older remote or anon)
+  const since30 = since30Iso
+  const [salesAggResult, salesItemsAggResult] = await Promise.all([
+    supabase.from('orders').select('total, created_at').gte('created_at', since30).neq('status', 'CANCELLED'),
+    supabase.from('order_items').select('quantity, unit_price, product_id, created_at, products(cost_price)').gte('created_at', since30),
+  ])
+  const salesRows: any[] = (salesAggResult.data as any[]) || []
+  const totalSalesRevenue = salesRows.reduce((s, r) => s + Number(r.total || 0), 0)
+  const itemRows: any[] = (salesItemsAggResult.data as any[]) || []
+  let totalSalesQty = 0
+  let totalEarning = 0
+  const byDayQty = new Map<string, number>()
+  const byDayEarn = new Map<string, number>()
+  for (const r of itemRows) {
+    const qty = Number(r.quantity || 0)
+    const unit = Number(r.unit_price || 0)
+    const cost = Number(r.products?.[0]?.cost_price ?? r.products?.cost_price ?? unit * 0.8)
+    const profit = (unit - cost) * qty
+    totalSalesQty += qty
+    totalEarning += profit > 0 ? profit : 0
+    const day = String(r.created_at).slice(0, 10)
+    byDayQty.set(day, (byDayQty.get(day) || 0) + qty)
+    byDayEarn.set(day, (byDayEarn.get(day) || 0) + profit)
+  }
+  const salesTrend: number[] = []
+  const earningTrend: number[] = []
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+    salesTrend.push(byDayQty.get(d) || 0)
+    earningTrend.push(Math.round(byDayEarn.get(d) || 0))
+  }
+  return { totalSalesQty, totalSalesRevenue, totalEarning: Math.round(totalEarning), salesTrend, earningTrend }
+}
+
 export async function fetchAdminDashboard(): Promise<AdminDashboardData> {
   const since30 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
   const [
@@ -74,8 +120,8 @@ export async function fetchAdminDashboard(): Promise<AdminDashboardData> {
     expiringResult,
     recentOrdersResult,
     recentActivityResult,
-    salesAggResult,
-    salesItemsAggResult,
+    pendingReturnsResult,
+    salesAgg,
   ] = await Promise.all([
     supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'PENDING'),
     supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'PROCESSING'),
@@ -110,13 +156,8 @@ export async function fetchAdminDashboard(): Promise<AdminDashboardData> {
       .select('id, action, actor, record_type, timestamp')
       .order('timestamp', { ascending: false })
       .limit(10),
-    // 30d sales revenue
-    supabase.from('orders').select('total, created_at').gte('created_at', since30).neq('status', 'CANCELLED'),
-    // 30d items + earning (join products for cost_price)
-    supabase
-      .from('order_items')
-      .select('quantity, unit_price, product_id, created_at, products(cost_price)')
-      .gte('created_at', since30),
+    supabase.from('return_requests').select('id, product_name, customer_name, quantity').eq('status', 'PENDING').order('created_at', { ascending: false }).limit(5),
+    fetchSalesAggregates(since30),
   ])
 
   const pendingOrders = pendingResult.count || 0
@@ -166,48 +207,25 @@ export async function fetchAdminDashboard(): Promise<AdminDashboardData> {
     timestamp: activity.timestamp,
   }))
 
-  // 30d Sales (qty), Revenue, Earning (profit)
-  const salesRows: any[] = (salesAggResult.data as any[]) || []
-  const totalSalesRevenue = salesRows.reduce((s, r) => s + Number(r.total || 0), 0)
-
-  const itemRows: any[] = (salesItemsAggResult.data as any[]) || []
-  let totalSalesQty = 0
-  let totalEarning = 0
-  const byDayQty = new Map<string, number>()
-  const byDayEarn = new Map<string, number>()
-  for (const r of itemRows) {
-    const qty = Number(r.quantity || 0)
-    const unit = Number(r.unit_price || 0)
-    const cost = Number(r.products?.[0]?.cost_price ?? r.products?.cost_price ?? unit * 0.8)
-    const profit = (unit - cost) * qty
-    totalSalesQty += qty
-    totalEarning += profit > 0 ? profit : 0
-    const day = String(r.created_at).slice(0, 10)
-    byDayQty.set(day, (byDayQty.get(day) || 0) + qty)
-    byDayEarn.set(day, (byDayEarn.get(day) || 0) + profit)
-  }
-  // build 7-day trends
-  const salesTrend: number[] = []
-  const earningTrend: number[] = []
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
-    salesTrend.push(byDayQty.get(d) || 0)
-    const e = byDayEarn.get(d) || 0
-    earningTrend.push(Math.round(e))
-  }
+  const pendingReturns = ((pendingReturnsResult.data as any[]) || []).map((r: any) => ({
+    id: r.id,
+    productName: r.product_name,
+    customerName: r.customer_name,
+    quantity: r.quantity,
+  }))
 
   return {
-    totalSalesQty,
-    totalSalesRevenue,
-    totalEarning: Math.round(totalEarning),
-    salesTrend,
-    earningTrend,
+    totalSalesQty: salesAgg.totalSalesQty,
+    totalSalesRevenue: salesAgg.totalSalesRevenue,
+    totalEarning: salesAgg.totalEarning,
+    salesTrend: salesAgg.salesTrend,
+    earningTrend: salesAgg.earningTrend,
     pendingOrders,
     processingOrders,
     activeProducts,
     lowStockProducts,
     attentionOrders,
-    pendingReturns: [],
+    pendingReturns,
     lowStockBatches: transformedLowStock,
     expiringBatches: transformedExpiring,
     recentOrders: transformedRecentOrders,

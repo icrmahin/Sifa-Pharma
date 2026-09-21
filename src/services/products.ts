@@ -200,9 +200,27 @@ export async function updateProduct(productId: string, input: Partial<Omit<Produ
 }
 
 export async function deleteProduct(productId: string): Promise<void> {
+  // Soft delete if referenced by orders — preserve history (PM-01)
+  const { data: ref, error: refError } = await supabase.from('order_items').select('id').eq('product_id', productId).limit(1)
+  if (refError) throw refError
+  if (ref && ref.length > 0) {
+    const { error } = await supabase.from('products').update({ is_active: false }).eq('id', productId)
+    if (error) throw error
+    return
+  }
   const { error: invError } = await supabase.from('inventory_items').delete().eq('product_id', productId)
   if (invError) throw invError
   const { error } = await supabase.from('products').delete().eq('id', productId)
+  if (error) throw error
+}
+
+export async function deactivateProduct(productId: string): Promise<void> {
+  const { error } = await supabase.from('products').update({ is_active: false }).eq('id', productId)
+  if (error) throw error
+}
+
+export async function activateProduct(productId: string): Promise<void> {
+  const { error } = await supabase.from('products').update({ is_active: true }).eq('id', productId)
   if (error) throw error
 }
 

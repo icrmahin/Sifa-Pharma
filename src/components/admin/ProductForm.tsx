@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { ScrollView, StyleSheet, Switch, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from "react-native";
 import { useThemeColors } from "../../providers/ThemeProvider";
 import { useShadows } from "../../constants/shadows";
 import sizes from "../../constants/sizes";
@@ -60,6 +60,7 @@ export default function ProductForm({
   const [expiryDate, setExpiryDate] = useState(product?.expiryDate ?? "");
   const [isActive, setIsActive] = useState(product?.isActive ?? true);
   const [isFeatured, setIsFeatured] = useState(product?.isFeatured ?? false);
+  const [showAdvanced, setShowAdvanced] = useState(Boolean(product?.batchNumber || product?.expiryDate));
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
@@ -257,16 +258,32 @@ export default function ProductForm({
             <View style={styles.field} />
           </View>
 
-          {SECTION("Batch")}
-
-          <View style={styles.row}>
-            <View style={styles.field}>
-              <Input label="Batch number" value={batchNumber} onChangeText={setBatchNumber} error={errors.batchNumber} placeholder="Optional" />
-            </View>
-            <View style={styles.field}>
-              <Input label="Expiry date" value={expiryDate} onChangeText={setExpiryDate} placeholder="YYYY-MM-DD" error={errors.expiryDate} autoCapitalize="none" />
-            </View>
-          </View>
+          <Pressable
+            onPress={() => setShowAdvanced((v) => !v)}
+            style={[styles.advancedToggle, { borderColor: colors.borderLight, backgroundColor: showAdvanced ? colors.background : colors.backgroundAlt }]}
+            accessibilityRole="button"
+            accessibilityLabel={showAdvanced ? "Hide advanced batch options" : "Show advanced batch options"}
+          >
+            <Text style={[styles.advancedToggleText, { color: showAdvanced ? colors.primary : colors.textMuted }]}>
+              {showAdvanced ? "▲ Advanced · batch & expiry" : "▼ Advanced · batch & expiry (auto if empty)"}
+            </Text>
+          </Pressable>
+          {showAdvanced ? (
+            <>
+              {SECTION("Batch · auto-handled")}
+              <Text style={[styles.hint, { color: colors.textMuted }]}>
+                Leave empty to auto-generate BATCH-XXXX-001 and skip expiry. Stock is sum of batches — no ID handling needed.
+              </Text>
+              <View style={styles.row}>
+                <View style={styles.field}>
+                  <Input label="Batch number" value={batchNumber} onChangeText={setBatchNumber} error={errors.batchNumber} placeholder="Auto: BATCH-XXXXXXXX-001" />
+                </View>
+                <View style={styles.field}>
+                  <Input label="Expiry date" value={expiryDate} onChangeText={setExpiryDate} placeholder="YYYY-MM-DD (optional)" error={errors.expiryDate} autoCapitalize="none" />
+                </View>
+              </View>
+            </>
+          ) : null}
 
           {SECTION("Listing")}
 
@@ -420,6 +437,14 @@ const styles = StyleSheet.create({
   },
   switchHint: { fontSize: typography.caption },
   hint: { fontSize: typography.caption, marginTop: -spacing.xs, marginBottom: spacing.xs },
+  advancedToggle: {
+    borderWidth: 1,
+    borderRadius: sizes.cardRadius,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    alignItems: "center",
+  },
+  advancedToggleText: { fontSize: typography.caption, fontWeight: "600" },
   error: { fontSize: typography.caption },
   footer: {
     padding: spacing.lg,

@@ -116,13 +116,11 @@
 
 ## P6 — Product Management Simplicity + Image Optimization (NEW)
 
-- [ ] **PM-01 Simplify add/edit/deactivate/delete/update `src/components/admin/ProductForm.tsx:17` `src/services/products.ts:112`**
-  - Admin never manages IDs manually. Auto: `id uuid gen_random_uuid()`, `order_number` trigger, `batch_number` default `BATCH-{shortId}-001` `products.ts:139`, `stock` derived from `inventory_items` sum. Form only asks `name/brand/generic/category/manufacturer/price/description/image/unit`; `cost_price` wired (DB-02) optional with default `price*0.8`. Delete = soft `is_active=false` unless no orders.
-  - Hide `batchNumber/expiryDate` manual complexity behind optional advanced section; system handles `inventory_items` insert automatically.
+- [x] **PM-01 Simplify add/edit/deactivate/delete/update `src/components/admin/ProductForm.tsx:17` `src/services/products.ts:112`**
+  - Fixed 2026-09-22: `ProductForm.tsx:17` Batch section now collapsible `Advanced · batch & expiry (auto if empty)` (`showAdvanced` state, `advancedToggle` `Pressable`), hint auto `BATCH-XXXX-001`, stock handled via inventory auto; `products.ts:112` `deleteProduct` soft `is_active=false` if `order_items` exists, else hard delete + inventory cleanup; added `deactivateProduct`/`activateProduct`; IDs auto `gen_random_uuid()`.
 
-- [ ] **IMG-01 Highly optimized image upload `src/services/storage.ts:22` `src/components/common/ImageUpload.tsx`**
-  - Before `supabase.storage.from('product-images').upload`, compress via `expo-image-manipulator`: resize max 1024×1024, quality 0.75, convert to `webp` (fallback `jpg`), strip EXIF, enforce 5MB MIME `jpg/png/webp`. Generate thumb `320px` variant stored as `secondary_image_url` via Supabase `transform` or client resize.
-  - Bucket migration: `insert into storage.buckets (id,name,public)` for `product-images` + `avatars` (`public=true`, `authenticated write` policy) — fixes DB-04.
+- [x] **IMG-01 Highly optimized image upload `src/services/storage.ts:22` `src/components/common/ImageUpload.tsx`**
+  - Fixed 2026-09-22: added `expo-image-manipulator@~57.0.10` to `package.json:16`, `storage.ts:22` now `compressImage()` resize max 1024 (thumb 320) quality 0.75 webp, enforce 5MB `ALLOWED_MIME`, `uploadProductImage(..., {thumb})` handles both, `resolveProductImageUriWithThumb` for thumb 320, fallback to raw if manipulator unavailable (web). Bucket `product-images` already `20260922120000` public.
 
 ---
 

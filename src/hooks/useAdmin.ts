@@ -2,13 +2,14 @@
  /* eslint-disable react-hooks/refs -- stable filters refs intentionally mutated during render for stable callbacks */
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useAuth } from './useAuth'
-import { fetchAdminDashboard, fetchAdminProducts, fetchAdminOrders, updateOrderStatus, fetchAdminInventory, createStockAdjustment } from '../services/admin'
+import { fetchAdminDashboard, fetchAdminProducts, fetchAdminOrders, updateOrderStatus, fetchAdminInventory, createStockAdjustment, type AdminDashboardData } from '../services/admin'
 import type { Product } from '../types/product'
 import type { Order } from '../types/order'
+import type { AdminInventoryRow } from '../services/admin'
 
 export function useAdmin() {
   const { user, isAdmin } = useAuth()
-  const [dashboard, setDashboard] = useState<any>(null)
+  const [dashboard, setDashboard] = useState<AdminDashboardData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -73,7 +74,7 @@ export function useAdminProducts(filters?: { status?: string; stockFilter?: stri
 }
 
 export function useAdminOrders(filters?: { status?: string; limit?: number; offset?: number }) {
-  const [data, setData] = useState<any[]>([])
+  const [data, setData] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [total, setTotal] = useState(0)
@@ -111,7 +112,7 @@ export function useAdminOrders(filters?: { status?: string; limit?: number; offs
 }
 
 export function useAdminInventory() {
-  const [data, setData] = useState<any[]>([])
+  const [data, setData] = useState<AdminInventoryRow[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 

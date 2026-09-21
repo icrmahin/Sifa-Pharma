@@ -52,22 +52,31 @@ export default function AdminDashboardScreen() {
     );
   }
 
+  if (!dashboard) {
+    return (
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+        <AdminHeader title="Dashboard" subtitle={timeNow() + " · no data"} />
+        <EmptyState title="No dashboard data" message="Dashboard returned no data. Pull to retry or check connection." actionLabel="Retry" onAction={reload} />
+      </SafeAreaView>
+    );
+  }
+
   const {
-    totalSalesQty = 0,
-    totalSalesRevenue = 0,
-    totalEarning = 0,
-    salesTrend = [],
-    earningTrend = [],
-    pendingOrders = 0,
-    processingOrders = 0,
-    activeProducts = 0,
-    lowStockProducts = 0,
-    attentionOrders = [],
-    pendingReturns = [],
-    lowStockBatches = [],
-    expiringBatches = [],
-    recentOrders = [],
-  } = dashboard ?? {};
+    totalSalesQty,
+    totalSalesRevenue,
+    totalEarning,
+    salesTrend,
+    earningTrend,
+    pendingOrders,
+    processingOrders,
+    activeProducts,
+    lowStockProducts,
+    attentionOrders,
+    pendingReturns,
+    lowStockBatches,
+    expiringBatches,
+    recentOrders,
+  } = dashboard;
 
   const open = (href: string) => router.push(href as never);
   const openOrder = (id: string) => router.push({ pathname: "/(admin)/orders/[orderId]", params: { orderId: id } });

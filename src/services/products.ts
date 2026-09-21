@@ -52,7 +52,7 @@ export async function fetchProducts(filters: ProductFilters = {}): Promise<Pagin
   if (error) throw error
 
   return {
-    data: (data || []).map(mapProduct),
+    data: (data || []).map((row) => mapProduct(row as unknown as Parameters<typeof mapProduct>[0])).filter(Boolean) as Product[],
     hasMore: (offset + limit) < (count || 0),
     total: count || 0,
   }
@@ -70,7 +70,7 @@ export async function fetchProductById(productId: string): Promise<Product | nul
     throw error
   }
 
-  return mapProduct(data)
+  return mapProduct(data as unknown as Parameters<typeof mapProduct>[0]) as Product
 }
 
 export async function fetchCategories(): Promise<Category[]> {
@@ -106,7 +106,7 @@ export async function searchProducts(query: string, limit = 10): Promise<Product
     .limit(limit)
 
   if (error) throw error
-  return (data || []).map(mapProduct)
+  return (data || []).map((row) => mapProduct(row as unknown as Parameters<typeof mapProduct>[0])).filter(Boolean) as Product[]
 }
 
 export async function createProduct(input: Omit<Product, 'id' | 'createdAt'> & { batchNumber?: string; expiryDate?: string }): Promise<Product> {
@@ -136,7 +136,8 @@ export async function createProduct(input: Omit<Product, 'id' | 'createdAt'> & {
     .select('*')
     .single()
   if (error) throw error
-  const product = mapProduct(data)
+  const product = mapProduct(data as unknown as Parameters<typeof mapProduct>[0]) as Product
+  if (!product) throw new Error('Failed to create product')
   if (input.stock > 0) {
     const batch = input.batchNumber?.trim() || `BATCH-${product.id.slice(0, 8).toUpperCase()}-001`
     const expiry = input.expiryDate ? new Date(input.expiryDate).toISOString().split('T')[0] : null
@@ -195,7 +196,7 @@ export async function updateProduct(productId: string, input: Partial<Omit<Produ
   }
   const { data, error } = await supabase.from('products').select('*, categories(name, slug), manufacturers(name)').eq('id', productId).single()
   if (error) throw error
-  return mapProduct(data)
+  return mapProduct(data as unknown as Parameters<typeof mapProduct>[0]) as Product
 }
 
 export async function deleteProduct(productId: string): Promise<void> {

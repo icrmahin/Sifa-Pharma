@@ -9,5 +9,5 @@ export async function fetchAuditEntries(limit = 50): Promise<AuditEntry[]> {
     .order('timestamp', { ascending: false })
     .limit(limit)
   if (error) throw error
-  return (data || []).map(mapAuditEntry)
+  return (data || []).map((r) => mapAuditEntry(r as unknown as Parameters<typeof mapAuditEntry>[0]) as AuditEntry)
 }

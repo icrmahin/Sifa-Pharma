@@ -5,7 +5,7 @@ import type { Order } from '../types/order'
 
 interface SupabaseResponse<T> {
   data: T | null
-  error: any
+  error: unknown
   count: number | null
 }
 
@@ -62,10 +62,12 @@ export interface AdminDashboardData {
   recentActivity: { id: string; action: string; actor: string; recordType: string; timestamp: string }[]
 }
 
+type DashboardSalesJson = { totalSalesQty?: number; totalSalesRevenue?: number; totalEarning?: number; salesTrend?: number[]; earningTrend?: number[] }
+
 async function fetchSalesAggregates(since30Iso: string): Promise<{ totalSalesQty: number; totalSalesRevenue: number; totalEarning: number; salesTrend: number[]; earningTrend: number[] }> {
   const { data, error } = await supabase.rpc('get_admin_dashboard_sales', { p_since: since30Iso })
   if (!error && data) {
-    const j = data as any
+    const j = data as DashboardSalesJson
     return {
       totalSalesQty: Number(j.totalSalesQty || 0),
       totalSalesRevenue: Number(j.totalSalesRevenue || 0),
@@ -80,9 +82,11 @@ async function fetchSalesAggregates(since30Iso: string): Promise<{ totalSalesQty
     supabase.from('orders').select('total, created_at').gte('created_at', since30).neq('status', 'CANCELLED'),
     supabase.from('order_items').select('quantity, unit_price, product_id, created_at, products(cost_price)').gte('created_at', since30),
   ])
-  const salesRows: any[] = (salesAggResult.data as any[]) || []
+  type SalesRow = { total?: number | string | null; created_at?: string | null }
+  type ItemRow = { quantity?: number | string | null; unit_price?: number | string | null; created_at?: string | null; products?: { cost_price?: number | string | null } | { cost_price?: number | string | null }[] | null }
+  const salesRows = (salesAggResult.data as SalesRow[] | null) || []
   const totalSalesRevenue = salesRows.reduce((s, r) => s + Number(r.total || 0), 0)
-  const itemRows: any[] = (salesItemsAggResult.data as any[]) || []
+  const itemRows = (salesItemsAggResult.data as ItemRow[] | null) || []
   let totalSalesQty = 0
   let totalEarning = 0
   const byDayQty = new Map<string, number>()
@@ -90,11 +94,13 @@ async function fetchSalesAggregates(since30Iso: string): Promise<{ totalSalesQty
   for (const r of itemRows) {
     const qty = Number(r.quantity || 0)
     const unit = Number(r.unit_price || 0)
-    const cost = Number(r.products?.[0]?.cost_price ?? r.products?.cost_price ?? unit * 0.8)
+    const prod = r.products as { cost_price?: number | string | null } | Array<{ cost_price?: number | string | null }> | null | undefined
+    const costRaw = Array.isArray(prod) ? prod[0]?.cost_price : prod?.cost_price
+    const cost = Number(costRaw ?? unit * 0.8)
     const profit = (unit - cost) * qty
     totalSalesQty += qty
     totalEarning += profit > 0 ? profit : 0
-    const day = String(r.created_at).slice(0, 10)
+    const day = String(r.created_at ?? '').slice(0, 10)
     byDayQty.set(day, (byDayQty.get(day) || 0) + qty)
     byDayEarn.set(day, (byDayEarn.get(day) || 0) + profit)
   }
@@ -207,7 +213,8 @@ export async function fetchAdminDashboard(): Promise<AdminDashboardData> {
     timestamp: activity.timestamp,
   }))
 
-  const pendingReturns = ((pendingReturnsResult.data as any[]) || []).map((r: any) => ({
+  type PendingReturnRow = { id: string; product_name: string; customer_name: string; quantity: number }
+  const pendingReturns = ((pendingReturnsResult.data as PendingReturnRow[] | null) || []).map((r) => ({
     id: r.id,
     productName: r.product_name,
     customerName: r.customer_name,
@@ -253,7 +260,7 @@ export async function fetchAdminProducts(filters?: { status?: string; stockFilte
   const { data, error, count } = await query
   if (error) throw error
 
-  return { data: (data || []).map(mapProduct), total: count || 0 }
+  return { data: (data || []).map((row) => mapProduct(row as unknown as Parameters<typeof mapProduct>[0])).filter(Boolean) as Product[], total: count || 0 }
 }
 
 export async function fetchAdminOrders(filters?: { status?: string; limit?: number; offset?: number }): Promise<{ data: Order[]; total: number }> {
@@ -269,16 +276,17 @@ export async function fetchAdminOrders(filters?: { status?: string; limit?: numb
   const { data, error, count } = await query
   if (error) throw error
 
-  return { data: (data || []).map((row: any) => mapOrder(row)), total: count || 0 }
+  const mapped = (data || []).map((row) => mapOrder(row as unknown as Parameters<typeof mapOrder>[0]) as Order).filter(Boolean) as Order[]
+  return { data: mapped, total: count || 0 }
 }
 
 export async function fetchAdminOrderById(orderId: string): Promise<Order | null> {
   const { data, error } = await supabase.from('orders').select('*, order_items(*)').eq('id', orderId).single()
   if (error) {
-    if (error.code === 'PGRST116') return null
+    if ((error as { code?: string }).code === 'PGRST116') return null
     throw error
   }
-  return mapOrder(data)
+  return mapOrder(data as unknown as Parameters<typeof mapOrder>[0]) as Order | null
 }
 
 export async function updateOrderStatus(orderId: string, status: string): Promise<void> {
@@ -290,14 +298,25 @@ export async function updateOrderStatus(orderId: string, status: string): Promis
   if (error) throw error
 }
 
-export async function fetchAdminInventory(): Promise<any[]> {
+export interface AdminInventoryRow {
+  id: string
+  product_id: string
+  batch_number: string
+  quantity: number
+  status: string
+  expiry_date: string | null
+  last_updated: string
+  products?: { name: string; brand?: string; generic_name?: string; is_active?: boolean } | null
+}
+
+export async function fetchAdminInventory(): Promise<AdminInventoryRow[]> {
   const { data, error } = await supabase
     .from('inventory_items')
     .select('*, products(name, brand, generic_name, is_active)')
     .order('last_updated', { ascending: false })
 
   if (error) throw error
-  return data || []
+  return (data as AdminInventoryRow[]) || []
 }
 
 export async function createStockAdjustment(adjustment: {

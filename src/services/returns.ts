@@ -9,7 +9,7 @@ export async function fetchReturns(userId?: string): Promise<ReturnRequest[]> {
   if (userId) query = query.eq('customer_id', userId)
   const { data, error } = await query
   if (error) throw supabaseErrorToAppError(error)
-  return (data || []).map(mapReturnRequest)
+  return (data || []).map((r) => mapReturnRequest(r as unknown as Parameters<typeof mapReturnRequest>[0]) as ReturnRequest)
 }
 
 export async function fetchReturnsResult(userId?: string): Promise<ServiceResult<ReturnRequest[]>> {
@@ -28,7 +28,7 @@ export async function fetchReturnById(returnId: string): Promise<ReturnRequest |
     if (error.code === 'PGRST116') return null
     throw supabaseErrorToAppError(error)
   }
-  return mapReturnRequest(data)
+  return mapReturnRequest(data as unknown as Parameters<typeof mapReturnRequest>[0]) as ReturnRequest
 }
 
 export async function createReturnRequest(input: {
@@ -58,7 +58,7 @@ export async function createReturnRequest(input: {
     .select()
     .single()
   if (error) throw supabaseErrorToAppError(error)
-  return mapReturnRequest(data)
+  return mapReturnRequest(data as unknown as Parameters<typeof mapReturnRequest>[0]) as ReturnRequest
 }
 
 export async function createReturnRequests(inputs: {
@@ -85,7 +85,7 @@ export async function createReturnRequests(inputs: {
   }))
   const { data, error } = await supabase.from('return_requests').insert(rows).select()
   if (error) throw supabaseErrorToAppError(error)
-  return (data || []).map(mapReturnRequest)
+  return (data || []).map((r) => mapReturnRequest(r as unknown as Parameters<typeof mapReturnRequest>[0]) as ReturnRequest)
 }
 
 export async function updateReturnStatus(returnId: string, status: 'APPROVED' | 'REJECTED' | 'PROCESSED'): Promise<void> {

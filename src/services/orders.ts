@@ -19,7 +19,7 @@ export async function fetchOrders(options?: { limit?: number; offset?: number })
   const { data, error } = await query
 
   if (error) throw error
-  return (data || []).map((row: any) => mapOrder(row))
+  return (data || []).map((row) => mapOrder(row as unknown as Parameters<typeof mapOrder>[0]) as Order).filter(Boolean) as Order[]
 }
 
 export async function fetchOrderById(orderId: string): Promise<OrderWithItems | null> {
@@ -34,7 +34,7 @@ export async function fetchOrderById(orderId: string): Promise<OrderWithItems | 
     throw error
   }
 
-  return mapOrder(data) as OrderWithItems
+  return mapOrder(data as unknown as Parameters<typeof mapOrder>[0]) as OrderWithItems
 }
 
 export async function createOrder(customerId: string, addressId: string): Promise<string> {

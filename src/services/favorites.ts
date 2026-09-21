@@ -30,7 +30,7 @@ async function fetchProductsByIds(productIds: string[]): Promise<Product[]> {
   if (productIds.length === 0) return [];
   const { data, error } = await supabase.from("products").select("*").in("id", productIds);
   if (error) throw error;
-  const byId = new Map((data || []).map((row: any) => [row.id, mapProduct(row)]));
+  const byId = new Map((data || []).map((row: any) => [row.id, mapProduct(row as unknown as Parameters<typeof mapProduct>[0]) as Product]));
   // preserve local order (recent first is stored order)
   return productIds.map((id) => byId.get(id)).filter(Boolean) as Product[];
 }

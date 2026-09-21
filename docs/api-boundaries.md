@@ -255,15 +255,16 @@ This function runs server-side and is FREE on Supabase Free.
 | Create cycle | `from('delivery_cycles').insert({ customerId, status: 'PENDING', startedAt, closesAt })` | **FREE** |
 | Update status | `from('delivery_cycles').update({ status }).eq('id', cycleId)` | **FREE** |
 
-### 7.3 FREE-TIER RISK: Cycle Timing
+### 7.3 FREE-TIER RISK: Cycle Timing (Mitigated 2026-09-22)
 
 Automated cycle closing requires scheduled logic. Supabase Free does not include cron jobs.
 
-**Free-tier approach**:
-- `closesAt` is computed at cycle creation (current time + 24 hours)
-- Client checks `closesAt` on every app open
+**Free-tier approach (implemented)**:
+- `closesAt` is computed at cycle creation (`src/services/deliveryCycle.ts:49` `now+24h`)
+- Client checks `closesAt` on every app open / `useDeliveryCycle` focus
 - Client detects expired cycles and prompts action
-- No background worker needed
+- `estimated_total` kept server-side via `sync_delivery_cycle_total()` trigger on `delivery_cycle_items` (`20260922140000`)
+- No `pg_cron`/Edge Function needed — no background worker (verified `2026-09-22`)
 
 ---
 

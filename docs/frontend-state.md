@@ -109,7 +109,7 @@
 - Audit log entries
 - Report data
 
-**Current state**: All server/API state is currently placeholder empty arrays. Hooks like `useProducts`, `useOrders`, `useProduct`, `useAdmin`, `useDeliveryCycle`, `useNotifications` all return empty arrays or null data.
+**Current state (2026-09-22)**: Wired. `useProducts`/`useProduct`/`useOrders`/`useAdmin`/`useDeliveryCycle`/`useNotifications` all fetch via Supabase services (`src/services/*` → `src/lib/mappers.ts`) with `loading/error/reload`, pagination `range`, `count: exact`, typed `Product`/`Order`/`AdminDashboardData`. Empty arrays only on no data, not placeholder.
 
 **Important rules for Supabase Free**:
 - Server state must NOT live in React Context unless used as a client-side cache

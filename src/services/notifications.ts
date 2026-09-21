@@ -10,7 +10,7 @@ export async function fetchNotifications(userId: string): Promise<NotificationIt
     .order('created_at', { ascending: false })
 
   if (error) throw error
-  return (data || []).map(mapNotification)
+  return (data || []).map((r) => mapNotification(r as unknown as Parameters<typeof mapNotification>[0]) as NotificationItem).filter(Boolean) as NotificationItem[]
 }
 
 export async function markNotificationAsRead(notificationId: string, userId: string): Promise<void> {

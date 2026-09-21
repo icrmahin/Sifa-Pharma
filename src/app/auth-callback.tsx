@@ -33,7 +33,7 @@ export default function AuthCallback() {
           return
         }
         if (token_hash && type) {
-          const { error } = await supabase.auth.verifyOtp({ token_hash, type: type as any })
+          const { error } = await supabase.auth.verifyOtp({ token_hash, type: type as 'recovery' | 'signup' | 'email_change' | 'invite' | 'magiclink' | 'email' })
           if (error) throw error
           if (type === 'recovery') {
             router.replace('/(auth)/reset-password')

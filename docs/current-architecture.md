@@ -248,16 +248,19 @@ AppProviders
 
 ### 4.7 Order Timeline (Supabase PostgreSQL)
 
-#### `supabase.from('order_timeline').select().eq('order_id', orderId)`
-- **Purpose**: Load all status updates for an order
-- **Table**: `order_timeline`
+> **Canonical (2026-09-22): `orders.timeline` jsonb** (`migrations:385`). Optional `order_timeline` table described below is supported as fallback via `fetchOrderTimeline()` but not required — `SVC-05` dual-read.
+
+#### `supabase.from('orders').select('timeline').eq('id', orderId).single()` (canonical)
+- **Purpose**: Load status updates from `orders.timeline` jsonb (current)
+- **Columns**: `timeline jsonb` array `{label, time, note}`
+- **Called from**: `OrderDetailScreen` timeline view via `src/services/orders.ts:49 fetchOrderTimeline()` (tries `order_timeline` then fallback)
+
+#### `supabase.from('order_timeline').select().eq('order_id', orderId)` (optional fallback)
+- **Purpose**: Load status updates if separate `order_timeline` table is created
+- **Table**: `order_timeline` (optional, not migrated — docs drift `D-02`/`SVC-05`)
 - **Columns**: `id`, `order_id`, `label`, `note`, `created_at`
 - **RLS**: Customer can only SELECT orders they own
-- **Called from**: `OrderDetailScreen` timeline view
-
-#### `supabase.from('order_timeline').insert({ order_id, label, note })`
-- **Purpose**: Add a new status update to an order
-- **Called from**: Admin panel when updating order status, automatic via trigger
+- **Implementation**: `fetchOrderTimeline()` tries this first, falls back to `orders.timeline` on `PGRST205`
 
 ---
 
@@ -392,28 +395,25 @@ AppProviders
 ## 5. Product-Specific Data Hooks (Backend Integration Points)
 
 ### 5.1 `useProducts(filters)` — `src/hooks/useProducts.ts`
-- **Currently**: Placeholder returning empty array
-- **Backend**: `supabase.from('products').select(filters)`
-- **Needed**: Pagination, search by name/brand/generic, filter by category, manufacturer, stock status, sort by price/name/discount
+- **Currently**: Wired — `fetchProducts()` via `supabase.from('products').select('*, categories, manufacturers')` with `range(offset, limit)` pagination, `ilike` search, `category_id`/`manufacturer_id`/`is_featured` filters, `count: exact`
+- **Backend**: `supabase.from('products').select(filters)` already implemented
+- **Notes**: Returns `PaginatedProducts {data, hasMore, total}`; used by Home + Products tabs
 
 ### 5.2 `useProduct(productId)` — `src/hooks/useProduct.ts`
-- **Currently**: Placeholder returning undefined
-- **Backend**: `supabase.from('products').select().eq('id', productId).single()` with JOINs for manufacturer, category, inventory
+- **Currently**: Wired — `fetchProductById()` via `supabase.from('products').select('*, categories, manufacturers').eq('id').single()` with `mapProduct`
+- **Backend**: `supabase.from('products').select().eq('id', productId).single()` with JOINs for manufacturer, category implemented
 
 ### 5.3 `useOrders()` — `src/hooks/useOrders.ts`
-- **Currently**: Placeholder returning empty array
-- **Backend**: `supabase.from('orders').select().eq('customer_id', userId)`
-- **Needed**: Pagination, status filtering, sort by date
+- **Currently**: Wired — `useOrders()` `fetchOrders()` + `useOrder(id)` typed `Order | null` via `supabase.from('orders').select('*, order_items(*)')`
+- **Backend**: `supabase.from('orders').select().eq('customer_id', userId)` implemented with pagination `limit/offset` in `fetchOrders`
 
 ### 5.4 `useDeliveryCycle()` — `src/hooks/useDeliveryCycle.ts`
-- **Currently**: Placeholder returning null
-- **Backend**: `supabase.from('delivery_cycles').select().eq('customer_id', userId)`
-- **Needed**: Fetch current active cycle, associated products
+- **Currently**: Wired — `fetchActiveDeliveryCycle()` + `fetchDeliveryCycles()` + `fetchDeliveryCycleById()` via `supabase.from('delivery_cycles').select('*, delivery_cycle_items(quantity, products(...))')`, `createDeliveryCycle()` with `estimated_total` trigger `sync_delivery_cycle_total()`
+- **Backend**: `supabase.from('delivery_cycles').select().eq('customer_id', userId)` + `delivery_cycle_items` join implemented
 
 ### 5.5 `useNotifications()` — `src/hooks/useNotifications.ts`
-- **Currently**: Placeholder returning empty array
-- **Backend**: `supabase.from('notifications').select().eq('user_id', userId).order('created_at', { ascending: false })`
-- **Needed**: Real-time subscription via Supabase Realtime
+- **Currently**: Wired — `fetchNotifications()` + `getUnreadCount()` via `supabase.from('notifications').select('*').eq('user_id')`, realtime `supabase.channel('notifications:{userId}:{rand}').on('postgres_changes', event '*', filter user_id=eq.{id})`
+- **Backend**: `supabase.from('notifications').select().eq('user_id', userId).order('created_at', { ascending: false })` + `supabase_realtime` publication `20260922150000` active
 
 ---
 
@@ -487,17 +487,17 @@ DeliveryCycleScreen [Order tracking]
 
 ---
 
-## 9. Free-Tier Constraints & Risks
+## 9. Free-Tier Constraints & Risks (Mitigated 2026-09-22)
 
-| Concern | Risk Level | Mitigation |
-|---------|-----------|------------|
-| Supabase Realtime subscriptions | Medium | Use sparingly; notifications only |
-| Database function calls | Low | Free plan allows reasonable usage |
-| Storage bandwidth | Low | Product images are small |
-| Row Level Security complexity | Medium | Must test thoroughly; RLS errors break UI |
-| Connection limits | Low | Mobile app has fewer concurrent connections |
-| Scheduled jobs (delivery cycle) | High | No built-in cron on free plan; use Edge Function + Supabase pg_cron or client-side check |
-| Real-time inventory updates | Medium | Polling instead of Realtime acceptable |
+| Concern | Risk Level | Mitigation (implemented) |
+|---------|-----------|--------------------------|
+| Supabase Realtime subscriptions | Medium → Low | Unique channel `notifications:{userId}:{rand}` per `useNotifications` instance (`src/hooks/useNotifications.ts:43`) avoids `cannot add callbacks after subscribe` on multi-mount; publication `supabase_realtime` limited to 4 tables (`20260922150000`); fallback to fetch on focus if WS fails |
+| Database function calls | Low | `get_admin_dashboard_sales` RPC + `get_customers_with_stats` reduce 11 parallel `select('*')` + N+1 |
+| Storage bandwidth | Low | `product-images`/`avatars` buckets `public=true` + client compression planned (`IMG-01`) |
+| Row Level Security complexity | Medium | Tested `PGRST205` missing-table fallback in `favorites`, `order_timeline` |
+| Connection limits | Low | Mobile app fewer concurrent; dashboard 9+RPC vs 11 |
+| Scheduled jobs (delivery cycle) | High → Medium | `closes_at = now+24h` computed at create (`deliveryCycle.ts:49`); client checks `closes_at` on app open; `delivery_cycle_items` trigger `sync_delivery_cycle_total()` keeps `estimated_total` server-side — no `pg_cron` needed on free tier (see `api-boundaries.md:258`) |
+| Real-time inventory updates | Medium | `products`/`inventory_items` in `supabase_realtime` (`20260922150000`); frontend can subscribe or poll on focus per `current-architecture.md:492` |
 
 ---
 

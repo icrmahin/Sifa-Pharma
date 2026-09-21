@@ -8,9 +8,12 @@ import {
   type ReactNode,
 } from 'react'
 import * as Linking from 'expo-linking'
+import type { Session } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 import type { User } from '../types/user'
 import type { AuthSession, AuthContextType, LoginForm, RegisterForm } from '../types/auth'
+
+type VerifyOtpType = 'signup' | 'recovery' | 'invite' | 'magiclink' | 'email_change' | 'email'
 
 // Production allowlist — must match DB is_admin() allowlist exactly
 // admin@sifa.local included for local seed parity (non-routable, dev only)
@@ -31,12 +34,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
-      await handleSessionChange(session)
+      await handleSessionChange(session as Session | null)
       setLoading(false)
     })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      await handleSessionChange(session)
+      await handleSessionChange(session as Session | null)
     })
 
     // Deep-link handling for email confirmation and password recovery (standalone Android via sifapharma://)
@@ -59,7 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (error) console.warn('[AuthProvider] exchangeCodeForSession error', error.message)
         } else if (token_hash && type) {
           // legacy token_hash flow (recovery, signup, email_change)
-          const { error } = await supabase.auth.verifyOtp({ token_hash, type: type as any })
+          const { error } = await supabase.auth.verifyOtp({ token_hash, type: type as VerifyOtpType })
           if (error) console.warn('[AuthProvider] verifyOtp error', error.message)
         } else {
           // Handle case where url contains access_token in hash (implicit flow fallback)
@@ -108,7 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  async function handleSessionChange(session: any) {
+  async function handleSessionChange(session: Session | null) {
     if (session?.user) {
       const email = session.user.email as string | undefined
       // Display role from profiles (derived), but authorization truth is email allowlist + DB is_admin()
@@ -126,8 +129,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.warn('[AuthProvider] blocked admin impersonation: profiles.role=admin but email not allowlisted', email)
       }
 
+      const sessionWithId = session as Session & { id?: string }
       const authSession: AuthSession = {
-        id: (session as any).id || session.access_token?.slice(0, 8) || '',
+        id: sessionWithId.id || session.access_token?.slice(0, 8) || '',
         userId: session.user.id || '',
         role: displayRole,
         email: email || undefined,
@@ -139,11 +143,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const appUser: User = {
         id: session.user.id || '',
-        name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User',
-        email: session.user.email,
-        phone: session.user.phone,
+        name: ((session.user.user_metadata?.name as string | undefined) || session.user.email?.split('@')[0] || 'User') as string,
+        email: session.user.email || undefined,
+        phone: session.user.phone ?? '',
         role: displayRole,
-        avatar: session.user.user_metadata?.avatar_url,
+        avatar: session.user.user_metadata?.avatar_url as string | undefined,
         createdAt: session.user.created_at || new Date().toISOString(),
       }
       setUser(appUser)
@@ -173,8 +177,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {}
     const finalIsAdmin = rpcAdmin !== null ? rpcAdmin : hardenedIsAdmin
     const role: 'customer' | 'admin' = finalIsAdmin ? 'admin' : 'customer'
+    const sessWithId = data.session as Session & { id?: string }
     return {
-      id: (data.session as any).id || '',
+      id: sessWithId.id || '',
       userId: data.user.id || '',
       role,
       email: data.user.email,
@@ -200,24 +205,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
      if (error) throw new Error(error.message)
     if (!data.user) throw new Error('No user returned')
     // Simple flow: no email confirmation required. If session exists, return it; if not (hosted still has confirmations enabled), fallback to user without session so caller can sign in directly.
-    if (data.session) {
-      return {
-        id: (data.session as any).id || '',
-        userId: data.user.id || '',
-        role: 'customer',
-        email: data.user.email,
-        phone: form.phone,
-        isAdmin: isEmailAllowlisted(data.user.email),
-      }
-    }
-    return {
-      id: '',
-      userId: data.user.id || '',
-      role: 'customer',
-      email: data.user.email,
-      phone: form.phone,
-      isAdmin: isEmailAllowlisted(data.user.email),
-    }
+     if (data.session) {
+       const sessWithId = data.session as Session & { id?: string }
+       return {
+         id: sessWithId.id || '',
+         userId: data.user.id || '',
+         role: 'customer',
+         email: data.user.email,
+         phone: form.phone,
+         isAdmin: isEmailAllowlisted(data.user.email),
+       }
+     }
+     return {
+       id: '',
+       userId: data.user.id || '',
+       role: 'customer',
+       email: data.user.email,
+       phone: form.phone,
+       isAdmin: isEmailAllowlisted(data.user.email),
+     }
   }, [])
 
   const signOut = useCallback(async () => {
@@ -232,7 +238,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: { user: currentUser } } = await supabase.auth.getUser()
     if (currentUser) {
       // Build minimal session-shaped object for handleSessionChange
-      await handleSessionChange({ user: currentUser, access_token: '' })
+      const minimalSession = { user: currentUser, access_token: '' } as unknown as Session
+      await handleSessionChange(minimalSession)
     }
   }, [])
 

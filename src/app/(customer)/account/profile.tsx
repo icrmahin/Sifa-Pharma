@@ -24,7 +24,7 @@ export default function ProfileScreen() {
   useEffect(() => {
     if (user) {
       setName(user.name ?? "");
-      setPhone((user as any).phone ?? "");
+      setPhone(user.phone ?? "");
     }
   }, [user]);
 

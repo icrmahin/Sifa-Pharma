@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/set-state-in-effect -- data fetching and derived state sync require setState inside effects */
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from './useAuth'
-import type { Order, OrderItem } from '../types/order'
+import type { Order } from '../types/order'
 import { fetchOrders, fetchOrderById, createOrder } from '../services/orders'
 
 export function useOrders() {
@@ -31,7 +31,7 @@ export function useOrders() {
 }
 
 export function useOrder(orderId?: string) {
-  const [order, setOrder] = useState<{ items: any[] } & { id: string; orderNumber: string; customerId: string; customerName: string; createdAt: string; status: string; subtotal: number; discount: number; deliveryFee: number; total: number; paymentMethod: string; address: string; timeline: any[] } | null>(null)
+  const [order, setOrder] = useState<Order | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 

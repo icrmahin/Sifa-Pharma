@@ -23,7 +23,7 @@ export async function fetchAddresses(userId: string): Promise<Address[]> {
     .order('created_at', { ascending: false })
 
   if (error) throw error
-  return (data || []).map(mapAddress)
+  return (data || []).map((r) => mapAddress(r as unknown as Parameters<typeof mapAddress>[0]) as Address)
 }
 
 export async function fetchAddressById(addressId: string): Promise<Address | null> {
@@ -37,7 +37,7 @@ export async function fetchAddressById(addressId: string): Promise<Address | nul
     if (error.code === 'PGRST116') return null
     throw error
   }
-  return mapAddress(data)
+  return mapAddress(data as unknown as Parameters<typeof mapAddress>[0]) as Address
 }
 
 export async function createAddress(userId: string, address: Omit<Address, 'id' | 'user_id' | 'created_at' | 'updated_at'>): Promise<Address> {
@@ -48,7 +48,7 @@ export async function createAddress(userId: string, address: Omit<Address, 'id' 
     .single()
 
   if (error) throw error
-  return mapAddress(data)
+  return mapAddress(data as unknown as Parameters<typeof mapAddress>[0]) as Address
 }
 
 export async function updateAddress(addressId: string, userId: string, updates: Partial<Omit<Address, 'id' | 'user_id' | 'created_at' | 'updated_at'>>): Promise<Address> {
@@ -61,7 +61,7 @@ export async function updateAddress(addressId: string, userId: string, updates: 
     .single()
 
   if (error) throw error
-  return mapAddress(data)
+  return mapAddress(data as unknown as Parameters<typeof mapAddress>[0]) as Address
 }
 
 export async function deleteAddress(addressId: string, userId: string): Promise<void> {

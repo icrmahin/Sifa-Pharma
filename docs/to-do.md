@@ -56,18 +56,30 @@
 
 ## P2 — Type Safety / `as any` / Placeholders
 
-- [ ] **T-01 `src/lib/mappers.ts:33` `// @ts-ignore` `_rawCategory/_rawManufacturer` + `db: any`**
-- [ ] **T-02 `src/providers/AuthProvider.tsx:62,130,177` `as any` session/OTP casts, `src/utils/navigation.ts:7` `router.push as any` `src/app/auth-callback.tsx:36`**
-- [ ] **T-03 `src/hooks/useOrders.ts:34` `any[]` order state, `src/hooks/useAdmin.ts:76,114` `any[]`, `src/services/admin.ts:170` `any[]` salesRows**
-- [ ] **T-04 Hardcoded empty defaults in dashboard `src/app/(admin)/index.tsx:55` `totalSalesQty=0` shows calm when fetch fails, no error**
+- [x] **T-01 `src/lib/mappers.ts:33` `// @ts-ignore` `_rawCategory/_rawManufacturer` + `db: any`**
+  - Fixed 2026-09-22: typed `DbProductRow` + `DbOrderRow` etc. with `DbRecord` base, removed `@ts-ignore` and `db: any`, changed to `DbProductRow | null` signatures, preserved `_rawCategory/_rawManufacturer` as `Category | Manufacturer` typed.
+
+- [x] **T-02 `src/providers/AuthProvider.tsx:62,130,177` `as any` session/OTP casts, `src/utils/navigation.ts:7` `router.push as any` `src/app/auth-callback.tsx:36`**
+  - Fixed 2026-09-22: `AuthProvider.tsx:62` `type as VerifyOtpType`, `AuthProvider.tsx:130,177` session `id` via `Session & {id?:string}` + `Session` typed `handleSessionChange(Session|null)`, `AuthProvider.tsx:11` import `Session`, `navigation.ts:7` `router.replace(fallback as Href)`, `auth-callback.tsx:36` `type as VerifyOtpType`, `profile.tsx:52` removed `(user as any).phone`.
+
+- [x] **T-03 `src/hooks/useOrders.ts:34` `any[]` order state, `src/hooks/useAdmin.ts:76,114` `any[]`, `src/services/admin.ts:170` `any[]` salesRows**
+  - Fixed 2026-09-22: `useOrders.ts:34` `useState<Order|null>` vs `any[]`, `useAdmin.ts:76,114` `Order[]` + `AdminInventoryRow[]` typed (`admin.ts:301` `AdminInventoryRow`), `admin.ts:170` typed `SalesRow`/`ItemRow`/`PendingReturnRow` + `DashboardSalesJson`, filtered `mapProduct/mapOrder` with `filter(Boolean)`.
+
+- [x] **T-04 Hardcoded empty defaults in dashboard `src/app/(admin)/index.tsx:55` `totalSalesQty=0` shows calm when fetch fails, no error**
+  - Fixed 2026-09-22: `admin/index.tsx:55` now `if (!dashboard) return EmptyState Retry` before destructuring, removed `dashboard ?? {} =0` defaults — errors surface via `ErrorState` already, empty data shows `EmptyState` not false calm.
 
 ---
 
 ## P3 — Docs Drift (Not Code Bug, But Must Sync)
 
-- [ ] **D-01 `docs/current-architecture.md:395` `docs/frontend-state.md:112` say hooks are placeholder empty arrays — code is already wired `src/hooks/useProducts.ts:39`**
-- [ ] **D-02 `order_timeline` table described but not migrated (see SVC-05)**
-- [ ] **D-03 Free-tier risks listed `docs/current-architecture.md:491` not mitigated: Realtime limits, `pg_cron` for delivery cycles `delivery_cycles.closes_at = now+24h` only client-checked `docs/api-boundaries.md:258`**
+- [x] **D-01 `docs/current-architecture.md:395` `docs/frontend-state.md:112` say hooks are placeholder empty arrays — code is already wired `src/hooks/useProducts.ts:39`**
+  - Fixed 2026-09-22: `current-architecture.md:395` updated 5.1-5.5 to Wired (fetch via `supabase.from` + pagination/realtime), `frontend-state.md:112` now `Wired (2026-09-22)` with `loading/error/reload` typed.
+
+- [x] **D-02 `order_timeline` table described but not migrated (see SVC-05)**
+  - Fixed 2026-09-22: `current-architecture.md:250` now notes canonical `orders.timeline jsonb` + optional `order_timeline` fallback; `orders.ts:49 fetchOrderTimeline()` tries `order_timeline` then fallback on `PGRST205` (see SVC-05).
+
+- [x] **D-03 Free-tier risks listed `docs/current-architecture.md:491` not mitigated: Realtime limits, `pg_cron` for delivery cycles `delivery_cycles.closes_at = now+24h` only client-checked `docs/api-boundaries.md:258`**
+  - Fixed 2026-09-22: `current-architecture.md:491` table now Mitigated (unique channel `notifications:{rand}`, publication 4 tables, `get_admin_dashboard_sales` RPC, `delivery_cycle_items` trigger), `api-boundaries.md:258` notes `sync_delivery_cycle_total()` server-side + client `closes_at` check, no `pg_cron` needed.
 
 ---
 

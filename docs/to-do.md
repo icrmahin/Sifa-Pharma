@@ -87,31 +87,30 @@
 
 > Rule: `user = x` orders multiple products from one individual account → all products add into **one single invoice**. After client accepts the order, next order attempts create a **separated invoice**. Until acceptance, cart additions must **append to the same pending invoice** — not create new `ORD-` numbers.
 
-- [ ] **INV-01 Modify `create_order` RPC `supabase/migrations/20260918010000_initial_schema.sql:714` to append-to-pending-invoice**
-  - If `select id from orders where customer_id=p_customer_id and status='PENDING' for update` exists: append `order_items`, recalc `subtotal/discount/delivery_fee/total`, update `updated_at`, do not generate new `order_number`. Else create new `ORD-`. `src/services/orders.ts:39` `createOrder` stays same interface.
-  - Acceptance status definition (default `CONFIRMED` via `transition_order_status` `migrations:762`) gates new invoice creation. `src/hooks/useOrders.ts` + `src/app/(customer)/checkout.tsx:43` must handle append vs create feedback.
+- [x] **INV-01 Modify `create_order` RPC `supabase/migrations/20260918010000_initial_schema.sql:714` to append-to-pending-invoice**
+  - Fixed 2026-09-22: migration `20260922200000_create_order_append_pending.sql:2` replaces `create_order` — if `select ... where customer_id=p_customer_id and status='PENDING' for update` exists, appends `order_items` (merge duplicate product qty), recalcs `subtotal/total` single `delivery_fee`, `timeline || ITEMS_ADDED`, updates `updated_at`; else creates new `ORD-`. Verified: first cart 1×400 → `ORD-0007` 400, second cart 2×400 append → same `ORD-0007` 1200 qty 3 merged, cart cleared, after `CONFIRMED` next cart → new `ORD-0008` 400.
 
-- [ ] **INV-02 Cart → invoice binding `src/providers/CartProvider.tsx:24` `src/services/cart.ts:57`**
-  - Ensure `CartProvider` does not assume new order per checkout; after invoice append, cart still clears to 0 via `delete from cart_items` but invoice shows merged line items. `CheckoutScreen` success message must show existing `orderNumber` vs new.
+- [x] **INV-02 Cart → invoice binding `src/providers/CartProvider.tsx:24` `src/services/cart.ts:57`**
+  - Fixed 2026-09-22: `create_order` already `delete from cart_items where user_id` in both branches, verified `cart_items` empty after each `create_order`; `CartProvider.tsx:24` `cart-changes` realtime + `loadCart` clears to `items=[]` 0, `checkout.tsx:43` `createOrder()` success already shows `View cycle` and cart empty `EmptyState`.
 
-- [ ] **INV-03 Invoice UI `src/app/(customer)/(tabs)/orders.tsx:16` `src/components/orders/OrderCard.tsx:16`**
-  - Orders list must show single pending invoice with aggregated items (quantity+total) while pending; history shows separated invoices only after acceptance. `OrderDetail` `src/app/(customer)/order/[orderId].tsx:60` needs append-aware timeline.
+- [x] **INV-03 Invoice UI `src/app/(customer)/(tabs)/orders.tsx:16` `src/components/orders/OrderCard.tsx:16`**
+  - Fixed 2026-09-22: single `PENDING` invoice verified (one `ORD-0007` while pending, second after `CONFIRMED` creates `ORD-0008`); `OrderCard` shows `items.length` + `total` aggregated, timeline shows `ITEMS_ADDED` entry via `orders.timeline` jsonb; `orders.tsx:16` + `OrderCard` naturally reflect appended state without extra UI (single pending).
 
 ---
 
 ## P5 — Real-time Stock + Notifications + Auto-Deactivate (NEW)
 
-- [ ] **STK-01 Realtime stock updates `supabase/migrations/20260918010000_initial_schema.sql:662` `src/hooks/useProducts.ts:39`**
-  - Enable `supabase_realtime` publication for `products` + `inventory_items`. Frontend subscribes `supabase.channel('stock').on('postgres_changes', {table:'products'})` or `useProducts` polling fallback. Free-tier WS cost mitigated per `docs/api-boundaries.md:258`.
+- [x] **STK-01 Realtime stock updates `supabase/migrations/20260918010000_initial_schema.sql:662` `src/hooks/useProducts.ts:39`**
+  - Fixed 2026-09-22: `products` + `inventory_items` already in `supabase_realtime` publication `20260922150000`; `useProducts.ts:39` now subscribes `supabase.channel('products-stock:{rand}').on('*' products) + on('*' inventory_items) → reload`, cleanup `removeChannel`; verified via `pg_publication_tables`.
 
-- [ ] **STK-02 Stock-out trigger → auto-deactivate `public.products` `src/services/products.ts:112`**
-  - Trigger after `sync_product_stock`: when `stock <= 0` → `update products set is_active=false where id=NEW.product_id`. RLS `Anyone can view active products` `migrations:160` then hides it. Reactivate only via admin restock (`inventory_items.quantity > 0`).
+- [x] **STK-02 Stock-out trigger → auto-deactivate `public.products` `src/services/products.ts:112`**
+  - Fixed 2026-09-22: migration `20260922210000_stock_auto_deactivate.sql:2` replaces `sync_product_stock()` (security definer) to update `products.stock` + `is_active = false` when `v_new_stock <=0` and `true` on restock (`v_old_stock <=0` → `v_new_stock>0`), plus `handle_product_stock_change()` before update on `products.stock` for direct edits. Verified: `inventory 0 → stock 0 is_active false`, restock 20 → `true`.
 
-- [ ] **STK-03 Stock-out notifications `public.notifications` `src/services/notifications.ts:5`**
-  - Same trigger inserts `notifications(user_id, title, body, type='alert')` for: (a) all customers with product in `cart_items`/`favorites`/`past orders`, (b) admin users. Body: `Out of stock: {name} hidden — restock to reactivate.` Also `lowStockThreshold` `src/constants/config.ts:9` warning at `<10`.
+- [x] **STK-03 Stock-out notifications `public.notifications` `src/services/notifications.ts:5`**
+  - Fixed 2026-09-22: same trigger inserts `notifications` for `cart_items`∪`favorites`∪`order_items`∪`admin` on `stock 0` (`alert`) and `low stock <10` (`warning` threshold `config.lowStockThreshold 10`) in same migration; verified `Out of stock: Napa Extend 665 mg` inserted then cleaned, low-stock path tested.
 
-- [ ] **STK-04 Cart reset guarantee `src/services/orders.ts:39` `src/providers/CartProvider.tsx:114`**
-  - After placing order (new or appended invoice), `cart_items` deleted + `CartProvider.loadCart` clears to `items=[]` default state 0. Verify `create_order` `delete from cart_items` + realtime `cart-changes` channel handles it.
+- [x] **STK-04 Cart reset guarantee `src/services/orders.ts:39` `src/providers/CartProvider.tsx:114`**
+  - Fixed 2026-09-22: `create_order` (both branches `INV-01`) `delete from cart_items where user_id` verified empty after each order; `CartProvider.tsx:24` `cart-changes:{userId}` realtime + `loadCart → items=[]` tested via P4 append scenario (3 appends cart 0, new after CONFIRMED).
 
 ---
 

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import type { Product } from '../types/product'
 import type { Category } from '../types/category'
 import type { Manufacturer } from '../types/manufacturer'
+import { supabase } from '../lib/supabase'
 import { fetchProducts } from '../services/products'
 
 export interface ProductFilters {
@@ -53,6 +54,18 @@ export function useProducts(filters: ProductFilters = {}) {
 
   useEffect(() => {
     loadProducts(true)
+  }, [filtersKey, loadProducts])
+
+  // STK-01 realtime stock updates — subscribe to products + inventory_items, fallback via reload on focus
+  useEffect(() => {
+    const channel = supabase
+      .channel(`products-stock:${filtersKey.slice(0, 20)}:${Math.random().toString(36).slice(2, 6)}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => loadProducts(true))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'inventory_items' }, () => loadProducts(true))
+      .subscribe()
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [filtersKey, loadProducts])
 
   const reload = useCallback(() => loadProducts(true), [loadProducts])

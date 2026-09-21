@@ -9,7 +9,7 @@ import Input from '../../../components/common/Input';
 import Button from '../../../components/common/Button';
 import LoadingState from '../../../components/common/LoadingState';
 import { useAuth } from '../../../hooks/useAuth';
-import { supabase } from '../../../lib/supabase';
+import { updateProfile } from '../../../services/profile';
 import spacing from '../../../constants/spacing';
 
 export default function ProfileScreen() {
@@ -49,11 +49,7 @@ export default function ProfileScreen() {
     }
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ name: name.trim(), phone: phone.trim() || null, updated_at: new Date().toISOString() })
-        .eq('id', user.id);
-      if (error) throw error;
+      await updateProfile(user.id, { name: name.trim(), phone: phone.trim() || null });
       await refreshUser();
       setSuccess(true);
     } catch (e: any) {

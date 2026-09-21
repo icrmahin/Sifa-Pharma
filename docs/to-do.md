@@ -34,23 +34,23 @@
 
 ## P1 — Service Layer Bypass / Hardcoded Business Logic
 
-- [ ] **SVC-01 Hardcoded `deliveryFee = 150` in 2 places `src/providers/CartProvider.tsx:126` `src/services/cart.ts:78` `src/services/admin.ts:246` `src/constants/config.ts:8`**
-  - Should read from `config.deliveryFee` single source.
+- [x] **SVC-01 Hardcoded `deliveryFee = 150` in 2 places `src/providers/CartProvider.tsx:126` `src/services/cart.ts:78` `src/services/admin.ts:246` `src/constants/config.ts:8`**
+  - Fixed 2026-09-22: `CartProvider.tsx:8` + `cart.ts:4` + `mappers.ts:1` now `import config` and `deliveryFee = config.deliveryFee` single source (`CartProvider.tsx:127` `cart.ts:79` `mappers.ts:62`). DB default `delivery_fee 150` stays but client single-source enforced.
 
-- [ ] **SVC-02 Customers list N+1 `src/services/customers.ts:14`**
-  - `fetchCustomers` does `select profile` then `select * from orders` for every customer to compute `orderCount/totalSpent` client-side, no pagination.
+- [x] **SVC-02 Customers list N+1 `src/services/customers.ts:14`**
+  - Fixed 2026-09-22: migration `20260922180000_customers_stats.sql:2` adds `get_customers_with_stats` + `get_customer_stats` RPCs server-side aggregation + pagination (`limit/offset` + `ilike` search). `customers.ts:14` now `fetchCustomers(query, {limit,offset}) → rpc` with fallback client `range`, maps `order_count/total_spent`. `fetchCustomerById` also via RPC. Verified `select * from get_customers_with_stats(null,5,0) → 1 row`.
 
-- [ ] **SVC-03 Returns creating only first item `src/services/returns.ts:22` `src/app/(customer)/order/[orderId].tsx:60`**
-  - `order.items[0]` → ignores multi-item orders; status via direct `update` not `validate_return` RPC `migrations:815`.
+- [x] **SVC-03 Returns creating only first item `src/services/returns.ts:22` `src/app/(customer)/order/[orderId].tsx:60`**
+  - Fixed 2026-09-22: `returns.ts:22` now `rpc('validate_return')` before insert + `createReturnRequests()` bulk for multi-item (`return_requests` rows per product), throws `AppError` via `supabaseErrorToAppError`. `order/[orderId].tsx:60` now selectable items (Set) with `toggleReturnItem`, defaults to all, `Submit return (n)` creates `n` rows via bulk RPC-validated insert.
 
-- [ ] **SVC-04 `ServiceResult<T>` unused `src/lib/result.ts:1` `src/lib/errors.ts:25`**
-  - Helpers `ok`/`fail`/`supabaseErrorToAppError` exist but services throw raw `error`. Error handling not unified.
+- [x] **SVC-04 `ServiceResult<T>` unused `src/lib/result.ts:1` `src/lib/errors.ts:25`**
+  - Fixed 2026-09-22: `returns.ts:1` + `customers.ts:1` now `import supabaseErrorToAppError` + `ok/fail ServiceResult`; `fetchReturnsResult` + `fetchCustomersResult` return `ServiceResult` via `ok/fail`, other fns throw `AppError` (unified). Fallback RPC errors mapped via `supabaseErrorToAppError`.
 
-- [ ] **SVC-05 Order `timeline` mismatch `supabase/migrations:385` `timeline jsonb` vs docs `order_timeline` table `docs/current-architecture.md:251`**
-  - Frontend reads `orders.timeline` jsonb; docs describe separate `order_timeline` table that does not exist.
+- [x] **SVC-05 Order `timeline` mismatch `supabase/migrations:385` `timeline jsonb` vs docs `order_timeline` table `docs/current-architecture.md:251`**
+  - Fixed 2026-09-22: `orders.ts:49` `fetchOrderTimeline` now tries `order_timeline` table first (`order_timeline.label, created_at`), falls back to `orders.timeline` jsonb if `PGRST205` missing-table, throws `AppError` otherwise — supports both canonical jsonb and docs table.
 
-- [ ] **SVC-06 Direct Supabase in screens bypassing service `src/app/(customer)/account/profile.tsx:52` `src/app/(admin)/returns/index.tsx:27`**
-  - Should use `profileService` / `returnsService`.
+- [x] **SVC-06 Direct Supabase in screens bypassing service `src/app/(customer)/account/profile.tsx:52` `src/app/(admin)/returns/index.tsx:27`**
+  - Fixed 2026-09-22: created `services/profile.ts:1` `updateProfile/fetchProfile` with `supabaseErrorToAppError`; `profile.tsx:12` now `import {updateProfile}` and `await updateProfile()`; `returns/index.tsx:14` now `import {fetchReturns}` and `fetchReturns().then` instead of direct `supabase.from`.
 
 ---
 

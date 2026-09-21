@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabase'
 import { mapOrder } from '../lib/mappers'
 import type { Order, OrderItem } from '../types/order'
+import { supabaseErrorToAppError } from '../lib/errors'
 
 export interface OrderWithItems extends Order {
   items: OrderItem[]
@@ -47,12 +48,24 @@ export async function createOrder(customerId: string, addressId: string): Promis
 }
 
 export async function fetchOrderTimeline(orderId: string): Promise<{ label: string; time: string; note?: string }[]> {
+  // Try separate order_timeline table first (docs describe it), fallback to orders.timeline jsonb
+  const { data: tlData, error: tlError } = await supabase
+    .from('order_timeline')
+    .select('label, note, created_at')
+    .eq('order_id', orderId)
+    .order('created_at', { ascending: true })
+  if (!tlError && tlData) {
+    return tlData.map((r: any) => ({ label: r.label, time: r.created_at, note: r.note }))
+  }
+  if (tlError && tlError.code !== 'PGRST205' && !String(tlError.message).includes('Could not find the table')) {
+    // Unexpected error, fallback still
+  }
   const { data, error } = await supabase
     .from('orders')
     .select('timeline')
     .eq('id', orderId)
     .single()
 
-  if (error) throw error
+  if (error) throw supabaseErrorToAppError(error)
   return (data?.timeline as { label: string; time: string; note?: string }[]) || []
 }

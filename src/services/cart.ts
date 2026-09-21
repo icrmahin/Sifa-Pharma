@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabase'
 import type { CartItem, CartSummary } from '../types/cart'
 import type { Product } from '../types/product'
+import config from '../constants/config'
 
 interface DbProduct {
   id: string
@@ -75,7 +76,7 @@ export async function fetchCart(userId: string): Promise<{ items: CartItemWithPr
     const itemDiscount = (item.product.price * item.quantity * (item.product.discountPercent || 0)) / 100
     return sum + itemDiscount
   }, 0)
-  const deliveryFee = 150
+  const deliveryFee = config.deliveryFee
   const total = subtotal - discount + deliveryFee
 
   return {

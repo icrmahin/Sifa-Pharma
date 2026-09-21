@@ -5,6 +5,7 @@ import { useAuth } from '../hooks/useAuth'
 import type { CartItem, CartSummary } from '../types/cart'
 import type { Product } from '../types/product'
 import { fetchCart, addToCart, updateCartItemQuantity, removeFromCart, clearCart } from '../services/cart'
+import config from '../constants/config'
 
 type CartContextValue = {
   items: (CartItem & { product: Product })[]
@@ -123,7 +124,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const itemDiscount = ((item.product?.price || 0) * item.quantity * (item.product?.discountPercent || 0)) / 100
       return sum + itemDiscount
     }, 0)
-    const deliveryFee = 150
+    const deliveryFee = config.deliveryFee
     const total = subtotal - discount + deliveryFee
     return { subtotal, discount, deliveryFee, total }
   }, [items])

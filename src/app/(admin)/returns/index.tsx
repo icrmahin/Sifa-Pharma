@@ -11,8 +11,7 @@ import StatusBadge from '../../../components/common/StatusBadge';
 import { useThemeColors } from '../../../providers/ThemeProvider';
 import spacing from '../../../constants/spacing';
 import typography from '../../../constants/typography';
-import { supabase } from '../../../lib/supabase';
-import { mapReturnRequest } from '../../../lib/mappers';
+import { fetchReturns } from '../../../services/returns';
 
 export default function AdminReturnsScreen() {
   const colors = useThemeColors();
@@ -23,14 +22,15 @@ export default function AdminReturnsScreen() {
   React.useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    supabase
-      .from('return_requests')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .then(({ data, error }) => {
+    fetchReturns()
+      .then((data) => {
         if (cancelled) return;
-        if (error) setError(error.message);
-        else setReturns((data || []).map(mapReturnRequest));
+        setReturns(data);
+        setLoading(false);
+      })
+      .catch((err: any) => {
+        if (cancelled) return;
+        setError(err.message || 'Failed to load returns');
         setLoading(false);
       });
     return () => {

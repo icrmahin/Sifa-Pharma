@@ -14,7 +14,7 @@ import Input from '../../../components/common/Input';
 import spacing from '../../../constants/spacing';
 import { useOrder } from '../../../hooks/useOrders';
 import { useAuth } from '../../../hooks/useAuth';
-import { createReturnRequest } from '../../../services/returns';
+import { createReturnRequests } from '../../../services/returns';
 import { formatCurrency } from '../../../utils/currency';
 import { formatDateTime } from '../../../utils/date';
 
@@ -29,6 +29,7 @@ export default function CustomerOrderDetailScreen() {
   const [returnSubmitting, setReturnSubmitting] = useState(false);
   const [returnError, setReturnError] = useState<string | null>(null);
   const [returnSuccess, setReturnSuccess] = useState(false);
+  const [selectedReturnIds, setSelectedReturnIds] = useState<Set<string>>(new Set());
 
   if (loading) {
     return (
@@ -57,6 +58,15 @@ export default function CustomerOrderDetailScreen() {
 
   const tone = order?.status === 'DELIVERED' ? 'success' : order?.status === 'CANCELLED' ? 'danger' : order?.status === 'PENDING' ? 'warning' : 'info';
 
+  const toggleReturnItem = (id: string) => {
+    setSelectedReturnIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
   const handleReturn = async () => {
     setReturnError(null);
     if (!returnReason.trim()) {
@@ -67,24 +77,25 @@ export default function CustomerOrderDetailScreen() {
       setReturnError('Not signed in.');
       return;
     }
-    const firstItem = order.items[0];
-    if (!firstItem) {
-      setReturnError('No items to return.');
+    const selected = order.items.filter((it) => selectedReturnIds.has(it.id));
+    const toReturn = selected.length > 0 ? selected : order.items;
+    if (toReturn.length === 0) {
+      setReturnError('No items selected to return.');
       return;
     }
     setReturnSubmitting(true);
     try {
-      await createReturnRequest({
+      await createReturnRequests({
         orderId: order.id,
         customerId: user.id,
         customerName: user.name || user.email || 'Customer',
-        productName: firstItem.productName,
-        quantity: firstItem.quantity,
         reason: returnReason.trim(),
+        items: toReturn.map((it) => ({ productName: it.productName, quantity: it.quantity })),
       });
       setReturnSuccess(true);
       setShowReturn(false);
       setReturnReason("");
+      setSelectedReturnIds(new Set());
     } catch (e: any) {
       setReturnError(e.message || 'Failed to request return. Only delivered orders can be returned.');
     } finally {
@@ -140,12 +151,22 @@ export default function CustomerOrderDetailScreen() {
           <View style={[styles.card, { backgroundColor: colors.backgroundAlt, borderColor: colors.border }]}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>Return</Text>
             {returnSuccess ? (
-              <Text style={[styles.meta, { color: colors.success }]}>Return requested. Admin will review.</Text>
+              <Text style={[styles.meta, { color: colors.success }]}>Return requested for {order.items.length > 1 ? `${order.items.filter((it) => selectedReturnIds.size === 0 || selectedReturnIds.has(it.id)).length} item(s)` : 'item'}. Admin will review.</Text>
             ) : showReturn ? (
               <View style={{ gap: spacing.md }}>
+                <Text style={[styles.meta, { color: colors.textMuted }]}>Select items to return (defaults to all)</Text>
+                {order.items.map((it) => {
+                  const selected = selectedReturnIds.size === 0 ? true : selectedReturnIds.has(it.id);
+                  return (
+                    <View key={it.id} style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, borderWidth: 1, borderColor: selected ? colors.primary : colors.borderLight, backgroundColor: selected ? colors.primarySoft : colors.backgroundAlt, borderRadius: 12, padding: spacing.sm }}>
+                      <Text style={[styles.itemName, { color: colors.text, flex: 1 }]}>{it.productName} — {it.quantity} pcs</Text>
+                      <Button title={selected ? 'Selected' : 'Select'} variant={selected ? 'primary' : 'secondary'} onPress={() => toggleReturnItem(it.id)} />
+                    </View>
+                  );
+                })}
                 <Input label="Reason" value={returnReason} onChangeText={setReturnReason} placeholder="e.g. Damaged, wrong item" multiline />
                 {returnError ? <Text style={[styles.meta, { color: colors.danger }]}>{returnError}</Text> : null}
-                <Button title={returnSubmitting ? "Submitting..." : "Submit return"} onPress={handleReturn} loading={returnSubmitting} disabled={returnSubmitting} fullWidth />
+                <Button title={returnSubmitting ? "Submitting..." : `Submit return (${selectedReturnIds.size === 0 ? order.items.length : selectedReturnIds.size})`} onPress={handleReturn} loading={returnSubmitting} disabled={returnSubmitting} fullWidth />
                 <Button title="Cancel" variant="secondary" onPress={() => setShowReturn(false)} fullWidth />
               </View>
             ) : (

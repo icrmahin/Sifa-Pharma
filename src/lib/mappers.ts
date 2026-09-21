@@ -1,3 +1,4 @@
+import config from '../constants/config'
 import type { Product } from '../types/product'
 import type { Order, OrderItem } from '../types/order'
 import type { Address } from '../types/address'
@@ -58,7 +59,7 @@ export function mapOrder(db: any): Order {
     status: db.status,
     subtotal: Number(db.subtotal ?? 0),
     discount: Number(db.discount ?? 0),
-    deliveryFee: Number(db.delivery_fee ?? db.deliveryFee ?? 150),
+    deliveryFee: Number(db.delivery_fee ?? db.deliveryFee ?? config.deliveryFee),
     total: Number(db.total ?? 0),
     paymentMethod: db.payment_method ?? db.paymentMethod ?? 'CASH_ON_DELIVERY',
     address: db.address ?? '',

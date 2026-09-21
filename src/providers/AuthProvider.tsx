@@ -91,14 +91,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  async function fetchProfileRole(userId: string): Promise<'customer' | 'admin' | null> {
+  async function fetchProfile(userId: string): Promise<{ name?: string | null; phone?: string | null; avatar_url?: string | null; role?: 'customer' | 'admin' | null } | null> {
     try {
-      const { data, error } = await supabase.from('profiles').select('role').eq('id', userId).single()
+      const { data, error } = await supabase.from('profiles').select('name, phone, avatar_url, role').eq('id', userId).single()
       if (error || !data) return null
-      return data.role as 'customer' | 'admin'
+      return data as { name?: string | null; phone?: string | null; avatar_url?: string | null; role?: 'customer' | 'admin' | null }
     } catch {
       return null
     }
+  }
+
+  async function fetchProfileRole(userId: string): Promise<'customer' | 'admin' | null> {
+    const p = await fetchProfile(userId)
+    return (p?.role as 'customer' | 'admin' | null) ?? null
   }
 
   async function checkIsAdminRpc(): Promise<boolean | null> {
@@ -114,8 +119,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function handleSessionChange(session: Session | null) {
     if (session?.user) {
       const email = session.user.email as string | undefined
-      // Display role from profiles (derived), but authorization truth is email allowlist + DB is_admin()
-      const profileRole = await fetchProfileRole(session.user.id)
+      // Phone source of truth is profiles.phone (not auth) — auth only for gmail, phone required for placing order
+      const profile = await fetchProfile(session.user.id)
+      const profileRole = (profile?.role as 'customer' | 'admin' | null) ?? null
       // DB truth via RPC (when available) otherwise fallback to email allowlist
       const rpcAdmin = await checkIsAdminRpc()
       const emailAdmin = isEmailAllowlisted(email)
@@ -129,13 +135,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.warn('[AuthProvider] blocked admin impersonation: profiles.role=admin but email not allowlisted', email)
       }
 
+      const profilePhone = profile?.phone ?? ''
+      const profileName = profile?.name ?? (session.user.user_metadata?.name as string | undefined) ?? session.user.email?.split('@')[0] ?? 'User'
+      const profileAvatar = profile?.avatar_url ?? (session.user.user_metadata?.avatar_url as string | undefined)
+
       const sessionWithId = session as Session & { id?: string }
       const authSession: AuthSession = {
         id: sessionWithId.id || session.access_token?.slice(0, 8) || '',
         userId: session.user.id || '',
         role: displayRole,
         email: email || undefined,
-        phone: session.user.phone || undefined,
+        phone: profilePhone || undefined,
         isAdmin: hardenedIsAdmin,
       }
       setSession(authSession)
@@ -143,11 +153,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const appUser: User = {
         id: session.user.id || '',
-        name: ((session.user.user_metadata?.name as string | undefined) || session.user.email?.split('@')[0] || 'User') as string,
+        name: profileName as string,
         email: session.user.email || undefined,
-        phone: session.user.phone ?? '',
+        phone: profilePhone,
         role: displayRole,
-        avatar: session.user.user_metadata?.avatar_url as string | undefined,
+        avatar: profileAvatar,
         createdAt: session.user.created_at || new Date().toISOString(),
       }
       setUser(appUser)

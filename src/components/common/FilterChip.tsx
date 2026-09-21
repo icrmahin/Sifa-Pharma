@@ -18,19 +18,20 @@ export default function FilterChip({ label, selected = false, onPress }: FilterC
   return (
     <Pressable
       onPress={onPress}
-      style={[
+      style={({ pressed }) => [
         styles.chip,
         {
           backgroundColor: selected ? colors.primarySoft : colors.backgroundAlt,
-          borderColor: selected ? colors.primary : colors.border,
+          borderColor: selected ? colors.primary : colors.borderLight,
           ...shadows.xs,
+          opacity: pressed ? 0.85 : 1,
         },
       ]}
       accessibilityRole="button"
       accessibilityState={{ selected }}
       accessibilityLabel={`Filter by ${label}`}
     >
-      <Text style={[styles.text, { color: selected ? colors.primary : colors.text }]}>
+      <Text style={[styles.text, { color: selected ? colors.primary : colors.textMuted }]}>
         {label}
       </Text>
     </Pressable>
@@ -42,9 +43,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: radius.pill,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.xs,
     minHeight: 36,
     justifyContent: "center",
+    alignItems: "center",
   },
   text: {
     fontFamily: fontFamily.semiBold,

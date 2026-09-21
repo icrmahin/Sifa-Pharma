@@ -11,12 +11,14 @@ import FilterChip from "../../../components/common/FilterChip";
 import ResponsiveContainer from "../../../components/common/ResponsiveContainer";
 import SearchBar from "../../../components/common/SearchBar";
 import { useThemeColors } from "../../../providers/ThemeProvider";
+import { useShadows } from "../../../constants/shadows";
 import { useResponsive } from "../../../hooks/useResponsive";
 import { useCategories } from "../../../hooks/useProducts";
 import { useAdminProducts } from "../../../hooks/useAdmin";
 import LoadingState from "../../../components/common/LoadingState";
 import ErrorState from "../../../components/common/ErrorState";
 import config from "../../../constants/config";
+import { radius } from "../../../constants/sizes";
 import spacing from "../../../constants/spacing";
 import typography from "../../../constants/typography";
 
@@ -38,6 +40,7 @@ const STOCK_FILTERS: { label: string; value: StockFilter }[] = [
 
 export default function AdminProductsScreen() {
   const colors = useThemeColors();
+  const shadows = useShadows();
   const { isDesktop } = useResponsive();
   const twoColumns = isDesktop;
 
@@ -128,7 +131,8 @@ export default function AdminProductsScreen() {
           placeholder="Search products"
         />
 
-        <View style={styles.filters}>
+        <View style={[styles.filtersIsland, { backgroundColor: colors.backgroundAlt, borderColor: colors.borderSoft, ...shadows.xs }]}>
+          <Text style={[styles.filterLabel, { color: colors.textMuted }]}>Status</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
             {STATUS_FILTERS.map((filter) => (
               <FilterChip
@@ -140,6 +144,7 @@ export default function AdminProductsScreen() {
             ))}
           </ScrollView>
 
+          <Text style={[styles.filterLabel, { color: colors.textMuted }]}>Stock</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
             {STOCK_FILTERS.map((filter) => (
               <FilterChip
@@ -151,6 +156,7 @@ export default function AdminProductsScreen() {
             ))}
           </ScrollView>
 
+          <Text style={[styles.filterLabel, { color: colors.textMuted }]}>Category</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
             <FilterChip
               label="All categories"
@@ -214,8 +220,20 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     paddingBottom: spacing.xxl,
   },
-  filters: { gap: spacing.sm },
-  chipRow: { gap: spacing.sm, paddingRight: spacing.sm },
+  filtersIsland: {
+    borderRadius: radius.xl,
+    borderWidth: 1,
+    padding: spacing.md,
+    gap: spacing.sm,
+  },
+  filterLabel: {
+    fontSize: typography.caption,
+    fontWeight: "700",
+    letterSpacing: 0.6,
+    textTransform: "uppercase",
+    marginTop: spacing.xs,
+  },
+  chipRow: { gap: spacing.sm, paddingRight: spacing.sm, paddingBottom: spacing.xs },
   count: {
     fontSize: typography.caption,
     fontWeight: "600",

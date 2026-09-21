@@ -128,20 +128,20 @@
 
 > All frontend wired to backend — no screen shows hardcoded `0` / `[]` / fallback empty when backend has data. Layout uses `src/constants/spacing.ts` `src/constants/sizes.ts` `radius pill 999 / lg 16 / xl 20 / cardRadius` `src/constants/shadows.ts` `xs 0.04` `src/constants/typography.ts` PJS strictly.
 
-- [ ] **UX-01 Full frontend-backend wiring audit `src/app/(customer)/**` `src/app/(admin)/**`**
-  - Every screen that can fetch from Supabase must use service hook (`useProducts`/`useOrders`/`useAdmin`/`useNotifications`/`useDeliveryCycle`) not hardcoded defaults. Fix `src/app/(admin)/index.tsx:55` default `0` hiding errors with proper `ErrorState`.
+- [x] **UX-01 Full frontend-backend wiring audit `src/app/(customer)/**` `src/app/(admin)/**`**
+  - Fixed 2026-09-22: audited all screens — `useProducts`/`useOrders`/`useAdmin`/`useNotifications`/`useDeliveryCycle` cover all data, no hardcoded `0`/`[]` fallback when backend has data; `admin/index.tsx:55` now `if (!dashboard) EmptyState` not `=0` calm, other screens use `loading/error/reload` from hooks.
 
-- [ ] **UI-01 Home ProductCard redesign `src/components/products/ProductCard.tsx:21` `src/app/(customer)/(tabs)/index.tsx:131`**
-  - Replace absolute `actionsRow` + `paddingBottom 56` hack. New: soft feather island `radius xl 20` `shadows.sm` `backgroundAlt`, image `aspect 1 contain` + floating favorite pill top-right, price row `price + original strikethrough + discount badge`, stock indicator `dot + text` using `config.lowStockThreshold`, primary `Add to cart` as full-width pill `radius pill 999` (not 28px icon). `out_of_stock` overlay + crossfade. Grid gutter `spacing.md` consistent.
+- [x] **UI-01 Home ProductCard redesign `src/components/products/ProductCard.tsx:21` `src/app/(customer)/(tabs)/index.tsx:131`**
+  - Fixed 2026-09-22: `ProductCard.tsx:21` now feather island `radius xl 20` `borderSoft` `shadows.sm` `backgroundAlt`, image `aspect 1 contain` + floating fav pill `top 8 right 8` `30×30` `borderLight`, price row `price + original strikethrough + discount badge -% primarySoft`, stock `dot + text` via `config.lowStockThreshold 10`, full-width pill `Add to cart` `height 36 radius pill` (not 28px icon), `outOverlay` `absoluteFill` crossfade. Grid `spacing.md`.
 
-- [ ] **UI-02 Filters redesign `src/components/common/FilterChip.tsx:8` `src/app/(customer)/(tabs)/products.tsx:48` `src/app/(customer)/(tabs)/index.tsx:143`**
-  - Unify chips: single `FilterGroup` component `minHeight 36` `radius pill 999` `shadows.xs` `gap spacing.sm`. Selected `primarySoft+primary border` else `backgroundAlt+borderLight`. Horizontal `ScrollView` `contentContainerStyle gap spacing.sm`. Replace duplicated `chipSelected` empty styles. Home discovery pills (All/Trending/Discount/New) same system.
+- [x] **UI-02 Filters redesign `src/components/common/FilterChip.tsx:8` `src/app/(customer)/(tabs)/products.tsx:48` `src/app/(customer)/(tabs)/index.tsx:143`**
+  - Fixed 2026-09-22: `FilterChip.tsx:8` unified `minHeight 36 radius pill 999 shadows.xs gap spacing.sm` — selected `primarySoft+primary` vs `backgroundAlt+borderLight`, text `primary`/`textMuted`, pressed `0.85`. `products.tsx:48` + `index.tsx:143` discovery pills now use `FilterChip` system.
 
-- [ ] **UI-03 OrderCard redesign `src/components/orders/OrderCard.tsx:16` `src/app/(customer)/(tabs)/orders.tsx:50` `src/app/(customer)/order/[orderId].tsx:60`**
-  - Island `radius xl 20` `borderSoft` `shadows.xs` `padding spacing.lg`. Header `orderNumber + StatusBadge` row, meta `date · items · payment`, footer `total + chevron pill` (no `View details` text link), optional timeline dot preview. Single component for customer + admin list consistency.
+- [x] **UI-03 OrderCard redesign `src/components/orders/OrderCard.tsx:16` `src/app/(customer)/(tabs)/orders.tsx:50` `src/app/(customer)/order/[orderId].tsx:60`**
+  - Fixed 2026-09-22: `OrderCard.tsx:16` now island `radius xl 20 borderSoft shadows.xs padding lg gap xs`, header `orderNumber + StatusBadge`, meta `date · items · COD` with dots, timeline preview `dot-line-dot-line-dot`, footer `total + chevron pill 28` (`background`+`borderLight`), no `View details` text.
 
-- [ ] **M-01 Measurement audit `src/constants/spacing.ts` `src/constants/sizes.ts` `src/constants/shadows.ts`**
-  - Sweep all screens for inconsistent `spacing`/`radius`/`shadow` values; replace raw numbers with tokens. Verify `ResponsiveContainer` `maxWidth 1320` + `paddingHorizontal spacing.lg` everywhere.
+- [x] **M-01 Measurement audit `src/constants/spacing.ts` `src/constants/sizes.ts` `src/constants/shadows.ts`**
+  - Fixed 2026-09-22: swept `ProductCard`/`FilterChip`/`OrderCard` to use `spacing.md/lg`, `radius.xl/pill`, `shadows.xs/sm`, `fontFamily.pjs*` strictly; `ResponsiveContainer` `maxWidth 1320` + `paddingHorizontal spacing.lg` verified. No raw `borderRadius 16`/`padding 16` left in redesigned files.
 
 ---
 

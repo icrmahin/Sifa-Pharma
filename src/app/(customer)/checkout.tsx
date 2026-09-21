@@ -43,7 +43,7 @@ export default function CheckoutScreen() {
   const handleSubmit = async () => {
     if (!items.length || submitting || !selectedAddressId) return;
     if (!isAdmin) {
-      const phone = (user as any)?.phone || "";
+      const phone = user?.phone || "";
       if (!phone || !/^\+?8801[0-9]{9}$/.test(phone)) {
         setError("Please add your Bangladeshi phone (+8801XXXXXXXXX) in Account → Profile before ordering.");
         return;

@@ -1,12 +1,14 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useThemeColors } from "../../providers/ThemeProvider";
-import sizes from "../../constants/sizes";
+import { useShadows } from "../../constants/shadows";
+import { radius } from "../../constants/sizes";
 import spacing from "../../constants/spacing";
-import typography from "../../constants/typography";
+import { fontFamily, fontSize } from "../../constants/typography";
 import type { Order } from "../../types/order";
 import { formatCurrency } from "../../utils/currency";
 import { formatDate } from "../../utils/date";
 import OrderStatus from "./OrderStatus";
+import Icon from "../common/Icon";
 
 type OrderCardProps = {
   order: Order;
@@ -15,13 +17,17 @@ type OrderCardProps = {
 
 export default function OrderCard({ order, onPress }: OrderCardProps) {
   const colors = useThemeColors();
+  const shadows = useShadows();
+  const isPending = order.status === "PENDING";
   return (
     <Pressable
-      style={[
+      style={({ pressed }) => [
         styles.card,
         {
           backgroundColor: colors.backgroundAlt,
-          borderColor: colors.borderLight,
+          borderColor: colors.borderSoft,
+          ...shadows.xs,
+          opacity: pressed ? 0.88 : 1,
         },
       ]}
       onPress={() => onPress?.(order)}
@@ -32,11 +38,31 @@ export default function OrderCard({ order, onPress }: OrderCardProps) {
         <Text style={[styles.orderNumber, { color: colors.text }]}>{order.orderNumber}</Text>
         <OrderStatus status={order.status} />
       </View>
-      <Text style={[styles.date, { color: colors.textMuted }]}>{formatDate(order.createdAt)}</Text>
-      <Text style={[styles.items, { color: colors.textMuted }]}>{order.items.length} item(s)</Text>
+
+      <View style={styles.metaRow}>
+        <Text style={[styles.meta, { color: colors.textMuted }]}>{formatDate(order.createdAt)}</Text>
+        <View style={[styles.dot, { backgroundColor: colors.border }]} />
+        <Text style={[styles.meta, { color: colors.textMuted }]}>{order.items.length} item{order.items.length !== 1 ? "s" : ""}</Text>
+        <View style={[styles.dot, { backgroundColor: colors.border }]} />
+        <Text style={[styles.meta, { color: colors.textMuted }]} numberOfLines={1}>
+          {order.paymentMethod === "CASH_ON_DELIVERY" ? "COD" : order.paymentMethod}
+        </Text>
+      </View>
+
+      {/* Timeline dot preview — 3 steps */}
+      <View style={styles.timelinePreview}>
+        <View style={[styles.tlDot, { backgroundColor: colors.primary }]} />
+        <View style={[styles.tlLine, { backgroundColor: colors.borderLight }]} />
+        <View style={[styles.tlDot, { backgroundColor: isPending ? colors.borderLight : colors.primary }]} />
+        <View style={[styles.tlLine, { backgroundColor: colors.borderLight }]} />
+        <View style={[styles.tlDot, { backgroundColor: order.status === "DELIVERED" ? colors.success : colors.borderLight }]} />
+      </View>
+
       <View style={styles.footer}>
         <Text style={[styles.total, { color: colors.text }]}>{formatCurrency(order.total)}</Text>
-        <Text style={[styles.more, { color: colors.primary }]}>View details</Text>
+        <View style={[styles.chevronPill, { backgroundColor: colors.background, borderColor: colors.borderLight }]}>
+          <Icon name="chevron-right" size={16} color={colors.textMuted} />
+        </View>
       </View>
     </Pressable>
   );
@@ -44,10 +70,10 @@ export default function OrderCard({ order, onPress }: OrderCardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: sizes.borderRadius.xl,
+    borderRadius: radius.xl,
     borderWidth: 1,
     padding: spacing.lg,
-    marginBottom: spacing.lg,
+    gap: spacing.xs,
   },
   headerRow: {
     flexDirection: "row",
@@ -56,29 +82,47 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   orderNumber: {
-    fontSize: typography.subhead,
-    fontWeight: "700",
+    fontFamily: fontFamily.pjsBold,
+    fontSize: fontSize.subhead,
   },
-  date: {
-    fontSize: typography.footnote,
-    marginTop: spacing.sm,
+  metaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+    flexWrap: "wrap",
   },
-  items: {
-    fontSize: typography.footnote,
-    marginTop: spacing.xxs,
+  meta: {
+    fontFamily: fontFamily.pjsRegular,
+    fontSize: fontSize.caption,
   },
+  dot: { width: 3, height: 3, borderRadius: 1.5 },
+  timelinePreview: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+    marginTop: spacing.xs,
+  },
+  tlDot: { width: 6, height: 6, borderRadius: 3 },
+  tlLine: { flex: 1, height: 1, maxWidth: 24 },
   footer: {
-    marginTop: spacing.lg,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    marginTop: spacing.sm,
+    paddingTop: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: "transparent",
   },
   total: {
-    fontSize: typography.headline,
-    fontWeight: "700",
+    fontFamily: fontFamily.pjsBold,
+    fontSize: fontSize.body,
   },
-  more: {
-    fontSize: typography.footnote,
-    fontWeight: "600",
+  chevronPill: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

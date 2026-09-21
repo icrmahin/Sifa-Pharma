@@ -13,10 +13,12 @@ import ResponsiveContainer from "../../../../components/common/ResponsiveContain
 import StatusBadge from "../../../../components/common/StatusBadge";
 import ProductImage from "../../../../components/products/ProductImage";
 import { useThemeColors } from "../../../../providers/ThemeProvider";
+import { useShadows } from "../../../../constants/shadows";
 import { useResponsive } from "../../../../hooks/useResponsive";
 import { useProduct, useCategories, useManufacturers } from "../../../../hooks/useProducts";
 import { updateProduct, deleteProduct } from "../../../../services/products";
 import config from "../../../../constants/config";
+import { radius } from "../../../../constants/sizes";
 import spacing from "../../../../constants/spacing";
 import typography from "../../../../constants/typography";
 import { formatCurrency } from "../../../../utils/currency";
@@ -34,6 +36,7 @@ function InfoRow({ label, value, colors }: { label: string; value: string; color
 
 export default function AdminProductDetailScreen() {
   const colors = useThemeColors();
+  const shadows = useShadows();
   const { isDesktop } = useResponsive();
   const params = useLocalSearchParams<{ productId: string }>();
   const productId = params.productId as string;
@@ -114,9 +117,11 @@ export default function AdminProductDetailScreen() {
 
       <ScrollView contentContainerStyle={styles.container}>
         <ResponsiveContainer sidebarAware maxWidth={isDesktop ? 960 : 1320}>
-          <ProductImage uri={product.image} recyclingKey={product.id} style={isDesktop ? styles.imageDesktop : styles.image} />
+          <View style={[styles.imageIsland, { backgroundColor: colors.backgroundAlt, borderColor: colors.borderSoft, ...shadows.sm }]}>
+            <ProductImage uri={product.image} recyclingKey={product.id} style={isDesktop ? styles.imageDesktop : styles.image} />
+          </View>
 
-        <View style={[styles.card, { backgroundColor: colors.backgroundAlt, borderColor: colors.borderLight }]}>
+          <View style={[styles.card, { backgroundColor: colors.backgroundAlt, borderColor: colors.borderSoft, ...shadows.sm }]}>
           <Text style={[styles.brand, { color: colors.textMuted }]}>{product.brand}</Text>
           <Text style={[styles.name, { color: colors.text }]}>{product.name}</Text>
           <Text style={[styles.generic, { color: colors.textMuted }]}>{product.genericName}</Text>
@@ -224,13 +229,19 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1 },
   container: {
     padding: spacing.lg,
-    gap: spacing.lg,
+    gap: spacing.md,
     paddingBottom: spacing.xxl,
   },
-  image: { height: 180, borderRadius: 12 },
-  imageDesktop: { height: 280, borderRadius: 12 },
+  imageIsland: {
+    borderRadius: radius.xl,
+    borderWidth: 1,
+    overflow: "hidden",
+    padding: spacing.sm,
+  },
+  image: { height: 180, borderRadius: radius.lg },
+  imageDesktop: { height: 280, borderRadius: radius.lg },
   card: {
-    borderRadius: 12,
+    borderRadius: radius.xl,
     borderWidth: 1,
     padding: spacing.lg,
     gap: spacing.sm,

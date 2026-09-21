@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useThemeColors } from "../../providers/ThemeProvider";
 import { useShadows } from "../../constants/shadows";
 import spacing from "../../constants/spacing";
+import config from "../../constants/config";
 import { fontFamily, fontSize } from "../../constants/typography";
 import { radius } from "../../constants/sizes";
 import type { Product } from "../../types/product";
@@ -26,8 +27,12 @@ function ProductCard({ product, compact, onPress }: ProductCardProps) {
   const [adding, setAdding] = useState(false);
   const fav = isFavorite(product.id);
 
+  const outOfStock = product.stock === 0;
+  const lowStock = product.stock > 0 && product.stock <= config.lowStockThreshold;
+  const discount = product.discountPercent ?? 0;
+
   const handleAdd = async () => {
-    if (product.stock === 0 || adding) return;
+    if (outOfStock || adding) return;
     setAdding(true);
     try {
       await addItem(product.id, 1);
@@ -44,8 +49,6 @@ function ProductCard({ product, compact, onPress }: ProductCardProps) {
     } catch {}
   };
 
-  const showLowStock = product.stock > 0 && product.stock <= 3;
-
   return (
     <View
       style={[
@@ -53,20 +56,51 @@ function ProductCard({ product, compact, onPress }: ProductCardProps) {
         compact && styles.compact,
         {
           backgroundColor: colors.backgroundAlt,
+          borderColor: colors.borderSoft,
           ...shadows.sm,
         },
       ]}
     >
+      {/* One solid background — image and details share same card backgroundAlt, nested compact */}
+      <View style={[styles.imageWrap, { backgroundColor: colors.backgroundAlt }]}>
+        <ProductImage uri={product.image || product.primaryImage} recyclingKey={product.id} style={styles.image} contentFit="contain" />
+        {/* Overlay Pressable for navigation — sibling to fav pill, not parent, avoids <button><button> */}
+        <Pressable
+          onPress={() => onPress?.(product)}
+          style={StyleSheet.absoluteFill}
+          accessibilityRole="button"
+          accessibilityLabel={`View ${product.name} details`}
+        />
+        {/* Favorite pill — absolute top-right, above overlay */}
+        <Pressable
+          onPress={handleFav}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel={fav ? `Remove ${product.name} from favorites` : `Add ${product.name} to favorites`}
+          style={({ pressed }) => [
+            styles.favPill,
+            {
+              backgroundColor: fav ? colors.danger : colors.backgroundAlt,
+              borderColor: fav ? colors.danger : colors.borderLight,
+              opacity: pressed ? 0.85 : 1,
+            },
+          ]}
+        >
+          <Icon name={fav ? "favorite" : "favorite-border"} size={14} color={fav ? colors.white : colors.textMuted} />
+        </Pressable>
+        {outOfStock ? (
+          <View style={[styles.outOverlay, { backgroundColor: colors.backgroundAlt + "CC" }]} pointerEvents="none">
+            <Text style={[styles.outText, { color: colors.text }]}>Out of stock</Text>
+          </View>
+        ) : null}
+      </View>
+
       <Pressable
         onPress={() => onPress?.(product)}
-        style={styles.mainPressable}
+        style={styles.contentPressable}
         accessibilityRole="button"
         accessibilityLabel={`View ${product.name} details`}
       >
-        <View style={[styles.imageWrap, { backgroundColor: colors.background }]}>
-          <ProductImage uri={product.image || product.primaryImage} recyclingKey={product.id} style={styles.image} contentFit="contain" />
-        </View>
-
         <View style={styles.content}>
           <Text style={[styles.name, { color: colors.text }]} numberOfLines={2}>
             {product.name}
@@ -79,60 +113,62 @@ function ProductCard({ product, compact, onPress }: ProductCardProps) {
           ) : null}
 
           <View style={styles.priceRow}>
-            <View style={styles.priceBlock}>
-              <Text style={[styles.price, { color: colors.text }]} numberOfLines={1}>
-                {formatCurrency(product.price)}
+            <Text style={[styles.price, { color: colors.text }]} numberOfLines={1}>
+              {formatCurrency(product.price)}
+            </Text>
+            {product.originalPrice && product.originalPrice > product.price ? (
+              <Text style={[styles.original, { color: colors.textMuted }]} numberOfLines={1}>
+                {formatCurrency(product.originalPrice)}
               </Text>
-              {product.originalPrice && product.originalPrice > product.price ? (
-                <Text style={[styles.original, { color: colors.textMuted }]} numberOfLines={1}>
-                  {formatCurrency(product.originalPrice)}
-                </Text>
-              ) : null}
-            </View>
+            ) : null}
+            {discount > 0 ? (
+              <View style={[styles.discountBadge, { backgroundColor: colors.primarySoft, borderColor: colors.primary + "22" }]}>
+                <Text style={[styles.discountText, { color: colors.primary }]}>-{discount}%</Text>
+              </View>
+            ) : null}
           </View>
 
-          {product.stock === 0 ? (
-            <Text style={[styles.stock, { color: colors.danger }]}>Out of stock</Text>
-          ) : showLowStock ? (
-            <Text style={[styles.stock, { color: colors.warning }]}>Only {product.stock} left</Text>
-          ) : null}
+          {/* Stock indicator dot + text */}
+          <View style={styles.stockRow}>
+            <View
+              style={[
+                styles.dot,
+                { backgroundColor: outOfStock ? colors.danger : lowStock ? colors.warning : colors.success },
+              ]}
+            />
+            <Text
+              style={[
+                styles.stockText,
+                { color: outOfStock ? colors.danger : lowStock ? colors.warning : colors.textMuted },
+              ]}
+              numberOfLines={1}
+            >
+              {outOfStock ? "Out of stock" : lowStock ? `Only ${product.stock} left` : `${product.stock} in stock`}
+            </Text>
+          </View>
         </View>
       </Pressable>
 
-      {/* Bottom compact action row: + and heart — no overlap, well defined */}
-      <View style={styles.actionsRow}>
-        <Pressable
-          onPress={handleFav}
-          hitSlop={6}
-          accessibilityRole="button"
-          accessibilityLabel={fav ? `Remove ${product.name} from favorites` : `Add ${product.name} to favorites`}
-          style={({ pressed }) => [
-            styles.iconBtn,
-            {
-              backgroundColor: fav ? colors.danger + "16" : colors.background,
-              borderColor: fav ? colors.danger + "30" : colors.borderLight,
-            },
-            pressed && styles.pressed,
-          ]}
-        >
-          <Icon name={fav ? "favorite" : "favorite-border"} size={14} color={fav ? colors.danger : colors.textMuted} />
-        </Pressable>
-
+      {/* Full-width pill Add to cart — not icon */}
+      <View style={styles.addWrap}>
         <Pressable
           onPress={handleAdd}
-          disabled={product.stock === 0 || adding}
-          hitSlop={6}
+          disabled={outOfStock || adding}
           accessibilityRole="button"
           accessibilityLabel={`Add ${product.name} to cart`}
           style={({ pressed }) => [
-            styles.iconBtn,
-            styles.primaryBtn,
-            { backgroundColor: product.stock === 0 ? colors.borderLight : colors.primary, borderColor: product.stock === 0 ? colors.borderLight : colors.primary },
-            product.stock === 0 && { opacity: 0.45 },
-            pressed && product.stock !== 0 && styles.pressed,
+            styles.addButton,
+            {
+              backgroundColor: outOfStock ? colors.borderLight : colors.primary,
+              borderColor: outOfStock ? colors.borderLight : colors.primary,
+              opacity: outOfStock ? 0.6 : pressed ? 0.88 : 1,
+            },
           ]}
         >
-          <Icon name="add" size={16} color={colors.white} />
+          <Icon name={outOfStock ? "block" : "add-shopping-cart"} size={14} color={outOfStock ? colors.textMuted : colors.white} />
+          <Text style={[styles.addText, { color: outOfStock ? colors.textMuted : colors.white }]}>
+            {adding ? "Adding..." : outOfStock ? "Out of stock" : "Add to cart"}
+          </Text>
         </Pressable>
       </View>
     </View>
@@ -142,27 +178,59 @@ function ProductCard({ product, compact, onPress }: ProductCardProps) {
 const styles = StyleSheet.create({
   card: {
     borderRadius: radius.xl,
+    borderWidth: 1,
     overflow: "hidden",
     marginBottom: spacing.md,
   },
   compact: { marginBottom: 0 },
-  mainPressable: { flex: 1 },
+  contentPressable: { flex: 1 },
+  // One solid nested card — image and details share same background, compact padding
   imageWrap: {
     aspectRatio: 1,
     alignItems: "center",
     justifyContent: "center",
-    padding: spacing.sm,
+    padding: spacing.xs,
+    backgroundColor: "transparent",
   },
   image: {
     width: "100%",
     height: "100%",
     borderRadius: radius.lg,
   },
+  favPill: {
+    position: "absolute",
+    top: spacing.sm,
+    right: spacing.sm,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    elevation: 2,
+    zIndex: 2,
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  outOverlay: {
+    ...StyleSheet.absoluteFill,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.lg,
+  },
+  outText: {
+    fontFamily: fontFamily.pjsBold,
+    fontSize: fontSize.caption,
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+  },
   content: {
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.sm,
-    paddingBottom: 56,
-    gap: 2,
+    paddingHorizontal: spacing.sm,
+    paddingTop: spacing.xs,
+    paddingBottom: spacing.xs,
+    gap: spacing.xs,
   },
   name: {
     fontFamily: fontFamily.pjsMedium,
@@ -177,12 +245,10 @@ const styles = StyleSheet.create({
   },
   priceRow: {
     flexDirection: "row",
-    alignItems: "flex-end",
+    alignItems: "center",
+    gap: spacing.xs,
     marginTop: spacing.xs,
-  },
-  priceBlock: {
-    flex: 1,
-    gap: 1,
+    flexWrap: "wrap",
   },
   price: {
     fontFamily: fontFamily.pjsBold,
@@ -194,35 +260,41 @@ const styles = StyleSheet.create({
     fontSize: fontSize.micro,
     textDecorationLine: "line-through",
   },
-  stock: {
+  discountBadge: {
+    borderWidth: 1,
+    borderRadius: radius.pill,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: 2,
+  },
+  discountText: {
+    fontFamily: fontFamily.pjsBold,
+    fontSize: fontSize.micro,
+  },
+  stockRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+    marginTop: spacing.xs,
+  },
+  dot: { width: 6, height: 6, borderRadius: 3 },
+  stockText: {
     fontFamily: fontFamily.pjsRegular,
     fontSize: fontSize.micro,
-    marginTop: 2,
   },
-  actionsRow: {
-    position: "absolute",
-    right: spacing.sm,
-    bottom: spacing.sm,
-    flexDirection: "row",
-    gap: 6,
-    alignItems: "center",
-  },
-  iconBtn: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+  addWrap: { paddingHorizontal: spacing.sm, paddingBottom: spacing.sm, paddingTop: spacing.xs },
+  addButton: {
+    height: 36,
+    borderRadius: radius.pill,
     borderWidth: 1,
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    gap: spacing.xs,
   },
-  primaryBtn: {
-    shadowColor: "#000",
-    shadowOpacity: 0.06,
-    shadowRadius: 3,
-    shadowOffset: { width: 0, height: 1 },
-    elevation: 1,
+  addText: {
+    fontFamily: fontFamily.pjsSemiBold,
+    fontSize: fontSize.footnote,
   },
-  pressed: { opacity: 0.82, transform: [{ scale: 0.96 }] },
 });
 
 export default memo(ProductCard);

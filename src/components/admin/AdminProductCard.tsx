@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useThemeColors } from "../../providers/ThemeProvider";
 import { useShadows } from "../../constants/shadows";
-import sizes from "../../constants/sizes";
+import { radius } from "../../constants/sizes";
 import spacing from "../../constants/spacing";
 import typography from "../../constants/typography";
 import type { Product } from "../../types/product";
@@ -26,8 +26,8 @@ export default function AdminProductCard({
         styles.card,
         {
           backgroundColor: colors.backgroundAlt,
-          borderColor: colors.borderLight,
-          ...shadows.sm,
+          borderColor: colors.borderSoft,
+          ...shadows.xs,
         },
         pressed && styles.pressed,
       ]}
@@ -35,11 +35,13 @@ export default function AdminProductCard({
       accessibilityRole="button"
       accessibilityLabel={`Edit ${product.name}`}
     >
-      <ProductImage
-        uri={product.primaryImage ?? product.image}
-        recyclingKey={product.id}
-        style={styles.image}
-      />
+      <View style={{ padding: spacing.sm }}>
+        <ProductImage
+          uri={product.primaryImage ?? product.image}
+          recyclingKey={product.id}
+          style={styles.image}
+        />
+      </View>
       <View style={styles.content}>
         <View style={styles.topRow}>
           <Text style={[styles.name, { color: colors.text }]} numberOfLines={2}>
@@ -86,12 +88,13 @@ export default function AdminProductCard({
 const styles = StyleSheet.create({
   card: {
     flexDirection: "row",
-    borderRadius: sizes.cardRadius,
+    borderRadius: radius.xl,
     borderWidth: 1,
     overflow: "hidden",
+    alignItems: "center",
   },
-  pressed: { opacity: 0.78 },
-  image: { width: 88, height: 104 },
+  pressed: { opacity: 0.78, transform: [{ scale: 0.99 }] },
+  image: { width: 88, height: 88, borderRadius: radius.lg },
   content: { flex: 1, padding: spacing.md, gap: spacing.xs },
   topRow: {
     flexDirection: "row",
@@ -104,7 +107,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-end",
     justifyContent: "space-between",
-    marginTop: "auto",
+    marginTop: spacing.xs,
   },
   stock: { fontSize: typography.caption, fontWeight: "600" },
 });

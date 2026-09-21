@@ -40,10 +40,10 @@ const SECTIONS: SettingsSection[] = [
   {
     title: "More Options",
     items: [
-      { label: "Help & FAQ", icon: "help-outline" },
-      { label: "Contact Us", icon: "phone" },
-      { label: "About Sifa-Pharma", icon: "info-outline" },
-      { label: "Terms & Privacy", icon: "description" },
+      { label: "Help & FAQ", icon: "help-outline", route: "/(customer)/account/help" },
+      { label: "Contact Us", icon: "phone", route: "/(customer)/account/contact" },
+      { label: "About Sifa-Pharma", icon: "info-outline", route: "/(customer)/account/about" },
+      { label: "Terms & Privacy", icon: "description", route: "/(customer)/account/terms" },
     ],
   },
   {
@@ -114,6 +114,11 @@ export default function AccountScreen() {
             <Text style={[styles.profileEmail, { color: colors.textMuted }]} numberOfLines={1}>
               {user?.email || ""}
             </Text>
+            {user?.phone ? (
+              <Text style={[styles.profileEmail, { color: colors.textMuted }]} numberOfLines={1}>
+                {user.phone}
+              </Text>
+            ) : null}
           </View>
           <Icon name="chevron-right" size={18} color={colors.textMuted} />
         </Pressable>
